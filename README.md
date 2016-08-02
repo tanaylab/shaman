@@ -7,26 +7,37 @@ This package provides a normalization scheme, along with basic analysis and stat
 1. Visualize normalized contact maps.
 1. Quantify contact enrichment acoording to features.
 
-### Installation ###
-#### Requirements ####
-* Perl
-* R packages:
-- _devtools _
-_ misha _
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+### Installation 
+#### Requirements 
+- Perl
+- R packages: 
+* devtools
+*  misha, RANN, data.table, ggplot2, reshape2, grid, Gviz (from bioconductor)
 
-### Contribution guidelines ###
+#### Installing misha package:
+```
+#!r
+install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/misha_3.4.3.tar.gz", repos=NULL) # Download and install misha package
+```
 
-* Writing tests
-* Code review
-* Other guidelines
+#### installing Gviz from bioconductor:
+```
+#!r
+source("https://bioconductor.org/biocLite.R")
+biocLite("Gviz")
+```
 
-### Who do I talk to? ###
+#### Installing shaman package:
+Download and install *shaman*: 
+```
+#!r
+devtools::install_bitbucket("tanaylab/shaman", ref='default', vignette = TRUE)
+library(shaman)
+```
 
-* Repo owner or admin
-* Other community or team contact
+#### Using the package
+Please refer to the package vignette for usage and workflow.
+```
+#!r
+browseVignettes('shaman') 
+```
