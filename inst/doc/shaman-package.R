@@ -6,7 +6,7 @@
 #  biocLite("Gviz")
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  devtools::install_bitbucket("tanaylab/shaman")
+#  devtools::install_url("http://www.wisdom.weizmann.ac.il/~nettam/shaman/shaman_1.0.0.tar.gz")
 #  library(shaman)
 
 ## ---- eval=FALSE, warning=FALSE------------------------------------------

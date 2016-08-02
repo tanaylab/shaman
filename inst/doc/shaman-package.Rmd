@@ -48,10 +48,10 @@ install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/misha_3.4.3.ta
 source("https://bioconductor.org/biocLite.R")
 biocLite("Gviz")
 ```
-#### Importing shaman package:
+#### Installing shaman package:
 Download and install _shaman_:
 ```{r, eval=FALSE}
-devtools::install_bitbucket("tanaylab/shaman")
+devtools::install_url("http://www.wisdom.weizmann.ac.il/~nettam/shaman/shaman_1.0.0.tar.gz")
 library(shaman)
 ```
 
@@ -111,4 +111,4 @@ Create data grid for two sets of features, and visualize it:
 grid = shaman_generate_feature_grid(feature1, feature2, obs_track, exp_track, range=25000, resolution=500)
 shaman_plot_feature_grid(grid, range=25000, grid_resolution=500, plot_resolution=1000)
 ```
-![Example of sptial contact enrichment for converging CTCF pairs: log10(obs) on the left, log2(obs/exp) on the right ](/home/nettam/projects/hic/figures/paper/hg19.k562.ctcf_neg.ctcf_pos.30.1.png)
+![Example of spatial contact enrichment for converging CTCF pairs: log10(obs) on the left, log2(obs/exp) on the right ](/home/nettam/projects/hic/figures/paper/hg19.k562.ctcf_neg.ctcf_pos.30.1.png)
