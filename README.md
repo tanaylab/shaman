@@ -1,16 +1,18 @@
 # The shaman pacakge - sampling HiC contact matrices for a-parametric normalization#
 
 This package provides a normalization scheme, along with basic analysis and statistical visualization of HiC experimental data. The normalization workflow consists of the following steps:
+1. Start with observed HiC data.
+1. Shuffle observed data to generate expected data.
+1. Compute the normalized score of each observed data point.
+1. Visualize normalized contact maps.
+1. Quantify contact enrichment acoording to features.
 
-    Start with observed HiC data.
-    Shuffle observed data to generate expected data.
-    Compute the normalized score of each observed data point.
-    Visualize normalized contact maps.
-    Quantify contact enrichment acoording to features.
-
-
-### How do I get set up? ###
-
+### Installation ###
+#### Requirements ####
+* Perl
+* R packages:
+- _devtools _
+_ misha _
 * Summary of set up
 * Configuration
 * Dependencies
