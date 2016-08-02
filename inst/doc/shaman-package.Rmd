@@ -1,0 +1,114 @@
+---
+title: "The shaman package - Sampling HiC contAct Matrices for Aparametric Normalization"
+author: "Netta Mendelson Cohen"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The shaman package - Sampling HiC contAct Matrices for Aparametric Normalization}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+This package provides a normalization scheme, along with basic analysis and statistical visualization of HiC experimental data.
+The normalization workflow consists of the following steps:
+
+1. Start with observed HiC data.
+1. Shuffle observed data to generate expected data.
+1. Compute the normalized score of each observed data point.
+1. Visualize normalized contact maps.
+1. Quantify contact enrichment acoording to features.
+
+## Installation
+### Requirements:
+The native environment for this package is the misha track database, i.e. start with an observed 2D track,
+generate ane expected 2D track and compute a score track. This process is CPU intensive and therefore requires SGE to be availabe,
+for distributed computing. However, inline functions which compute the expected and score values for a specific region are provided
+as well.
+The requirements are for all functions to work:
+
+- _Perl_
+- R packages:
+    * _devtools_.
+    * _misha_.
+    * _RANN_.
+    * _data.table_.
+    * _ggplot2_
+    * _reshape2_
+    * _grid_
+    * _Gviz_
+
+#### Installing misha package:
+Since _misha_ package is not in CRAN, we will need to install it directly as follows:
+Install the package:
+```{r, eval=FALSE}
+install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/misha_3.4.3.tar.gz", repos=NULL) #Installs misha package from file
+```
+#### Installing Gviz from bioconductor:
+```{r, eval=FALSE}
+source("https://bioconductor.org/biocLite.R")
+biocLite("Gviz")
+```
+#### Importing shaman package:
+Download and install _shaman_:
+```{r, eval=FALSE}
+devtools::install_bitbucket("tanaylab/shaman")
+library(shaman)
+```
+
+### Configuration files
+The next step is to set up the _conf_ files. To do so we will first need to dump templates of conf files to a conf directory:
+```{r, eval=FALSE, warning=FALSE}
+shaman_dump_config(config_dir = "my_shaman_proj/conf")
+```
+
+Now we will need to go to the supplied directory (`my_shaman_proj/conf` in our case) and complete the _configuration_ files.
+
+* __shaman.conf__: Contains all settings. 
+
+Once all configuration data has been updated, load configuration data by calling:
+```{r, eval=FALSE, warning=FALSE}
+shaman_load_config("my_shaman_proj/conf")
+```
+## Workflow
+### Distributed mode (based on sun grid engine)
+- Set configuration parameter "shaman.sge_support" to be 1.
+- Generate expected HiC misha 2D track
+```{r, eval=FALSE, warning=FALSE}
+shuffle_hic_track(track_db="db", obs_track_nm="obs", work_dir="work_dir")
+```
+- Generate score 2D track 
+```{r, eval=FALSE, warning=FALSE}
+score_hic_track(track_db="db", work_dir="work_dir", score_track_nm="score_track", obs_track_nms=c("obs"))
+```
+- Visualize region
+```{r, eval=FALSE, warning=FALSE}
+point_score = gextract("score_track", region, colnames="score")
+plot_map_score_with_annotations("hg19", point_score$points, region, misha_tracks=list("K56.k27ac", "rna-seq"), annotations=list("ctcf_pos", "ctcf_neg"), a_colors=c("#4572A7", "#AA4643"))
+```
+![Example of normalized map with annotations](/home/nettam/projects/hic/figures/paper/fig2.hoxd.example.png)
+
+### Local mode
+- Generating an expected matrix and computing its score for a given interval: a local computation is possible on a small region:
+```{r, eval=FALSE, warning=FALSE}
+point_score = shuffle_and_score_hic_mat(obs_track_nms="obs", interval=interval, work_dir="work_dir")
+```
+- Visualize region
+```{r, eval=FALSE, warning=FALSE}
+plot_map_score_with_annotations("hg19", point_score$points, region, misha_tracks=list("K56.k27ac", "rna-seq"), annotations=list("ctcf_pos", "ctcf_neg"), a_colors=c("#4572A7", "#AA4643"))
+```
+### Spatial contact enrichment - used to measure contact enrichemnt between two sets of genomic features.
+Relies on an existance of an expected (shuffled) 2d track.
+Builds a grid comprising of all combinations of intervals from feature 1 and feature 2 that fall within a band 
+defined by min_dist and max_dist. For each point on the grid, look at th surrounding window, defined by range parameter. 
+Discard all windows that do not contain a point with a score (defined in scotre_track_nm) above the score_filter parameter.
+This allows for focusing on potentially enriched pairs. Discect the window into small bins, size in base pairs defined by 
+the resolution parameter, and count the number of observed contacts, and the number of expected contacts in each bin.
+All windows are then summed together, generating a single matrix of observed and expected contacts, which is returned by function.
+Note that grid contains only points in which feature 1 position is smaller than feature 2 position.
+
+Create data grid for two sets of features, and visualize it:
+```{r, eval=FALSE, warning=FALSE}
+grid = shaman_generate_feature_grid(feature1, feature2, obs_track, exp_track, range=25000, resolution=500)
+shaman_plot_feature_grid(grid, range=25000, grid_resolution=500, plot_resolution=1000)
+```
+![Example of sptial contact enrichment for converging CTCF pairs: log10(obs) on the left, log2(obs/exp) on the right ](/home/nettam/projects/hic/figures/paper/hg19.k562.ctcf_neg.ctcf_pos.30.1.png)

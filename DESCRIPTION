@@ -1,0 +1,29 @@
+Package: shaman
+Type: Package
+Title: shaman - Sampling HiC contAct Matrices for Aparametric Normalization
+Version: 1.0.0
+Date: 2016-07-25
+Authors@R: c(person("Amos", "Tanay", role=c("aut")),
+    person("Netta", "Mendelson Cohen", email="netta.mendelsoncohen@weizmann.ac.il",
+    role=c("aut", "cre")))
+Description: Generate expected HiC data maintaining marginal coverage,
+  and the decay in contact probability with increasing genomic distance. Expected
+  HiC data is used for normalization and graphical presenstation of statistical
+  significance of observed HiC contact enrichments.
+License: GPL
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 5.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: rmarkdown,
+    knitr
+Depends: misha
+Imports:
+    RANN,
+    plyr,
+    data.table,
+    ggplot2,
+    reshape2,
+    grid,
+    Gviz
