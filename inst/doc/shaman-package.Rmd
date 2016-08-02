@@ -51,24 +51,18 @@ biocLite("Gviz")
 #### Installing shaman package:
 Download and install _shaman_:
 ```{r, eval=FALSE}
-devtools::install_url("http://www.wisdom.weizmann.ac.il/~nettam/shaman/shaman_1.0.0.tar.gz")
+devtools::install_bitubucket("tanaylab/shaman", ref='default', vignette=TRUE)
 library(shaman)
 ```
 
-### Configuration files
-The next step is to set up the _conf_ files. To do so we will first need to dump templates of conf files to a conf directory:
-```{r, eval=FALSE, warning=FALSE}
-shaman_dump_config(config_dir = "my_shaman_proj/conf")
-```
+### Options
+The following options are available for this package:
 
-Now we will need to go to the supplied directory (`my_shaman_proj/conf` in our case) and complete the _configuration_ files.
+####system parameters
 
-* __shaman.conf__: Contains all settings. 
+* shaman.sge_support = 0 - Set to 1 if Sun Grid Engine is available for distributed computing.
+* shaman.sge_flags = ""  - SGE paramters to be passed to qsub (e.g. threads, queue, etc').
 
-Once all configuration data has been updated, load configuration data by calling:
-```{r, eval=FALSE, warning=FALSE}
-shaman_load_config("my_shaman_proj/conf")
-```
 ## Workflow
 ### Distributed mode (based on sun grid engine)
 - Set configuration parameter "shaman.sge_support" to be 1.

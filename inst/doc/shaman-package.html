@@ -114,20 +114,20 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="installing-shaman-package" class="section level4">
 <h4>Installing shaman package:</h4>
 <p>Download and install <em>shaman</em>:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools::<span class="kw">install_url</span>(<span class="st">&quot;http://www.wisdom.weizmann.ac.il/~nettam/shaman/shaman_1.0.0.tar.gz&quot;</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools::<span class="kw">install_bitubucket</span>(<span class="st">&quot;tanaylab/shaman&quot;</span>, <span class="dt">ref=</span><span class="st">'default'</span>, <span class="dt">vignette=</span><span class="ot">TRUE</span>)
 <span class="kw">library</span>(shaman)</code></pre></div>
 </div>
 </div>
-<div id="configuration-files" class="section level3">
-<h3>Configuration files</h3>
-<p>The next step is to set up the <em>conf</em> files. To do so we will first need to dump templates of conf files to a conf directory:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">shaman_dump_config</span>(<span class="dt">config_dir =</span> <span class="st">&quot;my_shaman_proj/conf&quot;</span>)</code></pre></div>
-<p>Now we will need to go to the supplied directory (<code>my_shaman_proj/conf</code> in our case) and complete the <em>configuration</em> files.</p>
+<div id="options" class="section level3">
+<h3>Options</h3>
+<p>The following options are available for this package:</p>
+<div id="system-parameters" class="section level4">
+<h4>system parameters</h4>
 <ul>
-<li><strong>shaman.conf</strong>: Contains all settings.</li>
+<li>shaman.sge_support = 0 - Set to 1 if Sun Grid Engine is available for distributed computing.</li>
+<li>shaman.sge_flags = “” - SGE paramters to be passed to qsub (e.g. threads, queue, etc’).</li>
 </ul>
-<p>Once all configuration data has been updated, load configuration data by calling:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">shaman_load_config</span>(<span class="st">&quot;my_shaman_proj/conf&quot;</span>)</code></pre></div>
+</div>
 </div>
 </div>
 <div id="workflow" class="section level2">

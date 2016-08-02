@@ -6,14 +6,8 @@
 #  biocLite("Gviz")
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  devtools::install_url("http://www.wisdom.weizmann.ac.il/~nettam/shaman/shaman_1.0.0.tar.gz")
+#  devtools::install_bitubucket("tanaylab/shaman", ref='default', vignette=TRUE)
 #  library(shaman)
-
-## ---- eval=FALSE, warning=FALSE------------------------------------------
-#  shaman_dump_config(config_dir = "my_shaman_proj/conf")
-
-## ---- eval=FALSE, warning=FALSE------------------------------------------
-#  shaman_load_config("my_shaman_proj/conf")
 
 ## ---- eval=FALSE, warning=FALSE------------------------------------------
 #  shuffle_hic_track(track_db="db", obs_track_nm="obs", work_dir="work_dir")

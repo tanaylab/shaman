@@ -4,9 +4,9 @@
 #'
 #' @param config_dir Directory to dump to files to.
 #'
-#' @export
+#'
 
-shaman_dump_config <- function(config_dir)
+.shaman_dump_config <- function(config_dir)
 {
     config_files <- dir(system.file("config", package='shaman'), full.names=T)
     dir.create(config_dir, recursive=T, showWarnings=FALSE)
@@ -29,8 +29,8 @@ shaman_dump_config <- function(config_dir)
 #' files as those that were exported with \code{shaman_dump_config}.
 #' @param shaman_config Parameter file
 #'
-#' @export
-shaman_load_config <- function(config_dir, shaman_config=file.path(config_dir, "shaman.conf"))
+#'
+.shaman_load_config <- function(config_dir, shaman_config=file.path(config_dir, "shaman.conf"))
 {
     op <- options()
     all_paths <- list(
@@ -64,6 +64,6 @@ shaman_load_config <- function(config_dir, shaman_config=file.path(config_dir, "
 .shaman_check_config <- function(params) {
   if (!all( params %in% names(options()) ))
     {
-        stop("Missing configuration parameters! Have you loaded the files with shaman_load_config?")
+        .shaman_load_config(system.file("config", package="shaman"))
     }
 }
