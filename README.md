@@ -1,6 +1,7 @@
 # The shaman pacakge - sampling HiC contact matrices for a-parametric normalization#
 
 This package provides a normalization scheme, along with basic analysis and statistical visualization of HiC experimental data. The normalization workflow consists of the following steps:
+
 1. Start with observed HiC data.
 1. Shuffle observed data to generate expected data.
 1. Compute the normalized score of each observed data point.
@@ -9,10 +10,16 @@ This package provides a normalization scheme, along with basic analysis and stat
 
 ### Installation 
 #### Requirements 
-- Perl
-- R packages: 
-* devtools
-*  misha, RANN, data.table, ggplot2, reshape2, grid, Gviz (from bioconductor)
+- _Perl_
+- R packages:
+    * _devtools_.
+    * _misha_.
+    * _RANN_.
+    * _data.table_.
+    * _ggplot2_.
+    * _reshape2_.
+    * _grid_.
+    * _Gviz (from bioconductor)_.
 
 #### Installing misha package:
 ```
