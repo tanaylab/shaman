@@ -335,13 +335,13 @@ score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track_nms,
 
   while (nrow(near_cis_2d_upper_mat)>0) {
     #compute scores for each of the small matrices
-    commands = paste0("score_hic_mat_for_track(db, obs_track_nms, exp_track_nms, work_dir, \"",
+    commands = paste0("score_hic_mat_for_track(db, work_dir, obs_track_nms, exp_track_nms, \"",
         near_cis_2d_upper_mat$chrom1, "\", ", near_cis_2d_upper_mat$start1, ", ",
-        near_cis_2d_upper_mat$end1, ",\"", near_cis_2d_upper_mat$chrom2, "\", ", near_cis_2d_upper_mat$start2, ", ",
+        near_cis_2d_upper_mat$end1, ",", near_cis_2d_upper_mat$start2, ", ",
         near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")")
     commands <- paste(commands, collapse=",")
     res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=", sge_flags,  ",max.jobs=", max_jobs, ")")))
-
+    message(res[[1]])
     #check to see if there are any missing files
     existing_files = file.exists(expected_files)
     missing_files = expected_files[!existing_files]
@@ -402,7 +402,7 @@ score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, exp_track
   regional_interval <- gintervals.force_range(data.frame(chrom1=chrom, start1 = start1-expand, end1 = end1+expand,
     chrom2=chrom, start2=start2-expand, end2 = end2+expand))
   focus_interval = gintervals.2d(chrom, start1, end1, chrom, start2, end2)
-  n = score_hic_mat(obs_track_nms, ex_track_nms, focus_interval, regional_interval, min_dist=min_dist, k=k)
+  n = score_hic_mat(obs_track_nms, exp_track_nms, focus_interval, regional_interval, min_dist=min_dist, k=k)
   if (is.null(n)) {
     system(paste("perl -e'print\"chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tscore\";' > ", fn))
     #insufficient data in region - not writing region file
@@ -452,7 +452,7 @@ score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, exp_track
 ##########################################################################################################
 score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, regional_interval, min_dist=1024, k=100)
 {
-  points <- shaman_combine_points_multi_tracks(obs_track_nms, focus_interval, min_dist)
+  points <- .shaman_combine_points_multi_tracks(obs_track_nms, focus_interval, min_dist)
   if (is.null(points)) {
     message("number of points in focus interval = 0")
     return(NULL)
