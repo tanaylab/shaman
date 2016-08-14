@@ -225,12 +225,12 @@ shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, start1, 
                 p <- x
                 replace <- replace - nrow(x)
                 while (replace > 0) {
-                  p <- rbind(p, sample_n(x, min(replace, nrow(x))))
+                  p <- rbind(p, dplyr::sample_n(x, min(replace, nrow(x))))
                   replace <- replace - min(replace, nrow(x))
                 }
                 return(p)
               }
-              return(sample_n(x, replace))
+              return(dplyr::sample_n(x, replace))
           })
           a <- rbind(a, s[c("start1", "start2")])
       }
