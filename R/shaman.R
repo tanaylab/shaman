@@ -71,7 +71,7 @@ shuffle_hic_track <- function(track_db, obs_track_nm, work_dir, exp_track_nm=pas
         near_cis_intervals$end, ", \"", shuffle_exe, "\", max_dist=", near_cis,
 	", dist_resolution=", dist_resolution, ", decay_smooth=",
         smooth, ", shuffle=", near_cis_shuffle, ")}"), collapse=",")
-    res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=", sge_flags,  ",max.jobs=", max_jobs, ")")))
+    res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
 
     # checking to see all shuffled files were generated correctly
     exp_shuf_files <- paste0(obs_track_nm, "_", near_cis_intervals$chrom, "_",
@@ -98,7 +98,7 @@ shuffle_hic_track <- function(track_db, obs_track_nm, work_dir, exp_track_nm=pas
         smooth, ", shuffle=", far_cis_shuffle,
         ", raw_ext=\"full_chrom_raw\", shuffled_ext=\"full_chrom_shuffled\", sort_uniq=TRUE, data_files=c(",
         chrom_files$files, "))}"), collapse=",")
-    res <- eval(parse(text=paste("gcluster.run(", commands, ", opt.flags=", sge_flags, ",max.jobs=", max_jobs, ")")))
+    res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
     exp_shuf_files <- paste0(obs_track_nm, "_", chrom_files$chrom, "_0_0.full_chrom_shuffled.uniq")
     obs_shuf_files <- list.files(work_dir, pattern=paste0(obs_track_nm, ".*full_chrom_shuffled.uniq"))
     missing_files <- exp_shuf_files[!exp_shuf_files %in% obs_shuf_files]
@@ -340,7 +340,7 @@ score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track_nms,
         near_cis_2d_upper_mat$end1, ",", near_cis_2d_upper_mat$start2, ", ",
         near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")")
     commands <- paste(commands, collapse=",")
-    res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=", sge_flags,  ",max.jobs=", max_jobs, ")")))
+    res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
     message(res[[1]])
     #check to see if there are any missing files
     existing_files = file.exists(expected_files)
