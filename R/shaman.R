@@ -519,7 +519,15 @@ score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_inte
       message(paste("insufficient data found in intervals: exp=", nrow(exp)))
       return(NULL)
   }
-  return(.shaman_kk_norm(obs, exp, points, k))
+  #compute marginal coverage for observed and expected
+  marginal_intervals = gintervals.2d(regional_interval$chrom1, c(regional_interval$start1, regional_interval$start2),
+	c(regional_interval$end1, regional_interval$end2), regional_interval$chrom1)
+  obs_cov = .shaman_compute_marginal_multi_tracks(obs_track_nms, marginal_intervals, min_dist)
+  exp_cov = .shaman_compute_marginal_multi_tracks(exp_track_nms, marginal_intervals, min_dist)
+
+  k_exp = round(k * (exp_cov/obs_cov))
+ 
+  return(.shaman_kk_norm(obs, exp, points, k, k_exp))
 }
 
 #########################################################################################################
@@ -610,7 +618,7 @@ shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, expand=
 
   exp = as.data.frame(data.table::fread(shuf_fn, header=T))
 
-  ret = .shaman_kk_norm(obs, exp, points, k=k)
+  ret = .shaman_kk_norm(obs, exp, points, k=k, k_exp=k)
   ret$obs_fn = raw_fn
   ret$exp_fn = shuf_fn
   return(ret)
@@ -623,14 +631,14 @@ shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, expand=
 #  and the exp contact matrices and run ks.
 #  score = ks statitistic D
 ##########################################################################################################
-.shaman_kk_norm <- function(obs, exp, points, k=100)
+.shaman_kk_norm <- function(obs, exp, points, k=100, k_exp=100)
 {
   .shaman_check_config("shaman.ks_pl")
   knn_pl <- sprintf("%s/%s", system.file("perl", package="shaman"), getOption("shaman.ks_pl"))
   message(paste0("going into knn witn ", nrow(obs), " observed and ", nrow(exp), " expected"))
   o_knn <- RANN::nn2(obs[,c("start1", "start2")], points[,c("start1", "start2")], k=k)
   message("going into shuffled knn")
-  e_knn <- RANN::nn2(exp[,c("start1", "start2")], points[,c("start1", "start2")], k=round(nrow(exp)/nrow(obs)*k))
+  e_knn <- RANN::nn2(exp[,c("start1", "start2")], points[,c("start1", "start2")], k=k_exp)
 
   o_knn.tmp <- tempfile("knn_o_")
   e_knn.tmp <- gsub("knn_o_", "knn_e_", o_knn.tmp)
@@ -668,4 +676,13 @@ shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, expand=
     p <- gextract(x, interval, colnames=c("contacts"))
      return(p[abs(p$start1-p$start2) > min_dist,]) })
   return(points[,-1])
+}
+
+.shaman_compute_marginal_multi_tracks <- function(tracks, interval, min_dist)
+{
+   total = plyr::adply(tracks, 1, function(x) {
+     gvtrack.create("v_sum", x, "weighted.sum")
+     return(sum(gextract("v_sum", interval, iterator=interval, band=c(-max(gintervals.all()$end), -min_dist))$v_sum))
+     })[,-1]
+   return(sum(total))
 }
