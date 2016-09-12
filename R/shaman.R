@@ -343,7 +343,7 @@ score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track_nms,
         near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")")
     #commands <- paste(commands, collapse=",")
 
-    res <- gluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
+    res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
     #res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
     message(res[[1]])
     #check to see if there are any missing files
