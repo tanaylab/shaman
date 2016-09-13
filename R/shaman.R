@@ -337,10 +337,10 @@ score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track_nms,
 
   while (nrow(near_cis_2d_upper_mat)>0) {
     #compute scores for each of the small matrices
-    commands = paste0("score_hic_mat_for_track(db, work_dir, obs_track_nms, exp_track_nms, \"",
+    commands = paste0("{library(shaman); score_hic_mat_for_track(db, work_dir, obs_track_nms, exp_track_nms, \"",
         near_cis_2d_upper_mat$chrom1, "\", ", near_cis_2d_upper_mat$start1, ", ",
         near_cis_2d_upper_mat$end1, ",", near_cis_2d_upper_mat$start2, ", ",
-        near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")")
+        near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")}")
     #commands <- paste(commands, collapse=",")
 
     res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
@@ -524,8 +524,11 @@ score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_inte
       return(NULL)
   }
   #compute marginal coverage for observed and expected
-  marginal_intervals = gintervals.2d(regional_interval$chrom1, c(regional_interval$start1, regional_interval$start2),
-	c(regional_interval$end1, regional_interval$end2), regional_interval$chrom1)
+  margins = gintervals.canonic(gintervals(regional_interval$chrom1, 
+	c(regional_interval$start1, regional_interval$start2), 
+	c(regional_interval$end1, regional_interval$end2)))
+ 
+  marginal_intervals = gintervals.2d(margins$chrom, margins$start, margins$end, margins$chrom)
   obs_cov = .shaman_compute_marginal_multi_tracks(obs_track_nms, marginal_intervals, min_dist)
   exp_cov = .shaman_compute_marginal_multi_tracks(exp_track_nms, marginal_intervals, min_dist)
 
