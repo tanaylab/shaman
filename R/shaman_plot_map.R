@@ -1,6 +1,6 @@
 #' plot a normlized hic map
 #'
-#' \code{gplot_map_score}
+#' \code{shaman_gplot_map_score}
 #'
 #' Plots observerved hic contact matrix color-coded by normalized scores.
 #' Data can be either extracted directly from score track or computed via the functions:
@@ -13,7 +13,7 @@
 #' @return gplot containing the map
 #' @export
 ##########################################################################################################
-gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE, point_size=0.1, add_axis=TRUE) {
+shaman_gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE, point_size=0.1, add_axis=TRUE) {
   if (!all(c("start1", "start2", "score") %in% colnames(points_score))) {
     stop("points_score data frame must contain the following columns: start1, start2, score")
   }
@@ -32,7 +32,7 @@ gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE, point_
   } else {
     map_gplot <- ggplot2::ggplot(points_score[order(points_score$score),],
       ggplot2::aes(x=start1, y=start2, color=factor(floor(score)))) +
-      ggplot2::theme(axis.line.y = element_line(size=0.2))
+      ggplot2::theme(axis.line.y = ggplot2::element_line(size=0.2))
   }
   map_gplot <- map_gplot +
     ggplot2::geom_point(size=point_size) +
@@ -60,7 +60,7 @@ gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE, point_
 ##########################################################################################################
 #' plots misha 1D tracks and annotations
 #'
-#' \code{gplot_tracks_and_annotations}
+#' \code{shaman_gplot_tracks_and_annotations}
 #'
 #' Plots 1D tracks in UCSC format. Along with gene annotations and chromosomal axis, this
 #' function plots one dimensional misha tracks (e.g. rna-seq, chip-seq data) and marks
@@ -85,7 +85,7 @@ gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE, point_
 #'
 #' @export
 ##########################################################################################################
-plot_tracks_and_annotations <- function(genome, interval_range,
+shaman_plot_tracks_and_annotations <- function(genome, interval_range,
   misha_tracks=list(), mt_colors=getOption("shaman.track_colors"), mt_ylims=NULL,
   annotations=list(), a_colors=getOption("shaman.annotation_colors"),
   add_genes=T, add_ideogram=T, add_axis=T, gene_stacking="squish", gene_size=0.7,
@@ -125,7 +125,7 @@ plot_tracks_and_annotations <- function(genome, interval_range,
 ##########################################################################################################
 #' plots hic normalized map with annotations
 #'
-#' \code{plot_map_score_with_annotations}
+#' \code{shaman_plot_map_score_with_annotations}
 #'
 #' Plots observerved hic contact matrix color-coded by normalized scores, aligned with
 #' linear data such as gene annotations, rna, chromatin, transcription factor binding, etc').
@@ -154,7 +154,7 @@ plot_tracks_and_annotations <- function(genome, interval_range,
 #' @export
 ##########################################################################################################
 
-plot_map_score_with_annotations <- function(genome, points_score, interval_range, point_size=0.1,
+shaman_plot_map_score_with_annotations <- function(genome, points_score, interval_range, point_size=0.1,
   misha_tracks=list(), mt_colors=getOption("shaman.track_colors"), mt_ylims=NULL,
   annotations=list(), a_colors=getOption("shaman.annotation_colors"),
   add_genes=T, add_ideogram=T, add_axis=T, gene_stacking="squish", gene_size=0.7,
@@ -163,7 +163,7 @@ plot_map_score_with_annotations <- function(genome, points_score, interval_range
   if (!all(c("start1", "start2", "score") %in% colnames(points_score))) {
     stop("points_score data frame must contain the following columns: start1, start2, score")
   }
-  map_score <- gplot_map_score(points_score, interval_range, rotate=TRUE, point_size=point_size, add_axis=FALSE)
+  map_score <- shaman_gplot_map_score(points_score, interval_range, rotate=TRUE, point_size=point_size, add_axis=FALSE)
   if (fig_fn != "") {
 	png(fig_fn, width=fig_width, height=fig_height)
   }
@@ -171,7 +171,7 @@ plot_map_score_with_annotations <- function(genome, points_score, interval_range
   grid::pushViewport(grid::viewport(layout = grid::grid.layout(5, 1)))
   print(map_score, vp=grid::viewport(layout.pos.row=1:3, layout.pos.col=1))
   grid::pushViewport(grid::viewport(layout.pos.row=4:5, layout.pos.col=1))
-  plot_tracks_and_annotations(genome, interval_range,  misha_tracks=misha_tracks,
+  shaman_plot_tracks_and_annotations(genome, interval_range,  misha_tracks=misha_tracks,
 	mt_colors=mt_colors, mt_ylims=mt_ylims, annotations=annotations, a_colors=a_colors,
   	add_genes=add_genes, add_ideogram=add_ideogram, add_axis=add_axis, gene_stacking=gene_stacking,
 	gene_size=gene_size, track_size=track_size, annotation_size=annotation_size)
