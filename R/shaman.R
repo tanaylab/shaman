@@ -404,7 +404,7 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
   regional_interval <- gintervals.force_range(data.frame(chrom1=chrom, start1 = start1-expand, end1 = end1+expand,
     chrom2=chrom, start2=start2-expand, end2 = end2+expand))
   focus_interval = gintervals.2d(chrom, start1, end1, chrom, start2, end2)
-  n = score_hic_mat(obs_track_nms, exp_track_nms, focus_interval, regional_interval, min_dist=min_dist, k=k)
+  n = shaman_score_hic_mat(obs_track_nms, exp_track_nms, focus_interval, regional_interval, min_dist=min_dist, k=k)
   if (is.null(n)) {
     system(paste("perl -e'print\"chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tscore\";' > ", fn))
     #insufficient data in region - not writing region file
