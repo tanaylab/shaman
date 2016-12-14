@@ -57,6 +57,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
     intervals <- gintervals.all()
 
     commands <- paste0("{library(shaman); shaman_shuffle_hic_mat_for_track(\"", track_db, "\",\"", obs_track_nm, "\",\"",
+	      work_dir, "\", \"", intervals$chrom, "\", ", intervals$start, ", ",
         intervals$end, ", ", intervals$start, ", ", intervals$end, ", \"", shuffle_exe,
         "\", min_dist=1024, dist_resolution=", dist_resolution, ", decay_smooth=",
         smooth, ", shuffle=", shuffle, ", grid_small=", grid_small, ", grid_high=", grid_high,
