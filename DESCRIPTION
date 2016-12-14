@@ -1,8 +1,8 @@
 Package: shaman
 Type: Package
 Title: shaman - Sampling HiC contAct Matrices for Aparametric Normalization
-Version: 1.0.0
-Date: 2016-07-25
+Version: 1.1.0
+Date: 2016-12-14
 Authors@R: c(person("Amos", "Tanay", role=c("aut")),
     person("Netta", "Mendelson Cohen", email="netta.mendelsoncohen@weizmann.ac.il",
     role=c("aut", "cre")))
