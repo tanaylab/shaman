@@ -65,7 +65,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
         ", raw_ext=\"full_chrom_raw\", shuffled_ext=\"full_chrom_shuffled\", sort_uniq=TRUE)}")
      res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
 
-    exp_shuf_files <- paste0(obs_track_nm, "_", chrom_files$chrom, "_0_0.full_chrom_shuffled.uniq")
+    exp_shuf_files <- paste0(obs_track_nm, "_", intervals$chrom, "_0_0.full_chrom_shuffled.uniq")
     obs_shuf_files <- list.files(work_dir, pattern=paste0(obs_track_nm, ".*full_chrom_shuffled.uniq"))
     missing_files <- exp_shuf_files[!exp_shuf_files %in% obs_shuf_files]
     if (length(missing_files) > 0) {
