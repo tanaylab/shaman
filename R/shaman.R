@@ -486,6 +486,11 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
 #' If NA, value is determined based on observed data (recommended).
 #' @param hic_mcmc_max_resolution Maximum number of bins for each log2 unit.
 #' @param shuffle Number of shuffling rounds for each observed point.
+#' @param grid_small Initial size of maximum distance between contact pairs consdered for switching
+#' @param grid_high Final size of maximum distance between contact pairs consdered for switching
+#' @param grid_increase Grid increase size
+#' @param grid_step_iter Number of iterations in each grid size
+
 #' @return NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
 #' 1) points - start1, start2 and score for all observed points.
 #' 2) obs - the observed points.
@@ -497,7 +502,9 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
 ##########################################################################################################
 
 shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, expand=1e06, min_dist=1024, k=100,
-  dist_resolution=NA, decay_smooth=NA, hic_mcmc_max_resolution=400, shuffle=30)
+  dist_resolution=NA, decay_smooth=NA, hic_mcmc_max_resolution=400, shuffle=80,
+  grid_small = 500000, grid_high=1000000, grid_increase=500000,
+  grid_step_iter = 40)
 {
    .shaman_check_config("shaman.shuffle_exe")
   shuffle_exe = sprintf("%s/%s", system.file("bin", package="shaman"), getOption("shaman.shuffle_exe"))
@@ -546,16 +553,18 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
         decay_smooth = min(floor(dist_resolution / 10),20)
   }
   samples_per_proposal_correction = floor(nrow(obs)/20)
-  sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_fends=0 -proposal_from_contacts=0
-		-dist_resolution=%d -decay_smooth=%d -decay_regularization=5 -proposal_correction_factor=0.25
-		-max_dist=%d -min_dist=1024 -samples_per_proposal_correction=%d",
-              shuffle_exe, raw_fn, shuf_fn, shuffle, dist_resolution, decay_smooth, max(obs$start2-obs$start1),
-              samples_per_proposal_correction), width=10000, simplify=TRUE)
+  sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_contacts=0
+                -dist_resolution=%d -decay_smooth=%d -decay_regularization=5 -proposal_correction_factor=0.25
+                -max_dist=%d -min_dist=1024 -grid_switch_bin_dist=1 -grid_x_min_bin=%d
+                -grid_x_max_bin=%d -grid_x_increase=%d -grid_x_increase_iter=%d",
+                 shuffle_exe, raw_fn, shuf_fn, shuffle, dist_resolution, decay_smooth, max(obs$start2-obs$start1),
+                 grid_small, grid_high, grid_increase, grid_step_iter), width=10000, simplify=TRUE)
+
   system(sys_command, ignore.stdout=TRUE, ignore.stderr=FALSE, intern=TRUE)
 
   exp = as.data.frame(data.table::fread(shuf_fn, header=T))
 
-  ret = .shaman_kk_norm(obs, exp, points, k=k, k_exp=k)
+  ret = .shaman_kk_norm(obs, exp, points, k=k, k_exp=2*k)
   ret$obs_fn = raw_fn
   ret$exp_fn = shuf_fn
   return(ret)

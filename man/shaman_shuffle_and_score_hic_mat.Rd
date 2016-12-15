@@ -6,7 +6,9 @@
 \usage{
 shaman_shuffle_and_score_hic_mat(obs_track_nms, interval, work_dir,
   expand = 1e+06, min_dist = 1024, k = 100, dist_resolution = NA,
-  decay_smooth = NA, hic_mcmc_max_resolution = 400, shuffle = 30)
+  decay_smooth = NA, hic_mcmc_max_resolution = 400, shuffle = 80,
+  grid_small = 5e+05, grid_high = 1e+06, grid_increase = 5e+05,
+  grid_step_iter = 40)
 }
 \arguments{
 \item{obs_track_nms}{Name of observed 2D genomic tracks for the hic data.}
@@ -31,6 +33,14 @@ If NA, value is determined based on observed data (recommended).}
 \item{hic_mcmc_max_resolution}{Maximum number of bins for each log2 unit.}
 
 \item{shuffle}{Number of shuffling rounds for each observed point.}
+
+\item{grid_small}{Initial size of maximum distance between contact pairs consdered for switching}
+
+\item{grid_high}{Final size of maximum distance between contact pairs consdered for switching}
+
+\item{grid_increase}{Grid increase size}
+
+\item{grid_step_iter}{Number of iterations in each grid size}
 }
 \value{
 NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
