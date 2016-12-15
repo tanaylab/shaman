@@ -453,15 +453,16 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
       return(NULL)
   }
   #compute marginal coverage for observed and expected
-  margins = gintervals.canonic(gintervals(regional_interval$chrom1,
-	c(regional_interval$start1, regional_interval$start2),
-	c(regional_interval$end1, regional_interval$end2)))
+  #margins = gintervals.canonic(gintervals(regional_interval$chrom1,
+#	c(regional_interval$start1, regional_interval$start2),
+#	c(regional_interval$end1, regional_interval$end2)))
 
-  marginal_intervals = gintervals.2d(margins$chrom, margins$start, margins$end, margins$chrom)
-  obs_cov = .shaman_compute_marginal_multi_tracks(obs_track_nms, marginal_intervals, min_dist)
-  exp_cov = .shaman_compute_marginal_multi_tracks(exp_track_nms, marginal_intervals, min_dist)
+  #marginal_intervals = gintervals.2d(margins$chrom, margins$start, margins$end, margins$chrom)
+  #obs_cov = .shaman_compute_marginal_multi_tracks(obs_track_nms, marginal_intervals, min_dist)
+  #exp_cov = .shaman_compute_marginal_multi_tracks(exp_track_nms, marginal_intervals, min_dist)
 
-  k_exp = round(k * (exp_cov/obs_cov))
+  k_exp = 2*k
+  #k_exp =  round(k * (exp_cov/obs_cov))
 
   return(.shaman_kk_norm(obs, exp, points, k, k_exp))
 }
