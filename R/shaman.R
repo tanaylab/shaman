@@ -85,7 +85,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
         }
     }
     gtrack.2d.import(exp_track_nm, paste("shuffled 2d track with shuffle factor =",
-      far_cis_shuffle, ", based on", obs_track_nm), files)
+      shuffle, ", based on", obs_track_nm), files)
 
     # cleanup work dir from all temporary files
     try(system(sprintf("rm %s%s*", work_dir, obs_track_nm)))
