@@ -169,10 +169,10 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
       message(paste("writing", nrow(a), "raw data, dist resolution=", dist_resolution))
       if (nrow(a) < 2000 | dist_resolution == 0) {
           message("not shuffling, leaving raw")
-          fwrite(format(rbind(a, a[, c(2:1)]), scientific=FALSE), shuf_fn, quote=FALSE, row.names=F,
+          data.table::fwrite(format(rbind(a, a[, c(2:1)]), scientific=FALSE), shuf_fn, quote=FALSE, row.names=F,
               sep="\t")
       } else {
-          fwrite(format(a, scientific=FALSE), raw_fn, quote=F, row.names=F, sep="\t")
+          data.table::fwrite(format(a, scientific=FALSE), raw_fn, quote=F, row.names=F, sep="\t")
           if (is.na(decay_smooth)) {
               decay_smooth=min(floor(dist_resolution/10), 20)
           }
