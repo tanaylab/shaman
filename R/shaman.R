@@ -172,14 +172,14 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
           fwrite(format(rbind(a, a[, c(2:1)]), scientific=FALSE), shuf_fn, quote=FALSE, row.names=F,
               sep="\t")
       } else {
-          write.table(format(a, scientific=FALSE), raw_fn, quote=F, row.names=F, sep="\t")
+          fwrite(format(a, scientific=FALSE), raw_fn, quote=F, row.names=F, sep="\t")
           if (is.na(decay_smooth)) {
               decay_smooth=min(floor(dist_resolution/10), 20)
           }
           sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_contacts=0
                 -dist_resolution=%d -decay_smooth=%d -decay_regularization=5 -proposal_correction_factor=0.25
                 -max_dist=%d -min_dist=1024 -grid_switch_bin_dist=1 -grid_x_min_bin=%d
-                -grid_x_max_bin=%d -grid_x_increase=%d -grid_x_increase_iter=%d",
+                -grid_x_max_bin=%d -grid_x_increase=%d -grid_x_increase_iter=%d -output_symmetric_mat=1",
                 shuffle_exe, raw_fn, shuf_fn, shuffle, dist_resolution, decay_smooth, max_dist,
                 grid_small, grid_high, grid_increase, grid_step_iter), width=10000, simplify=TRUE)
           ret=system(sys_command, ignore.stdout=TRUE, ignore.stderr=FALSE, intern=TRUE)
@@ -556,7 +556,8 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
   sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_contacts=0
                 -dist_resolution=%d -decay_smooth=%d -decay_regularization=5 -proposal_correction_factor=0.25
                 -max_dist=%d -min_dist=1024 -grid_switch_bin_dist=1 -grid_x_min_bin=%d
-                -grid_x_max_bin=%d -grid_x_increase=%d -grid_x_increase_iter=%d",
+                -grid_x_max_bin=%d -grid_x_increase=%d -grid_x_increase_iter=%d
+                -input_symmetric_mat=1 -output_symmetric_mat=1",
                  shuffle_exe, raw_fn, shuf_fn, shuffle, dist_resolution, decay_smooth, max(obs$start2-obs$start1),
                  grid_small, grid_high, grid_increase, grid_step_iter), width=10000, simplify=TRUE)
 
