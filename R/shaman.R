@@ -169,7 +169,7 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
       message(paste("writing", nrow(a), "raw data, dist resolution=", dist_resolution))
       if (nrow(a) < 2000 | dist_resolution == 0) {
           message("not shuffling, leaving raw")
-          data.table::fwrite(format(rbind(a, a[, c(2:1)]), scientific=FALSE), shuf_fn, quote=FALSE, row.names=F,
+          data.table::fwrite(format(rbind(a,setNames(rev(a), names(a))), scientific=FALSE), shuf_fn, quote=FALSE, row.names=F,
               sep="\t")
       } else {
           data.table::fwrite(format(a, scientific=FALSE), raw_fn, quote=F, row.names=F, sep="\t")
@@ -274,7 +274,6 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 
     res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
     #res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
-    message(res[[1]])
     #check to see if there are any missing files
     existing_files = file.exists(expected_files)
     missing_files = expected_files[!existing_files]
@@ -565,7 +564,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 
   exp = as.data.frame(data.table::fread(shuf_fn, header=T))
 
-  ret = .shaman_kk_norm(obs, exp, points, k=k, k_exp=2*k)
+  ret = .shaman_kk_norm(obs, exp, points, k=k, k_exp=k)
   ret$obs_fn = raw_fn
   ret$exp_fn = shuf_fn
   return(ret)
@@ -641,7 +640,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 .gcluster.run2 <- function (..., command.list = NULL, opt.flags = "", max.jobs = 400, debug = FALSE,  R = "R")
 {
     if (!is.null(command.list)){
-        commands <- llply(command.list, function(x) parse(text=x))
+        commands <- plyr::llply(command.list, function(x) parse(text=x))
     } else {
         commands <- as.list(substitute(list(...))[-1L])
     }
