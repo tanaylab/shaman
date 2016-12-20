@@ -463,7 +463,7 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
   k_exp = 2*k
   #k_exp =  round(k * (exp_cov/obs_cov))
 
-  return(.shaman_kk_norm(obs, exp, points, k, k_exp))
+  return(shaman_kk_norm(obs, exp, points, k, k_exp))
 }
 
 #########################################################################################################
@@ -541,7 +541,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
   message("writing to raw file name:")
   raw_fn = paste0(work_dir, "/",  interval$chrom1, "_", interval$start1, "_", interval$start2, "_", expand, ".obs")
   message(raw_fn)
-  write.table(format(obs[obs$start2 > obs$start1, c("start1", "start2")], scientific=FALSE),
+  data.table::fwrite(format(obs[, c("start1", "start2")], scientific=FALSE),
     raw_fn, sep="\t", row.names=FALSE, quote=FALSE)
 
   # shuffle contacts in expanded interval
@@ -564,20 +564,37 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 
   exp = as.data.frame(data.table::fread(shuf_fn, header=T))
 
-  ret = .shaman_kk_norm(obs, exp, points, k=k, k_exp=k)
+  ret = shaman_kk_norm(obs, exp, points, k=k, k_exp=2*k)
   ret$obs_fn = raw_fn
   ret$exp_fn = shuf_fn
   return(ret)
 }
 
 ##########################################################################################################
-#  .shaman_kk_norm
-#
-#  For each point in points, compute the distance to it's k nearest neighbors in the obs
-#  and the exp contact matrices and run ks.
-#  score = ks statitistic D
+#'  Compute a score matrix for observed data based on the expected for a given set of points
+#'
+#' \code{shaman_kk_norm}
+#'
+#' This function receives observed and expected data and compute the score on a given set of points.
+#' The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
+#  in the observed data compared the the expected data.
+#'
+#' @param obs Dataframe containing the observed points
+#' @param exp Dataframe containing the expected (shuffled) points.
+#' @param points A score will be computed for each of the points.
+#' @param k The number of neighbor distances used for the score on observed data. 
+#' For higher resolution maps, increase k. For lower resolution maps, decrease k.
+#' @param k_exp The number of neighbor distances used for the score on expected data. Should reflect
+#' the ratio between the total number of observed and expected over the entire chromosome.
+#'
+#' @return NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
+#' 1) points - start1, start2 and score for all observed points.
+#' 2) obs - the observed points.
+#' 3) exp - the expected points.
+#'
+#' @export
 ##########################################################################################################
-.shaman_kk_norm <- function(obs, exp, points, k=100, k_exp=100)
+shaman_kk_norm <- function(obs, exp, points, k=100, k_exp=100)
 {
   .shaman_check_config("shaman.ks_pl")
   knn_pl <- sprintf("%s/%s", system.file("perl", package="shaman"), getOption("shaman.ks_pl"))

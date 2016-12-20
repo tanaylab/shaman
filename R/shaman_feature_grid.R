@@ -107,6 +107,7 @@ shaman_plot_feature_grid <- function(grids, range, grid_resolution, plot_resolut
   if (fig_fn != "") {
 	png(fig_fn, width=fig_width, height=fig_height)
   }
+  par(mar=c(0,0,0,0))
   if (type == "enrichment") {
 	image(as.matrix(log2((obs/sum(obs, na.rm=TRUE))/(exp/sum(exp, na.rm=TRUE)))),
 		zlim=zlim, col=pal(1000), xaxt="n", yaxt="n")

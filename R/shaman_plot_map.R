@@ -1,3 +1,58 @@
+#' plot an observed or expected hic map
+#'
+#' \code{shaman_gplot_map}
+#'
+#' Plots hic contact matrix.
+#'
+#' @param points A dataframe containing the points (start1, start2).
+#' @param rotate Binary flag, indicating if the plot should be rotated by 45 degrees.
+#' @param point_size Cex size of the points in the plot.
+#' @param add_axis Binary flag, indicating if axis should be added to plot.
+#' @return gplot containing the map
+#' @export
+##########################################################################################################
+shaman_gplot_map <- function(points, interval_range=NA, rotate=TRUE, point_size=0.1, add_axis=TRUE) {
+  if (!all(c("start1", "start2") %in% colnames(points))) {
+    stop("points_score data frame must contain the following columns: start1, start2")
+  }
+  if (is.na(interval_range)[1]) {
+        interval_range=data.frame(start=min(points$start1), end=max(points$start1))
+  }
+  if (rotate) {
+    points = points[points$start2 > points$start1,]
+    map_gplot <- ggplot2::ggplot(points,
+      ggplot2::aes(x=(start1+start2)/2, y=(start2-start1)/2)) +
+      ggplot2::coord_cartesian(xlim=c(interval_range$start, interval_range$end),
+        ylim=c(0, (interval_range$end-interval_range$start)/2)) +
+      ggplot2::theme (panel.grid.major = ggplot2::element_blank(),
+                      panel.grid.minor = ggplot2::element_blank())
+  } else {
+    map_gplot <- ggplot2::ggplot(points,
+      ggplot2::aes(x=start1, y=start2)) +
+      ggplot2::scale_x_continuous(position = "top") +
+      ggplot2::theme(axis.line.y = ggplot2::element_line(size=0.2))
+  }
+  map_gplot <- map_gplot +
+    ggplot2::geom_point(size=point_size, alpha=0.1) +
+    ggplot2::scale_x_continuous(expand=c(0,0)) +
+    ggplot2::scale_y_continuous(expand=c(0,0)) +
+    ggplot2::theme_bw() + ggplot2::theme( legend.position="none",
+         panel.border = ggplot2::element_blank(),
+         axis.title.x = ggplot2::element_blank(),
+         axis.title.y = ggplot2::element_blank(),
+	 axis.line.x = ggplot2::element_line(size=0.2))
+  if (add_axis == FALSE) {
+	map_gplot <- map_gplot + ggplot2::theme(
+         axis.ticks = ggplot2::element_blank(),
+         axis.text.x = ggplot2::element_blank(),
+         axis.text.y = ggplot2::element_blank(),
+	 axis.line.x = ggplot2::element_blank(),
+	 axis.line.y = ggplot2::element_blank(),
+         axis.ticks.length = ggplot2::unit(0,"null") )
+  }
+  return(map_gplot)
+}
+
 #' plot a normlized hic map
 #'
 #' \code{shaman_gplot_map_score}
@@ -20,7 +75,7 @@ shaman_gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE,
   if (is.na(interval_range)[1]) {
 	interval_range=data.frame(start=min(points_score$start1), end=max(points_score$start1))
   }
-  col.scores = .shaman_score_pal()
+  col.scores = shaman_score_pal()
   if (rotate) {
     points_score = points_score[points_score$start2 > points_score$start1,]
     map_gplot <- ggplot2::ggplot(points_score[order(points_score$score),],
@@ -32,6 +87,7 @@ shaman_gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE,
   } else {
     map_gplot <- ggplot2::ggplot(points_score[order(points_score$score),],
       ggplot2::aes(x=start1, y=start2, color=factor(floor(score)))) +
+      ggplot2::scale_x_continuous(position = "top") + 
       ggplot2::theme(axis.line.y = ggplot2::element_line(size=0.2))
   }
   map_gplot <- map_gplot +
@@ -181,9 +237,14 @@ shaman_plot_map_score_with_annotations <- function(genome, points_score, interva
 }
 
 ##########################################################################################################
-# .shaman_score_pal
+#' Returns the color palette used to display normalized scores 
+#'
+#' \code{shaman_score_pal}
+#'
+#' @export
 ##########################################################################################################
-.shaman_score_pal <- function() {
+
+shaman_score_pal <- function() {
   .shaman_check_config(c("shaman.score_pal_0_col", "shaman.score_pal_pos_col",
 	"shaman.score_pal_neg_col", "shaman.score_pal_pos_breaks", "shaman.score_pal_neg_breaks"))
   col.neg <- rev(.shaman_palette_breaks(100 , getOption("shaman.score_pal_neg_col"),
