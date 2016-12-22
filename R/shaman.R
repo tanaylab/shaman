@@ -345,17 +345,17 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
     system(paste("perl -e'print\"chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tscore\";' > ", fn))
     #insufficient data in region - not writing region file
         return(0);
-     }
-     if (length(n) < 3) {
-         #knn did not complete
-         return(-1);
-     }
-     p = n$points
-     data.table::fwrite(format(p[p$start1<=p$start2,
-       c("chrom1", "start1", "end1", "chrom2", "start2", "end2", "score")],
+  }
+  if (length(n) < 1) {
+       #knn did not complete
+      return(-1);
+  }
+  p = n$points
+ data.table::fwrite(format(p[p$start1<=p$start2,
+ 	c("chrom1", "start1", "end1", "chrom2", "start2", "end2", "score")],
        scientific=FALSE),
        fn, row.names=FALSE, quote=FALSE, sep="\t")
-      return(1)
+ return(1)
 }
 
 ##########################################################################################################
