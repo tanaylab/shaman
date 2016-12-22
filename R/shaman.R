@@ -264,6 +264,12 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
   expected_files = paste0(work_dir , "/", paste0(obs_track_nms, collapse=".") , ".",
         near_cis_2d_upper_mat$chrom1, ".", near_cis_2d_upper_mat$start1, ".", near_cis_2d_upper_mat$start2, ".score")
 
+   existing_files = file.exists(expected_files)
+   missing_files = expected_files[!existing_files]
+   message(paste("missing", length(missing_files), "score files"))
+   near_cis_2d_upper_mat = near_cis_2d_upper_mat[!existing_files,]
+   expected_files = paste0(work_dir , "/", paste0(obs_track_nms, collapse=".") , ".",
+        near_cis_2d_upper_mat$chrom1, ".", near_cis_2d_upper_mat$start1, ".", near_cis_2d_upper_mat$start2, ".score")
   while (nrow(near_cis_2d_upper_mat)>0) {
     #compute scores for each of the small matrices
     commands = paste0("{library(shaman); shaman_score_hic_mat_for_track(db, work_dir, obs_track_nms, exp_track_nms, \"",
@@ -345,8 +351,7 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
          return(-1);
      }
      p = n$points
-     write.table(
-       format(p[p$start1<=p$start2,
+     data.table::fwrite(format(p[p$start1<=p$start2,
        c("chrom1", "start1", "end1", "chrom2", "start2", "end2", "score")],
        scientific=FALSE),
        fn, row.names=FALSE, quote=FALSE, sep="\t")
@@ -430,6 +435,11 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 ##########################################################################################################
 shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist=1024, k=100)
 {
+  knn_pl <- sprintf("%s/%s", system.file("perl", package="shaman"), getOption("shaman.ks_pl"))
+  o_knn.tmp <- tempfile("knn_o_")
+  e_knn.tmp <- gsub("knn_o_", "knn_e_", o_knn.tmp)
+  ks_knn.tmp <- gsub("knn_o_", "knn_ks_", o_knn.tmp)
+
   obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
   if (is.null(obs) | nrow(points)==0) {
      message(paste("0 data found in intervals, focus interval=", nrow(points)))
@@ -440,7 +450,17 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
      message(paste("insufficient data found in intervals: obs=", nrow(obs)))
      return(NULL)
   }
-
+  o_knn <- RANN::nn2(obs[,c("start1", "start2")], points[,c("start1", "start2")], k=k)
+  message("write tab 1")
+  data.table::fwrite(as.data.frame(round(o_knn$nn.dist)), o_knn.tmp, sep="\t", col.names=F, quote=F, row.names=F)
+  if (!file.exists(o_knn.tmp)) {
+    message(paste0("problem writing ", o_knn.tmp))
+    return(0);
+  }
+  rm(o_knn)
+  rm(obs)
+  gc()
+  
   exp <- .shaman_combine_points_multi_tracks(exp_track_nms, regional_interval, min_dist)
   if (is.null(exp)) {
       message(paste("0 data found in intervals: exp"))
@@ -451,19 +471,23 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
       message(paste("insufficient data found in intervals: exp=", nrow(exp)))
       return(NULL)
   }
-  #compute marginal coverage for observed and expected
-  #margins = gintervals.canonic(gintervals(regional_interval$chrom1,
-#	c(regional_interval$start1, regional_interval$start2),
-#	c(regional_interval$end1, regional_interval$end2)))
+  e_knn <- RANN::nn2(exp[,c("start1", "start2")], points[,c("start1", "start2")], k=2*k)
+  message("write tab 2")
+  data.table::fwrite(as.data.frame(round(e_knn$nn.dist)), e_knn.tmp, sep="\t", col.names=F, quote=F, row.names=F)
+  if (!file.exists(e_knn.tmp)) {
+    message(paste0("problem writing ", e_knn.tmp))
+    return(0);
+  }
+  rm(e_knn)
+  rm(exp)
+  gc()
+  system(sprintf("perl %s %s %s >%s", knn_pl, o_knn.tmp, e_knn.tmp, ks_knn.tmp) )
+  s_ks <- as.data.frame(data.table::fread(ks_knn.tmp))
 
-  #marginal_intervals = gintervals.2d(margins$chrom, margins$start, margins$end, margins$chrom)
-  #obs_cov = .shaman_compute_marginal_multi_tracks(obs_track_nms, marginal_intervals, min_dist)
-  #exp_cov = .shaman_compute_marginal_multi_tracks(exp_track_nms, marginal_intervals, min_dist)
+  points$score <- 100 *  ifelse(-s_ks$V1 < s_ks$V2, s_ks$V2,  s_ks$V1)
+  try(system(sprintf('rm %s %s %s', o_knn.tmp, e_knn.tmp, ks_knn.tmp)))
 
-  k_exp = 2*k
-  #k_exp =  round(k * (exp_cov/obs_cov))
-
-  return(shaman_kk_norm(obs, exp, points, k, k_exp))
+  return(list(points=points))
 }
 
 #########################################################################################################
@@ -607,13 +631,13 @@ shaman_kk_norm <- function(obs, exp, points, k=100, k_exp=100)
   e_knn.tmp <- gsub("knn_o_", "knn_e_", o_knn.tmp)
   ks_knn.tmp <- gsub("knn_o_", "knn_ks_", o_knn.tmp)
   message("write tab 1")
-  write.table(as.data.frame(round(o_knn$nn.dist)), o_knn.tmp, sep="\t", col.names=F, quote=F, row.names=F)
+  data.table::fwrite(as.data.frame(round(o_knn$nn.dist)), o_knn.tmp, sep="\t", col.names=F, quote=F, row.names=F)
   if (!file.exists(o_knn.tmp)) {
     message(paste0("problem writing ", o_knn.tmp))
     return(0);
   }
   message("write tab 2")
-  write.table(as.data.frame(round(e_knn$nn.dist)), e_knn.tmp, sep="\t", col.names=F, quote=F, row.names=F)
+  data.table::fwrite(as.data.frame(round(e_knn$nn.dist)), e_knn.tmp, sep="\t", col.names=F, quote=F, row.names=F)
   if (!file.exists(e_knn.tmp)) {
     message(paste0("problem writing ", e_knn.tmp))
     return(0);
