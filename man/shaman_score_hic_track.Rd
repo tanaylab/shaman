@@ -41,7 +41,8 @@ and computing the score of each matrix independantly.
 The model for computing the score relies on the KS D statistic computed for each observed point,
 over the distances of the k-nearest neighbors in the observed compared to the expected.
 High scores represent contact enrichment while low scores depict insulation.
-Note that this function requires sge (qsub). Parameter can be set via shaman.sge_support in shaman.conf file.
+Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
+Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
 
 Each step creates temporary files of the matrix scores which are then joined to a track.
 Temporary files are deleted upon track creation.

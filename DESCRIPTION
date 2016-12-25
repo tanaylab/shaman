@@ -26,4 +26,6 @@ Imports:
     ggplot2,
     reshape2,
     grid,
-    Gviz
+    Gviz,
+    parallel,
+    doMC

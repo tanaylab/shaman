@@ -18,7 +18,7 @@ shaman_shuffle_hic_track(track_db, obs_track_nm, work_dir,
 
 \item{exp_track_nm}{Name of expected 2D genomic track.}
 
-\item{max_jobs}{Maximal number of qsub jobs - for optimal performance provide the number of chromosomes.}
+\item{max_jobs}{Maximal number of qsub or local jobs - for optimal performance provide the number of chromosomes.}
 
 \item{shuffle}{Average number of shuffling transitions for each observed point in the chromosomal contact matrix.}
 
@@ -40,7 +40,8 @@ If NA, value is determined based on observed data (recommended).}
 \details{
 This function generates an expected 2D hic track based on observed hic data.
 Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
-Note that this function requires sge (qsub). Parameter can be set via shaman.sge_support in shaman.conf file.
+Note that this function requires sge (qsub) or multicore to be enables.
+Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
 
 Each step creates temporary files of the shuffled matrices which are then joined to a track.
 Temporary files are deleted upon track creation.

@@ -5,7 +5,7 @@
 \title{generate a score matrix for observed data based on the expected for a given set of points}
 \usage{
 shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval,
-  min_dist = 1024, k = 100)
+  min_dist = 1024, k = 100, k_exp = 2 * k)
 }
 \arguments{
 \item{obs_track_nms}{Names of observed 2D genomic tracks for the hic data. Pooling of multiple

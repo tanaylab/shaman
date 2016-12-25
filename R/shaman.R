@@ -4,7 +4,8 @@
 #'
 #' This function generates an expected 2D hic track based on observed hic data.
 #' Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
-#' Note that this function requires sge (qsub). Parameter can be set via shaman.sge_support in shaman.conf file.
+#' Note that this function requires sge (qsub) or multicore to be enables.
+#' Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
 #'
 #' Each step creates temporary files of the shuffled matrices which are then joined to a track.
 #' Temporary files are deleted upon track creation.
@@ -12,7 +13,7 @@
 #' @param obs_track_nm Name of observed 2D genomic track for the hic data.
 #' @param work_dir Centralized directory to store temporary files.
 #' @param exp_track_nm Name of expected 2D genomic track.
-#' @param max_jobs Maximal number of qsub jobs - for optimal performance provide the number of chromosomes.
+#' @param max_jobs Maximal number of qsub or local jobs - for optimal performance provide the number of chromosomes.
 #' @param shuffle Average number of shuffling transitions for each observed point in the chromosomal contact matrix.
 #' @param grid_small Initial size of maximum distance between contact pairs consdered for switching
 #' @param grid_high Final size of maximum distance between contact pairs consdered for switching
@@ -40,8 +41,9 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
    #check sge
    .shaman_check_config("shaman.sge_support")
    sge_support <- getOption("shaman.sge_support")
-   if (!sge_support) {
-     stop(paste("shuffle_hic_track function requires SGE support. If available, set configuration parameter shaman.sge_support to 1"))
+   mc_support <- getOption("shaman.mc_support")
+   if (!sge_support & !mc_support) {
+     stop(paste("shuffle_hic_track function requires SGE or multicore support. If available, set configuration parameter shaman.sge_support or shaman.mc_support to 1"))
    }
    sge_flags <- getOption("shaman.sge_flags")
    shuffle_exe = sprintf("%s/%s", system.file("bin", package="shaman"), getOption("shaman.shuffle_exe"))
@@ -56,6 +58,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 
     intervals <- gintervals.all()
 
+    if (sge_support) {
     commands <- paste0("{library(shaman); shaman_shuffle_hic_mat_for_track(\"", track_db, "\",\"", obs_track_nm, "\",\"",
 	      work_dir, "\", \"", intervals$chrom, "\", ", intervals$start, ", ",
         intervals$end, ", ", intervals$start, ", ", intervals$end, ", \"", shuffle_exe,
@@ -64,7 +67,16 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
         ", grid_step_iter=", grid_step_iter,
         ", raw_ext=\"full_chrom_raw\", shuffled_ext=\"full_chrom_shuffled\", sort_uniq=TRUE)}")
      res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
-
+    } else {
+	doMC::registerDoMC(cores=max_jobs)
+	res=plyr::ddply(intervals, .(chrom, start), function(x) {
+		shaman_shuffle_hic_mat_for_track(track_db, obs_track_nm, work_dir, x$chrom[1],
+			x$start[1], x$end[1], x$start[1], x$end[1], shuffle_exe, min_dist=1024,
+			dist_resolution=dist_resolution, decay_smooth=smooth, shuffle=shuffle,
+			grid_small=grid_small, grid_high=grid_high, grid_step_iter=grid_step_iter,
+			raw_ext="full_chrom_raw", shuffled_ext="ful_chrom_shuffled", sort_uniq=TRUE)
+	}, .parallel=TRUE)
+    }
     exp_shuf_files <- paste0(obs_track_nm, "_", intervals$chrom, "_0_0.full_chrom_shuffled.uniq")
     obs_shuf_files <- list.files(work_dir, pattern=paste0(obs_track_nm, ".*full_chrom_shuffled.uniq"))
     missing_files <- exp_shuf_files[!exp_shuf_files %in% obs_shuf_files]
@@ -205,7 +217,8 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' The model for computing the score relies on the KS D statistic computed for each observed point,
 #' over the distances of the k-nearest neighbors in the observed compared to the expected.
 #' High scores represent contact enrichment while low scores depict insulation.
-#' Note that this function requires sge (qsub). Parameter can be set via shaman.sge_support in shaman.conf file.
+#' Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
+#' Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
 #'
 #' Each step creates temporary files of the matrix scores which are then joined to a track.
 #' Temporary files are deleted upon track creation.
@@ -242,8 +255,9 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
    #check sge
    .shaman_check_config("shaman.sge_support")
    sge_support <- getOption("shaman.sge_support")
-   if (!sge_support) {
-     stop(paste("score_hic_track function requires SGE support. If available, set configuration parameter shaman.sge_support to 1"))
+   mc_support <- getOption("shaman.mc_support")
+   if (!sge_support & !mc_support) {
+     stop(paste("score_hic_track function requires SGE or multicore support. If available, set configuration parameter shaman.sge_support or shaman.mc_support to 1"))
    }
    sge_flags <- getOption("shaman.sge_flags")
 
@@ -272,13 +286,22 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
         near_cis_2d_upper_mat$chrom1, ".", near_cis_2d_upper_mat$start1, ".", near_cis_2d_upper_mat$start2, ".score")
   while (nrow(near_cis_2d_upper_mat)>0) {
     #compute scores for each of the small matrices
-    commands = paste0("{library(shaman); shaman_score_hic_mat_for_track(db, work_dir, obs_track_nms, exp_track_nms, \"",
+    if (sge_support) {
+      commands = paste0("{library(shaman); shaman_score_hic_mat_for_track(db, work_dir, obs_track_nms, exp_track_nms, \"",
         near_cis_2d_upper_mat$chrom1, "\", ", near_cis_2d_upper_mat$start1, ", ",
         near_cis_2d_upper_mat$end1, ",", near_cis_2d_upper_mat$start2, ", ",
         near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")}")
     #commands <- paste(commands, collapse=",")
 
-    res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
+     res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
+   } else {
+     doMC::registerDoMC(cores=max_jobs)
+     res=plyr::ddply(intervals, .(chrom, start), function(x) {
+        shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms,
+        near_cis_2d_upper_mat$chrom1, near_cis_2d_upper_mat$start1,
+        near_cis_2d_upper_mat$end1, near_cis_2d_upper_mat$start2,
+        near_cis_2d_upper_mat$end2, expand,  k,)}, .parallel=TRUE)
+   }
     #res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
     #check to see if there are any missing files
     existing_files = file.exists(expected_files)
@@ -379,6 +402,11 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 #' @param min_dist The minimum distance between points.
 #' @param k The number of neighbor distances used for the score. For higher resolution maps, increase k. For
 #' lower resolution maps, decrease k.
+#' @param k_exp The number of neighbor distances used for the score on the expected tracks. Note, that when
+#' comparing expected generated by shuffling the observed, k_exp should be 2*k as the number of contacts in
+#' the expected track will always be twice the observed. However, if comparing between two datasets that are
+#' independent, k_exp should be set to NA and the will be determined by the ratio between the total number
+#' of contacts in this region.
 #'
 #' @return NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
 #' 1) points - start1, start2 and score for all observed points.
@@ -387,7 +415,7 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 #'
 #' @export
 ##########################################################################################################
-shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, regional_interval, min_dist=1024, k=100)
+shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, regional_interval, min_dist=1024, k=100, k_exp=2*k)
 {
   points <- .shaman_combine_points_multi_tracks(obs_track_nms, focus_interval, min_dist)
   if (is.null(points)) {
@@ -401,7 +429,7 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 
   points = unique(points[,c("chrom1", "start1", "end1", "chrom2", "start2", "end2")])
   message(paste0("kk norm on ", nrow(points), " points"))
-  return(shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k=k))
+  return(shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k=k, k_exp=k_exp))
 }
 
 ##########################################################################################################
@@ -433,7 +461,7 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #'
 #' @export
 ##########################################################################################################
-shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist=1024, k=100)
+shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist=1024, k=100, k_exp=2*k)
 {
   knn_pl <- sprintf("%s/%s", system.file("perl", package="shaman"), getOption("shaman.ks_pl"))
   o_knn.tmp <- tempfile("knn_o_")
@@ -450,6 +478,7 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
      message(paste("insufficient data found in intervals: obs=", nrow(obs)))
      return(NULL)
   }
+  n_obs = nrow(obs)
   o_knn <- RANN::nn2(obs[,c("start1", "start2")], points[,c("start1", "start2")], k=k)
   message("write tab 1")
   data.table::fwrite(as.data.frame(round(o_knn$nn.dist)), o_knn.tmp, sep="\t", col.names=F, quote=F, row.names=F)
@@ -460,7 +489,7 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
   rm(o_knn)
   rm(obs)
   gc()
-  
+
   exp <- .shaman_combine_points_multi_tracks(exp_track_nms, regional_interval, min_dist)
   if (is.null(exp)) {
       message(paste("0 data found in intervals: exp"))
@@ -471,7 +500,13 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
       message(paste("insufficient data found in intervals: exp=", nrow(exp)))
       return(NULL)
   }
-  e_knn <- RANN::nn2(exp[,c("start1", "start2")], points[,c("start1", "start2")], k=2*k)
+  n_exp = nrow(exp)
+  if (is.na(k_exp)) {
+	#computing k_exp by number of points
+	k_exp = round(k * n_exp / n_obs)
+  }
+  message(paste0("n_obs = ", n_obs, ", n_exp = ", n_exp, ", k_exp = ", k_exp))
+  e_knn <- RANN::nn2(exp[,c("start1", "start2")], points[,c("start1", "start2")], k=k_exp)
   message("write tab 2")
   data.table::fwrite(as.data.frame(round(e_knn$nn.dist)), e_knn.tmp, sep="\t", col.names=F, quote=F, row.names=F)
   if (!file.exists(e_knn.tmp)) {
@@ -606,7 +641,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 #' @param obs Dataframe containing the observed points
 #' @param exp Dataframe containing the expected (shuffled) points.
 #' @param points A score will be computed for each of the points.
-#' @param k The number of neighbor distances used for the score on observed data. 
+#' @param k The number of neighbor distances used for the score on observed data.
 #' For higher resolution maps, increase k. For lower resolution maps, decrease k.
 #' @param k_exp The number of neighbor distances used for the score on expected data. Should reflect
 #' the ratio between the total number of observed and expected over the entire chromosome.
