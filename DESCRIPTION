@@ -18,14 +18,15 @@ Suggests: knitr,
     rmarkdown
 VignetteBuilder: rmarkdown,
     knitr
-Depends: misha
+Depends:
+    misha,
+    plyr,
+    parallel,
+    doMC
 Imports:
     RANN,
-    plyr,
     data.table,
     ggplot2,
     reshape2,
     grid,
-    Gviz,
-    parallel,
-    doMC
+    Gviz
