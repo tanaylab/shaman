@@ -296,11 +296,10 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
      res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
    } else {
      doMC::registerDoMC(cores=max_jobs)
-     res=plyr::ddply(intervals, .(chrom, start), function(x) {
+     res=plyr::ddply(near_cis_2d_upper_mat, .(chrom, start), function(x) {
         shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms,
-        near_cis_2d_upper_mat$chrom1, near_cis_2d_upper_mat$start1,
-        near_cis_2d_upper_mat$end1, near_cis_2d_upper_mat$start2,
-        near_cis_2d_upper_mat$end2, expand,  k,)}, .parallel=TRUE)
+        xt$chrom1[1], x$start1[1],x$end1[1], x$start2[1], x$end2[1], expand,  k,)}, 
+	.parallel=TRUE)
    }
     #res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
     #check to see if there are any missing files
