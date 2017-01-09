@@ -74,7 +74,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 			x$start[1], x$end[1], x$start[1], x$end[1], shuffle_exe, min_dist=1024,
 			dist_resolution=dist_resolution, decay_smooth=smooth, shuffle=shuffle,
 			grid_small=grid_small, grid_high=grid_high, grid_step_iter=grid_step_iter,
-			raw_ext="full_chrom_raw", shuffled_ext="ful_chrom_shuffled", sort_uniq=TRUE)
+			raw_ext="full_chrom_raw", shuffled_ext="full_chrom_shuffled", sort_uniq=TRUE)
 	}, .parallel=TRUE)
     }
     exp_shuf_files <- paste0(obs_track_nm, "_", intervals$chrom, "_0_0.full_chrom_shuffled.uniq")

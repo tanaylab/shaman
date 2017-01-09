@@ -55,7 +55,7 @@ shaman_gplot_map <- function(points, interval_range=NA, rotate=TRUE, point_size=
 
 #' plot a normlized hic map
 #'
-#' \code{shaman_gplot_map_score}
+#' \code{shaman_golot_map_score}
 #'
 #' Plots observerved hic contact matrix color-coded by normalized scores.
 #' Data can be either extracted directly from score track or computed via the functions:
