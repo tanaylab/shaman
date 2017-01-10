@@ -290,7 +290,7 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
   while (nrow(near_cis_2d_upper_mat)>0) {
     #compute scores for each of the small matrices
     if (sge_support) {
-      commands = paste0("{library(shaman); shaman_score_hic_mat_for_track(db, work_dir, obs_track_nms, exp_track_nms, points_track_nms, \"",
+      commands = paste0("{library(shaman); shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms, \"",
         near_cis_2d_upper_mat$chrom1, "\", ", near_cis_2d_upper_mat$start1, ", ",
         near_cis_2d_upper_mat$end1, ",", near_cis_2d_upper_mat$start2, ", ",
         near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")}")
@@ -367,7 +367,7 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
   regional_interval <- gintervals.force_range(data.frame(chrom1=chrom, start1 = start1-expand, end1 = end1+expand,
     chrom2=chrom, start2=start2-expand, end2 = end2+expand))
   focus_interval = gintervals.2d(chrom, start1, end1, chrom, start2, end2)
-  n = shaman_score_hic_mat(obs_track_nms, exp_track_nms, focus_interval, regional_interval, points_track_nms, min_dist=min_dist, k=k)
+  n = shaman_score_hic_mat(obs_track_nms, exp_track_nms, focus_interval, regional_interval, points_track_nms=points_track_nms, min_dist=min_dist, k=k)
   if (is.null(n)) {
     system(paste("perl -e'print\"chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tscore\";' > ", fn))
     #insufficient data in region - not writing region file
