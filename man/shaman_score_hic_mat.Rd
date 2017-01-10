@@ -5,7 +5,8 @@
 \title{generate a score matrix for observed data based on the expected for a given 2D focus interval}
 \usage{
 shaman_score_hic_mat(obs_track_nms, exp_track_nms, focus_interval,
-  regional_interval, min_dist = 1024, k = 100, k_exp = 2 * k)
+  regional_interval, points_track_nms = obs_track_nms, min_dist = 1024,
+  k = 100, k_exp = 2 * k)
 }
 \arguments{
 \item{obs_track_nms}{Names of observed 2D genomic tracks for the hic data. Pooling of multiple
@@ -19,6 +20,9 @@ tracks is supported.}
 \item{regional_interval}{An expansion of the focus interval, inclusing  points outside the focus matrix
 for accurate computing of the score. Note that for each observed point, its k-nearest neighbors must be
 included in the expanded matrix.}
+
+\item{points_track_nms}{Names of 2D genomic tracks that contain points on which to compute
+normalized score. Pooling points from multiple tracks is supported.}
 
 \item{min_dist}{The minimum distance between points.}
 

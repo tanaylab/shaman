@@ -5,8 +5,8 @@
 \title{generate a score matrix for observed data based on the expected}
 \usage{
 shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms,
-  chrom, start1, end1, start2, end2, expand = 2e+06, k = 100,
-  min_dist = 1024)
+  points_track_nms, chrom, start1, end1, start2, end2, expand = 2e+06,
+  k = 100, min_dist = 1024)
 }
 \arguments{
 \item{track_db}{Directory of the misha database.}
@@ -18,6 +18,9 @@ observed tracks is supported.}
 
 \item{exp_track_nms}{Names of expected (shuffled) 2D genomic tracks. Pooling of multiple expected
 tracks is supported.}
+
+\item{points_track_nms}{Names of 2D genomic tracks that contain points on which to compute
+normalized score. Pooling points from multiple tracks is supported.}
 
 \item{chrom}{The chormosome of the matrix.}
 

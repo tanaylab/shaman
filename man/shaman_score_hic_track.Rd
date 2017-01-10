@@ -5,8 +5,9 @@
 \title{generate a score hic track based on observed and expected (shuffled) hic data}
 \usage{
 shaman_score_hic_track(track_db, work_dir, score_track_nm, obs_track_nms,
-  exp_track_nms = paste0(obs_track_nms, "_shuffle"), near_cis = 5e+06,
-  expand = 2e+06, k = 100, max_jobs = 100)
+  exp_track_nms = paste0(obs_track_nms, "_shuffle"),
+  points_track_nms = obs_track_nms, near_cis = 5e+06, expand = 2e+06,
+  k = 100, max_jobs = 100)
 }
 \arguments{
 \item{track_db}{Directory of the misha database.}
@@ -20,6 +21,9 @@ observed tracks is supported.}
 
 \item{exp_track_nms}{Names of expected (shuffled) 2D genomic tracks. Pooling of multiple expected
 tracks is supported.}
+
+\item{points_track_nms}{Names of 2D genomic tracks that contain points on which to compute
+normalized score. Pooling points from multiple tracks is supported.}
 
 \item{near_cis}{Size of matrix in grid.}
 

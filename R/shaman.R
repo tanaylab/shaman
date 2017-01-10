@@ -229,6 +229,8 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' observed tracks is supported.
 #' @param exp_track_nms Names of expected (shuffled) 2D genomic tracks. Pooling of multiple expected
 #' tracks is supported.
+#' @param points_track_nms Names of 2D genomic tracks that contain points on which to compute
+#' normalized score. Pooling points from multiple tracks is supported.
 #' @param near_cis Size of matrix in grid.
 #' @param expand Size of expansion, points to include outside the matrix for accurate computing of the score.
 #' Note that for each observed point, its k-nearest neighbors must be included in the expanded matrix.
@@ -239,7 +241,8 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' @export
 ##########################################################################################################
 shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track_nms,
-  exp_track_nms=paste0(obs_track_nms, "_shuffle"), near_cis=5e06, expand=2e06, k=100, max_jobs=100)
+  exp_track_nms=paste0(obs_track_nms, "_shuffle"), points_track_nms=obs_track_nms,
+  near_cis=5e06, expand=2e06, k=100, max_jobs=100)
 {
     gsetroot(track_db)
     # check tracks
@@ -287,7 +290,7 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
   while (nrow(near_cis_2d_upper_mat)>0) {
     #compute scores for each of the small matrices
     if (sge_support) {
-      commands = paste0("{library(shaman); shaman_score_hic_mat_for_track(db, work_dir, obs_track_nms, exp_track_nms, \"",
+      commands = paste0("{library(shaman); shaman_score_hic_mat_for_track(db, work_dir, obs_track_nms, exp_track_nms, points_track_nms, \"",
         near_cis_2d_upper_mat$chrom1, "\", ", near_cis_2d_upper_mat$start1, ", ",
         near_cis_2d_upper_mat$end1, ",", near_cis_2d_upper_mat$start2, ", ",
         near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")}")
@@ -297,8 +300,8 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
    } else {
      doMC::registerDoMC(cores=max_jobs)
      res=plyr::ddply(near_cis_2d_upper_mat, .(chrom1, start1, start2), function(x) {
-        shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms,
-        x$chrom1[1], x$start1[1],x$end1[1], x$start2[1], x$end2[1], expand,  k)}, 
+        shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
+        x$chrom1[1], x$start1[1],x$end1[1], x$start2[1], x$end2[1], expand,  k)},
 	.parallel=TRUE)
    }
     #res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
@@ -339,6 +342,8 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 #' observed tracks is supported.
 #' @param exp_track_nms Names of expected (shuffled) 2D genomic tracks. Pooling of multiple expected
 #' tracks is supported.
+#' @param points_track_nms Names of 2D genomic tracks that contain points on which to compute
+#' normalized score. Pooling points from multiple tracks is supported.
 #' @param chrom The chormosome of the matrix.
 #' @param start1 The start coordinate of the first dimension.
 #' @param end1 The end coordinate of the first dimension.
@@ -352,8 +357,8 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 #'
 #' @export
 ##########################################################################################################
-shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, exp_track_nms, chrom, start1, end1,
-  start2, end2, expand=2e06, k=100, min_dist=1024)
+shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
+  chrom, start1, end1, start2, end2, expand=2e06, k=100, min_dist=1024)
 {
   fn <- paste0(work_dir , "/", paste0(obs_track_nms, collapse=".") , ".", chrom, ".", start1, ".", start2, ".score")
   if(file.exists(fn)) {
@@ -362,7 +367,7 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
   regional_interval <- gintervals.force_range(data.frame(chrom1=chrom, start1 = start1-expand, end1 = end1+expand,
     chrom2=chrom, start2=start2-expand, end2 = end2+expand))
   focus_interval = gintervals.2d(chrom, start1, end1, chrom, start2, end2)
-  n = shaman_score_hic_mat(obs_track_nms, exp_track_nms, focus_interval, regional_interval, min_dist=min_dist, k=k)
+  n = shaman_score_hic_mat(obs_track_nms, exp_track_nms, focus_interval, regional_interval, points_track_nms, min_dist=min_dist, k=k)
   if (is.null(n)) {
     system(paste("perl -e'print\"chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tscore\";' > ", fn))
     #insufficient data in region - not writing region file
@@ -398,6 +403,8 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 #' @param regional_interval An expansion of the focus interval, inclusing  points outside the focus matrix
 #' for accurate computing of the score. Note that for each observed point, its k-nearest neighbors must be
 #' included in the expanded matrix.
+#' @param points_track_nms Names of 2D genomic tracks that contain points on which to compute
+#' normalized score. Pooling points from multiple tracks is supported.
 #' @param min_dist The minimum distance between points.
 #' @param k The number of neighbor distances used for the score. For higher resolution maps, increase k. For
 #' lower resolution maps, decrease k.
@@ -414,9 +421,10 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 #'
 #' @export
 ##########################################################################################################
-shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, regional_interval, min_dist=1024, k=100, k_exp=2*k)
+shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, regional_interval,
+  points_track_nms=obs_track_nms, min_dist=1024, k=100, k_exp=2*k)
 {
-  points <- .shaman_combine_points_multi_tracks(obs_track_nms, focus_interval, min_dist)
+  points <- .shaman_combine_points_multi_tracks(points_track_nms, focus_interval, min_dist)
   if (is.null(points)) {
     message("number of points in focus interval = 0")
     return(NULL)

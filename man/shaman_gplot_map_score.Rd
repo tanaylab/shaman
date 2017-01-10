@@ -20,7 +20,7 @@ shaman_gplot_map_score(points_score, interval_range = NA, rotate = TRUE,
 gplot containing the map
 }
 \description{
-\code{shaman_gplot_map_score}
+\code{shaman_golot_map_score}
 }
 \details{
 Plots observerved hic contact matrix color-coded by normalized scores.
