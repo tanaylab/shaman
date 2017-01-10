@@ -474,7 +474,7 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
   o_knn.tmp <- tempfile("knn_o_")
   e_knn.tmp <- gsub("knn_o_", "knn_e_", o_knn.tmp)
   ks_knn.tmp <- gsub("knn_o_", "knn_ks_", o_knn.tmp)
-
+  message(paste("obs = ", paste(obs_track_nms, collapse=",")))
   obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
   if (is.null(obs) | nrow(points)==0) {
      message(paste("0 data found in intervals, focus interval=", nrow(points)))
