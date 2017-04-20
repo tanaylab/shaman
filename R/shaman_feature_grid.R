@@ -128,6 +128,7 @@ shaman_plot_feature_grid <- function(grids, range, grid_resolution, plot_resolut
   if (fig_fn != "") {
 	dev.off()
   }
+  return(list(obs=obs, exp=exp))
 
 }
 

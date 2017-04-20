@@ -188,12 +188,13 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
           if (is.na(decay_smooth)) {
               decay_smooth=min(floor(dist_resolution/10), 20)
           }
-          sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_contacts=0
+          sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_contacts=1 -proposal_iterations=0.5
                 -dist_resolution=%d -decay_smooth=%d -decay_regularization=5 -proposal_correction_factor=0.25
                 -max_dist=%d -min_dist=1024 -grid_switch_bin_dist=1 -grid_x_min_bin=%d
                 -grid_x_max_bin=%d -grid_x_increase=%d -grid_x_increase_iter=%d -output_symmetric_mat=1",
                 shuffle_exe, raw_fn, shuf_fn, shuffle, dist_resolution, decay_smooth, max_dist,
                 grid_small, grid_high, grid_increase, grid_step_iter), width=10000, simplify=TRUE)
+ 	  message(sys_command)
           ret=system(sys_command, ignore.stdout=TRUE, ignore.stderr=FALSE, intern=TRUE)
       }
   }
@@ -321,9 +322,9 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 	paste(exp_track_nms, collapse=", ")), score_files, allow.duplicates=FALSE)
 
   #cleanup work dir from all temporary files
-  for (track in obs_track_nms) {
-    try(system(sprintf('rm %s%s*', work_dir, track)))
-  }
+#  for (track in obs_track_nms) {
+#    try(system(sprintf('rm %s%s*', work_dir, track)))
+#  }
 }
 
 ##########################################################################################################
@@ -618,7 +619,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
         decay_smooth = min(floor(dist_resolution / 10),20)
   }
   samples_per_proposal_correction = floor(nrow(obs)/20)
-  sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_contacts=0
+  sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_contacts=1 -proposal_iterations=0.5
                 -dist_resolution=%d -decay_smooth=%d -decay_regularization=5 -proposal_correction_factor=0.25
                 -max_dist=%d -min_dist=1024 -grid_switch_bin_dist=1 -grid_x_min_bin=%d
                 -grid_x_max_bin=%d -grid_x_increase=%d -grid_x_increase_iter=%d

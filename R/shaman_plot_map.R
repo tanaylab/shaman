@@ -87,7 +87,7 @@ shaman_gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE,
   } else {
     map_gplot <- ggplot2::ggplot(points_score[order(points_score$score),],
       ggplot2::aes(x=start1, y=start2, color=factor(floor(score)))) +
-      ggplot2::scale_x_continuous(position = "top") + 
+      ggplot2::scale_x_continuous(position = "top") +
       ggplot2::theme(axis.line.y = ggplot2::element_line(size=0.2))
   }
   map_gplot <- map_gplot +
@@ -159,16 +159,20 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
   if (length(misha_tracks) > 0) {
     for (t in 1:length(misha_tracks)) {
       data_track = .shaman_get_data(genome, interval_range, misha_tracks[[t]], col=mt_colors[t], ylim=mt_ylims[[t]])
-      Gviz::displayPars(data_track) <- list(size=track_size)
-      tracks[[length(tracks)+1]] <- data_track
+      if (!is.null(data_track)) {
+        Gviz::displayPars(data_track) <- list(size=track_size)
+        tracks[[length(tracks)+1]] <- data_track
+      }
     }
   }
   if (length(annotations) > 0) {
     for (t in 1:length(annotations)) {
       annot_track = .shaman_get_annotation(genome, interval_range, annotations[[t]],
 	fill_col=a_colors[t], border_col=a_colors[t])
-      Gviz::displayPars(annot_track) <- list(size=annotation_size)
-      tracks[[length(tracks)+1]] <- annot_track
+      if (!is.null(annot_track)) {
+        Gviz::displayPars(annot_track) <- list(size=annotation_size)
+        tracks[[length(tracks)+1]] <- annot_track
+      }
     }
   }
   if (add_ideogram) {
@@ -237,7 +241,7 @@ shaman_plot_map_score_with_annotations <- function(genome, points_score, interva
 }
 
 ##########################################################################################################
-#' Returns the color palette used to display normalized scores 
+#' Returns the color palette used to display normalized scores
 #'
 #' \code{shaman_score_pal}
 #'
@@ -293,14 +297,20 @@ shaman_score_pal <- function() {
   if (plot_strand) {
     annot = plyr::ddply(annotations, c("strand"), function(x) {
       y = gintervals.intersect(x, interv)
+      if (is.null(y)) {
+        return(NULL)
+      }
       y$strand = ifelse(x$strand[1] == 1, "+", "-")
       return(y) })
+    if (is.null(annot)) {
+      return(NULL)
+    }
   } else {
      annot = gintervals.intersect(annotations, interv)
+     if (is.null(annot)) {
+       return(NULL)
+      }
      annot$strand="*"
-  }
-  if (is.null(annot)) {
-      return(null)
   }
   atrack = Gviz::AnnotationTrack(start=annot$start, width=annot$end-annot$start, chromosome=as.character(annot$chrom),
           strand=annot$strand, genome=genome, name="", fill=fill_col, stacking="dense", col=border_col)
