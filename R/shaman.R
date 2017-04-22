@@ -322,9 +322,9 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 	paste(exp_track_nms, collapse=", ")), score_files, allow.duplicates=FALSE)
 
   #cleanup work dir from all temporary files
-#  for (track in obs_track_nms) {
-#    try(system(sprintf('rm %s%s*', work_dir, track)))
-#  }
+  for (track in obs_track_nms) {
+    try(system(sprintf('rm %s%s*', work_dir, track)))
+  }
 }
 
 ##########################################################################################################
