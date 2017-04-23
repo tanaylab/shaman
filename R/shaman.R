@@ -365,6 +365,7 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
   if(file.exists(fn)) {
      return(0)
   }
+  options(gmax.data.size=1e09)
   regional_interval <- gintervals.force_range(data.frame(chrom1=chrom, start1 = start1-expand, end1 = end1+expand,
     chrom2=chrom, start2=start2-expand, end2 = end2+expand))
   focus_interval = gintervals.2d(chrom, start1, end1, chrom, start2, end2)
