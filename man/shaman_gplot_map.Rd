@@ -25,4 +25,3 @@ gplot containing the map
 \details{
 Plots hic contact matrix.
 }
-

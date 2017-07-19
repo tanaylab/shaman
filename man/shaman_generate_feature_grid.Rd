@@ -7,7 +7,8 @@
 shaman_generate_feature_grid(feature1, feature2, obs_track_nm,
   exp_track_nm = paste0(obs_track_nm, "_shuffle"),
   score_track_nm = paste0(obs_track_nm, "_score"), score_filter = 30,
-  range = 25000, resolution = 500, min_dist = 2e+05, max_dist = 1e+06)
+  range = 25000, resolution = 500, min_dist = 200000,
+  max_dist = 1000000)
 }
 \arguments{
 \item{feature1}{1d intervals representing feature 1. Strand, if provided will be ignored.}
@@ -51,4 +52,3 @@ All windows are then summed together, generating a single matrix of observed and
 returned by function.
 Note that grid contains only points in which feature 1 position is smaller than feature 2 position.
 }
-

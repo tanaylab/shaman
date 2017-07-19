@@ -27,4 +27,3 @@ Plots observerved hic contact matrix color-coded by normalized scores.
 Data can be either extracted directly from score track or computed via the functions:
 score_hic_mat, shuffle_and_score_hic_mat
 }
-

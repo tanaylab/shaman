@@ -38,4 +38,3 @@ enrichment: (-1,1), obs,exp: (-4.5, -3)}
 \details{
 After contact feature grids are generated via shaman_generate_feature_grid, use this function to visualize them.
 }
-

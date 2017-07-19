@@ -5,7 +5,7 @@
 \title{generate a score matrix for observed data based on the expected}
 \usage{
 shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms,
-  points_track_nms, chrom, start1, end1, start2, end2, expand = 2e+06,
+  points_track_nms, chrom, start1, end1, start2, end2, expand = 2000000,
   k = 100, min_dist = 1024)
 }
 \arguments{
@@ -47,4 +47,3 @@ lower resolution maps, decrease k.}
 This function extracts observed data and expected data in an expanded matrix and computes
 The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
 }
-

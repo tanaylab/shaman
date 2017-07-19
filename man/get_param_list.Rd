@@ -9,4 +9,3 @@ get_param_list(nm, params)
 \description{
 Get params from saved var
 }
-

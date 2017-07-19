@@ -6,7 +6,7 @@
 \usage{
 shaman_score_hic_track(track_db, work_dir, score_track_nm, obs_track_nms,
   exp_track_nms = paste0(obs_track_nms, "_shuffle"),
-  points_track_nms = obs_track_nms, near_cis = 5e+06, expand = 2e+06,
+  points_track_nms = obs_track_nms, near_cis = 5000000, expand = 2000000,
   k = 100, max_jobs = 100)
 }
 \arguments{
@@ -51,4 +51,3 @@ Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf
 Each step creates temporary files of the matrix scores which are then joined to a track.
 Temporary files are deleted upon track creation.
 }
-

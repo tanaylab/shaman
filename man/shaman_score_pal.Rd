@@ -9,4 +9,3 @@ shaman_score_pal()
 \description{
 \code{shaman_score_pal}
 }
-
