@@ -1,0 +1,17 @@
+navbar:
+  title: "shaman"
+  type: inverse
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Usage"
+      href: articles/shaman-package.html
+      icon: fa-road
+    - text: "Reference"
+      href: reference/index.html
+      icon: fa-th-list
+  right:
+    - icon: fa-bitbucket-square
+      href: https://bitbucket.org/tanaylab/shaman
+
+

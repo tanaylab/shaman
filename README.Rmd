@@ -1,0 +1,71 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+```
+
+# The shaman pacakge - sampling HiC contact matrices for a-parametric normalization#
+
+This package provides a normalization scheme, along with basic analysis and statistical visualization of HiC experimental data. The normalization workflow consists of the following steps:
+
+1. Start with observed HiC data.
+1. Shuffle observed data to generate expected data.
+1. Compute the normalized score of each observed data point.
+1. Visualize normalized contact maps.
+1. Quantify contact enrichment acoording to features.
+
+
+### Code
+Source code can be found at: 
+https://bitbucket.org/tanaylab/shaman
+
+### Installation 
+#### Requirements 
+- _Perl_
+- R packages:
+    * _devtools_.
+    * _misha_.
+    * _RANN_.
+    * _data.table_.
+    * _ggplot2_.
+    * _reshape2_.
+    * _grid_.
+    * _Gviz (from bioconductor)_.
+
+#### Installing misha package:
+```{r, eval=FALSE}
+install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/misha_3.4.3.tar.gz", repos=NULL) # Download and install misha package
+```
+
+#### Installing Gviz from bioconductor:
+```{r, eval=FALSE}
+source("https://bioconductor.org/biocLite.R")
+biocLite("Gviz")
+```
+
+#### Installing shaman package:
+Download and install *shaman*: 
+```{r, eval=FALSE}
+devtools::install_bitbucket("tanaylab/shaman", ref='default', vignette = TRUE)
+library(shaman)
+```
+
+#### Using the package
+Please refer to the package vignette for usage and workflow.
+```{r, eval=FALSE}
+browseVignettes('shaman') 
+```
+
+
+Alternatively, see the usage section in the website: 
+https://tanaylab.bitbucket.io/shaman/articles/shaman-package.html
