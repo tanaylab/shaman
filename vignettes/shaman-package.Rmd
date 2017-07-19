@@ -79,7 +79,7 @@ shaman_score_hic_track(track_db="db", work_dir="work_dir", score_track_nm="score
 point_score = gextract("score_track", region, colnames="score")
 shaman_plot_map_score_with_annotations("hg19", point_score$points, region, misha_tracks=list("K56.k27ac", "rna-seq"), annotations=list("ctcf_pos", "ctcf_neg"), a_colors=c("#4572A7", "#AA4643"))
 ```
-![Example of normalized map with annotations](/home/nettam/projects/hic/figures/paper/fig2.hoxd.example.png)
+![Example of normalized map with annotations](fig2.hoxd.example.png)
 
 ### Local mode
 - Generating an expected matrix and computing its score for a given interval: a local computation is possible on a small region:
@@ -105,4 +105,4 @@ Create data grid for two sets of features, and visualize it:
 grid = shaman_generate_feature_grid(feature1, feature2, obs_track, exp_track, range=25000, resolution=500)
 shaman_plot_feature_grid(grid, range=25000, grid_resolution=500, plot_resolution=1000)
 ```
-![Example of spatial contact enrichment for converging CTCF pairs: log10(obs) on the left, log2(obs/exp) on the right ](/home/nettam/projects/hic/figures/paper/hic.K562.ela_k562.ctcf_neg.ctcf_pos.1k.png)
+![Example of spatial contact enrichment for converging CTCF pairs: log10(obs) on the left, log2(obs/exp) on the right ](hic.K562.ela_k562.ctcf_neg.ctcf_pos.1k.png)
