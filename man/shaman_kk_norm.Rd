@@ -32,4 +32,3 @@ NULL if insufficient observed data, otherwise resturns a list containing 3 eleme
 This function receives observed and expected data and compute the score on a given set of points.
 The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
 }
-

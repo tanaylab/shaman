@@ -48,4 +48,3 @@ NULL if insufficient observed data, otherwise resturns a list containing 3 eleme
 This function extracts observed data and expected data in an expanded matrix and computes
 The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
 }
-

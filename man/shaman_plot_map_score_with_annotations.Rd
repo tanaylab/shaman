@@ -58,4 +58,3 @@ to be displayed in the region.}
 Plots observerved hic contact matrix color-coded by normalized scores, aligned with
 linear data such as gene annotations, rna, chromatin, transcription factor binding, etc').
 }
-

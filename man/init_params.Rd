@@ -9,4 +9,3 @@ init_params(fn, prev_params = NULL)
 \description{
 Read params from files
 }
-

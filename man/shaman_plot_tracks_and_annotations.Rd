@@ -49,4 +49,3 @@ Plots 1D tracks in UCSC format. Along with gene annotations and chromosomal axis
 function plots one dimensional misha tracks (e.g. rna-seq, chip-seq data) and marks
 annotated intervals in the plotting region.
 }
-

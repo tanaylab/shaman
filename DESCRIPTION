@@ -13,7 +13,7 @@ Description: Generate expected HiC data maintaining marginal coverage,
 License: GPL
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: rmarkdown,
@@ -30,3 +30,6 @@ Imports:
     reshape2,
     grid,
     Gviz
+Remotes: 
+    bioc::3.3/Gviz,
+    bioc::3.3/GenomeInfoDb
