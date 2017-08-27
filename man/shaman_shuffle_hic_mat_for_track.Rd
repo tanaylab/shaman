@@ -7,10 +7,10 @@
 shaman_shuffle_hic_mat_for_track(track_db, track, work_dir, chrom, start1, end1,
   start2, end2, shuffle_exe, min_dist = 1024,
   max_dist = max(gintervals.all()$end), dist_resolution = NA,
-  decay_smooth = NA, proposal_iterations = 1e+07, shuffle = 80,
+  decay_smooth = NA, proposal_iterations = 10000000, shuffle = 80,
   hic_mcmc_max_resolution = 400, raw_ext = "raw",
-  shuffled_ext = "shuffled", grid_small = 5e+05, grid_high = 1e+06,
-  grid_increase = 5e+05, grid_step_iter = 40, sort_uniq = FALSE)
+  shuffled_ext = "shuffled", grid_small = 500000, grid_high = 1000000,
+  grid_increase = 500000, grid_step_iter = 40, sort_uniq = FALSE)
 }
 \arguments{
 \item{track_db}{Directory of the misha database.}
