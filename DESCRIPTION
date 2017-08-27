@@ -1,8 +1,8 @@
 Package: shaman
 Type: Package
 Title: shaman - Sampling HiC contAct Matrices for Aparametric Normalization
-Version: 1.2
-Date: 2016-12-14
+Version: 2.0
+Date: 201-08-27
 Authors@R: c(person("Amos", "Tanay", role=c("aut")),
     person("Netta", "Mendelson Cohen", email="netta.mendelsoncohen@weizmann.ac.il",
     role=c("aut", "cre")))
@@ -14,6 +14,8 @@ License: GPL
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
+LinkingTo: Rcpp
+SystemRequirements: C++11
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: rmarkdown,
@@ -21,15 +23,17 @@ VignetteBuilder: rmarkdown,
 Depends:
     misha,
     plyr,
-    parallel,
-    doMC
+    parallel (>= 3.3.2) ,
+    doMC (>= 1.3.4)
 Imports:
+    Rcpp (>= 0.12.11),
     RANN,
     data.table,
-    ggplot2,
+    ggplot2 (>= 2.2.0),
     reshape2,
     grid,
-    Gviz
-Remotes: 
+    Gviz,
+    Rcpp
+Remotes:
     bioc::3.3/Gviz,
     bioc::3.3/GenomeInfoDb
