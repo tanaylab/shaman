@@ -6,7 +6,7 @@
 \usage{
 shaman_shuffle_hic_track(track_db, obs_track_nm, work_dir,
   exp_track_nm = paste0(obs_track_nm, "_shuffle"), max_jobs = 25,
-  shuffle = 80, grid_small = 5e+05, grid_high = 1e+06,
+  shuffle = 80, grid_small = 500000, grid_high = 1000000,
   grid_step_iter = 40, dist_resolution = NA, smooth = NA)
 }
 \arguments{
