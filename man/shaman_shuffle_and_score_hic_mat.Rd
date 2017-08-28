@@ -5,9 +5,9 @@
 \title{Inline function for generating an expected matrix and computing the score for a given interval}
 \usage{
 shaman_shuffle_and_score_hic_mat(obs_track_nms, interval, work_dir,
-  expand = 1e+06, min_dist = 1024, k = 100, dist_resolution = NA,
+  expand = 1000000, min_dist = 1024, k = 100, dist_resolution = NA,
   decay_smooth = NA, hic_mcmc_max_resolution = 400, shuffle = 80,
-  grid_small = 5e+05, grid_high = 1e+06, grid_increase = 5e+05,
+  grid_small = 500000, grid_high = 1000000, grid_increase = 500000,
   grid_step_iter = 40)
 }
 \arguments{
