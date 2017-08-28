@@ -9,7 +9,36 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## Import misha database from ucsc
+## Create misha database from ucsc
+
+### hg19
+In order to create a misha database for _hg19_ genome, run the following _misha_ commands (assuming *"hg19"* is your new data base path):
+```{r, eval = FALSE}
+ftp <- "ftp://hgdownload.soe.ucsc.edu/goldenPath/hg19" 
+gdb.create("hg19",
+           paste(ftp, 'chromosomes', paste0('chr', c(1:22, 'X', 'Y', 'M'), '.fa.gz'), sep='/'),
+           paste(ftp, "database/knownGene.txt.gz", sep = "/"),
+           paste(ftp, "database/kgXref.txt.gz", sep = "/"),
+           c("kgID", "mRNA", "spID", "spDisplayID", "geneSymbol",
+             "refseq", "protAcc", "description", "rfamAcc",
+             "tRnaName"))
+gdb.init()
+
+```
+
+### mm9
+In order to create a misha database for _mm9_ genome, run the following _misha_ commands (assuming *"mm9"* is your new data base path):
+```{r, eval = FALSE}
+ftp <- "ftp://hgdownload.soe.ucsc.edu/goldenPath/mm9" 
+gdb.create("mm9",
+           paste(ftp, 'chromosomes', paste0('chr', c(1:19, 'X', 'Y', 'M'), '.fa.gz'), sep='/'),
+           paste(ftp, "database/knownGene.txt.gz", sep = "/"),
+           paste(ftp, "database/kgXref.txt.gz", sep = "/"),
+           c("kgID", "mRNA", "spID", "spDisplayID", "geneSymbol",
+             "refseq", "protAcc", "description"))
+gdb.init()
+
+```
 
 ## Import contacts
 
