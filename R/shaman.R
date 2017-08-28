@@ -46,7 +46,6 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
      stop(paste("shuffle_hic_track function requires SGE or multicore support. If available, set configuration parameter shaman.sge_support or shaman.mc_support to 1"))
    }
    sge_flags <- getOption("shaman.sge_flags")
-   shuffle_exe = sprintf("%s/%s", system.file("bin", package="shaman"), getOption("shaman.shuffle_exe"))
 
     # check work_dir
     if (substr(work_dir, nchar(work_dir), nchar(work_dir)) != "/") {
@@ -61,8 +60,8 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
     if (sge_support) {
     commands <- paste0("{library(shaman); shaman_shuffle_hic_mat_for_track(\"", track_db, "\",\"", obs_track_nm, "\",\"",
 	      work_dir, "\", \"", intervals$chrom, "\", ", intervals$start, ", ",
-        intervals$end, ", ", intervals$start, ", ", intervals$end, ", \"", shuffle_exe,
-        "\", min_dist=1024, dist_resolution=", dist_resolution, ", decay_smooth=",
+        intervals$end, ", ", intervals$start, ", ", intervals$end,  
+        ", min_dist=1024, dist_resolution=", dist_resolution, ", decay_smooth=",
         smooth, ", shuffle=", shuffle, ", grid_small=", grid_small, ", grid_high=", grid_high,
         ", grid_step_iter=", grid_step_iter,
         ", raw_ext=\"full_chrom_raw\", shuffled_ext=\"full_chrom_shuffled\", sort_uniq=TRUE)}")
@@ -71,7 +70,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 	doMC::registerDoMC(cores=max_jobs)
 	res=plyr::ddply(intervals, .(chrom, start), function(x) {
 		shaman_shuffle_hic_mat_for_track(track_db, obs_track_nm, work_dir, x$chrom[1],
-			x$start[1], x$end[1], x$start[1], x$end[1], shuffle_exe, min_dist=1024,
+			x$start[1], x$end[1], x$start[1], x$end[1], min_dist=1024,
 			dist_resolution=dist_resolution, decay_smooth=smooth, shuffle=shuffle,
 			grid_small=grid_small, grid_high=grid_high, grid_step_iter=grid_step_iter,
 			raw_ext="full_chrom_raw", shuffled_ext="full_chrom_shuffled", sort_uniq=TRUE)
@@ -125,7 +124,6 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 #' @param end1 The end coordinate of the first dimension.
 #' @param start2 The start coordinate of the second dimension.
 #' @param end2 The end coordinate of the second dimension.
-#' @param shuffle_exe The executable that computes the shuffled matrix.
 #' @param min_dist The minimum distance between contact end points.
 #' @param max_dist The maximum distance between contact end points.
 #' @param dist_resolution Number of bins in each log2 distance unit. If NA, value is determined
@@ -148,7 +146,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 #' @export
 ##########################################################################################################
 shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, start1, end1, start2, end2,
-  shuffle_exe, min_dist=1024, max_dist=max(gintervals.all()$end), dist_resolution=NA,
+  min_dist=1024, max_dist=max(gintervals.all()$end), dist_resolution=NA,
   decay_smooth=NA, proposal_iterations=1e+07, shuffle=80, hic_mcmc_max_resolution=400,
   raw_ext="raw", shuffled_ext="shuffled", grid_small = 500000, grid_high=1000000, grid_increase=500000,
   grid_step_iter = 40, sort_uniq=FALSE) {
@@ -184,18 +182,13 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
           data.table::fwrite(format(rbind(a,setNames(rev(a), names(a))), scientific=FALSE), shuf_fn, quote=FALSE, row.names=F,
               sep="\t")
       } else {
-          data.table::fwrite(format(a, scientific=FALSE), raw_fn, quote=F, row.names=F, sep="\t")
           if (is.na(decay_smooth)) {
               decay_smooth=min(floor(dist_resolution/10), 20)
           }
-          sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_contacts=1 -proposal_iterations=0.5
-                -dist_resolution=%d -decay_smooth=%d -decay_regularization=5 -proposal_correction_factor=0.25
-                -max_dist=%d -min_dist=1024 -grid_switch_bin_dist=1 -grid_x_min_bin=%d
-                -grid_x_max_bin=%d -grid_x_increase=%d -grid_x_increase_iter=%d -output_symmetric_mat=1",
-                shuffle_exe, raw_fn, shuf_fn, shuffle, dist_resolution, decay_smooth, max_dist,
-                grid_small, grid_high, grid_increase, grid_step_iter), width=10000, simplify=TRUE)
- 	  message(sys_command)
-          ret=system(sys_command, ignore.stdout=TRUE, ignore.stderr=FALSE, intern=TRUE)
+
+          ret = shaman_hic_matrix_shuffler_cpp(t(a[, c("start1", "start2")]), 
+		shuf_fn, shuffle, 1, 0.5, dist_resolution, decay_smooth, 5, 0.25,
+		max_dist, 1024, 1, grid_small, grid_high, grid_increase, grid_step_iter, 0, 1)
       }
   }
   if (sort_uniq) {
@@ -565,6 +558,9 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
 #' 4) obs_fn - the name of the observed data file
 #' 4) exp_fn - the name of the expected (shuffled) data file
 #'
+#' @examples
+#' init_shaman_examples...
+#' shaman_shuffle_and_score_hic_mat(...)
 #' @export
 ##########################################################################################################
 
@@ -573,8 +569,6 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
   grid_small = 500000, grid_high=1000000, grid_increase=500000,
   grid_step_iter = 40)
 {
-   .shaman_check_config("shaman.shuffle_exe")
-  shuffle_exe = sprintf("%s/%s", system.file("bin", package="shaman"), getOption("shaman.shuffle_exe"))
 
   if (interval$chrom1 != interval$chrom2) {
 	stop("Only cis intervals supported")
@@ -606,29 +600,18 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
     message(paste("insufficient data found in intervals: obs=", nrow(obs)))
     return(NULL)
   }
-  message("writing to raw file name:")
-  raw_fn = paste0(work_dir, "/",  interval$chrom1, "_", interval$start1, "_", interval$start2, "_", expand, ".obs")
-  message(raw_fn)
-  data.table::fwrite(format(obs[, c("start1", "start2")], scientific=FALSE),
-    raw_fn, sep="\t", row.names=FALSE, quote=FALSE)
 
   # shuffle contacts in expanded interval
   message(paste0("shuffling ", nrow(obs), " observed points"))
-  shuf_fn = gsub("obs", "shuffled", raw_fn)
+  shuf_fn = paste0(work_dir, "/",  interval$chrom1, "_", interval$start1, "_", interval$start2, "_", expand, ".shuffled")
 
   if (is.na(decay_smooth)) {
         decay_smooth = min(floor(dist_resolution / 10),20)
   }
   samples_per_proposal_correction = floor(nrow(obs)/20)
-  sys_command <- strwrap(sprintf("%s %s %s -shuffle_factor=%d -proposal_from_contacts=1 -proposal_iterations=0.5
-                -dist_resolution=%d -decay_smooth=%d -decay_regularization=5 -proposal_correction_factor=0.25
-                -max_dist=%d -min_dist=1024 -grid_switch_bin_dist=1 -grid_x_min_bin=%d
-                -grid_x_max_bin=%d -grid_x_increase=%d -grid_x_increase_iter=%d
-                -input_symmetric_mat=1 -output_symmetric_mat=1",
-                 shuffle_exe, raw_fn, shuf_fn, shuffle, dist_resolution, decay_smooth, max(obs$start2-obs$start1),
-                 grid_small, grid_high, grid_increase, grid_step_iter), width=10000, simplify=TRUE)
+  shaman_hic_matrix_shuffler_cpp(t(obs[, c("start1", "start2")]), shuf_fn, shuffle, 1, 0.5, dist_resolution, decay_smooth, 5, 0.25,
+	max(obs$start2-obs$start1), 1024, 1, grid_small, grid_high, grid_increase, grid_step_iter, 1, 1)
 
-  system(sys_command, ignore.stdout=TRUE, ignore.stderr=FALSE, intern=TRUE)
 
   exp = as.data.frame(data.table::fread(shuf_fn, header=T))
 

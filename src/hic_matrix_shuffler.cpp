@@ -1,5 +1,4 @@
 #include "ContactShuffler.h"
-#include "Options.h"
 #include "Random.h"
 #include <ctime>
 #include <algorithm>
@@ -11,36 +10,8 @@
 using namespace std;
 using namespace Rcpp;
 
-const int OPT_DEFS=54;
-const char *c_opt_defaults[OPT_DEFS] = {
-"shuffle_factor", "10",
-"decay_smooth", "0",
-"min_dist", "0",
-"max_dist", "200000000",
-"grid_x_min_bin", "500000",
-"grid_x_max_bin", "1000000",
-"grid_x_increase", "250000",
-"grid_x_increase_iter", "10",
-"grid_dist_resolution", "5",
-"grid_switch_bin_dist", "1",
-"grid_switch_x_dist", "1000000",
-"decay_regularization", "0",
-"output_header", "1",
-//"output_transitions", "transitions.txt",
-"decay_file", "decay.txt",
-"proposal_from_constant", "0",
-"proposal_from_contacts", "0",
-"proposal_iterations", "1",
-"proposal_correction_factor", "0.25",
-"samples_per_proposal_correction", "10000",
-"debug_proposal", "0",
-"debug_file_prefix", "contact_shuffler.dbg",
-"random_seed", "-1"
-};
-
-
 // [[Rcpp::export]]
-int shaman_hic_matrix_shuffler_cpp(std::string raw_contacts,
+int shaman_hic_matrix_shuffler_cpp(Rcpp::DataFrame& raw_contacts,
 		std::string shuf_contacts,
 		int shuffle_factor,
 		int proposal_from_contacts,
@@ -56,26 +27,24 @@ int shaman_hic_matrix_shuffler_cpp(std::string raw_contacts,
 		int grid_x_max_bin,
 		int grid_x_increase,
 		int grid_x_increase_iter,
+		int input_symmetric_mat,
 		int output_symmetric_mat)
 {
 	Rcpp::Rcerr << "running new shuffler" << endl;
-	Options opt;
-	opt.load_defaults(c_opt_defaults, OPT_DEFS);
-//	opt.parse_argv(argc, argv);
 
-
-	unsigned int seed = opt.get_g_int("random_seed");
-	Random::reset(seed);
+	Random::reset(-1);
 	clock_t begin = clock();
-	Rcpp::Rcout << "raw contacts file = " << raw_contacts << endl;
+	//Rcpp::Rcout << "raw contacts file = " << raw_contacts << endl;
 
 
 	int dist_log_scale = 2;
-	int input_symmetric_mat = 0;
 	int output_header = 1;
 	float proposal_iterations = (float) proposal_iterations_d;
 	int proposal_from_constant = 0;
-	float proposal_correction_factor = (float)proposal_correction_factor;
+	float proposal_correction_factor = (float)proposal_correction_factor_d;
+
+	Rcpp::Rcerr << "proposal iterations = " << proposal_iterations << "\t"
+			<< " proposal_correction_factor = " << proposal_correction_factor << endl;
 
 	Rcerr << "shuffle factor = " << shuffle_factor << endl;
 	ContactShuffler shuffler(dist_log_scale,dist_resolution,
@@ -83,7 +52,8 @@ int shaman_hic_matrix_shuffler_cpp(std::string raw_contacts,
 			proposal_correction_factor,  decay_smooth,
 			decay_regularization, min_dist, max_dist);
 
-	int contacts = shuffler.load_contacts(raw_contacts.c_str(), input_symmetric_mat);
+	vector< vector <int > > r_contacts = Rcpp::as<vector<vector<int> > >(raw_contacts);
+	int contacts = shuffler.load_contacts(r_contacts, input_symmetric_mat);
 	Rcerr << "finished loading from contacts" << endl;
 
 	shuffler.init_exp_decay_from_obs();
@@ -101,7 +71,6 @@ int shaman_hic_matrix_shuffler_cpp(std::string raw_contacts,
 		cerr << "finished init proposal from area" << endl;
 	 }
 	}
-
 	int iter = 0;
 	while(iter < shuffle_factor) {
 		shuffler.shuffle_contacts(grid_x_increase_iter, 0.0001, 0.01, 0);

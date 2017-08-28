@@ -22,7 +22,8 @@ public:
 			int grid_switch_bin_dist, //int grid_switch_x_dist,
 			float correction_factor, int decay_smooth, int regularization, int min_dist, int max_dist);
 	virtual ~ContactShuffler();
-	virtual long load_contacts(const char* fn, bool symetric);
+	//virtual long load_contacts(const char* fn, bool symetric);
+	virtual long load_contacts(const vector<vector<int> >& contacts, bool symetric);
 	virtual int save_contacts(const char* fn, bool symetric, bool with_header);
 	virtual int init_obs_decay_from_contacts();
 	virtual int	init_exp_decay_from_obs();
