@@ -13,41 +13,27 @@ This package provides a normalization scheme, along with basic analysis and stat
 
 Source code can be found at: <https://bitbucket.org/tanaylab/shaman>
 
-### Installation
-
 #### Requirements
 
 -   *Perl*
--   R packages:
-    -   *devtools*.
-    -   *misha*.
-    -   *RANN*.
-    -   *data.table*.
-    -   *ggplot2*.
-    -   *reshape2*.
-    -   *grid*.
-    -   *Gviz (from bioconductor)*.
+-   *devtools* R package
+-   *Gviz* package from bioconductor
 
-#### Installing misha package:
+### Installation
+
+The quickest way to install *shaman* is use the following command:
 
 ``` r
-install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/misha_3.4.3.tar.gz", repos=NULL) # Download and install misha package
+devtools::install_bitbucket('tanaylab/shaman@default', 
+                            vignette = TRUE, 
+                            repos=c(getOption('repos'), 'https://tanaylab.bitbucket.io/repo'))
 ```
 
-#### Installing Gviz from bioconductor:
+If devtools fails to install all the bioconductor requirments please install *Gviz* manually from bioconductor:
 
 ``` r
 source("https://bioconductor.org/biocLite.R")
 biocLite("Gviz")
-```
-
-#### Installing shaman package:
-
-Download and install *shaman*:
-
-``` r
-devtools::install_bitbucket("tanaylab/shaman", ref='default', vignette = TRUE)
-library(shaman)
 ```
 
 #### Using the package

@@ -1,0 +1,17 @@
+---
+title: "Import"
+author: "Netta Medndelson Cohen"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Import misha database from ucsc
+
+## Import contacts
+
+## Import chip-seq data
+

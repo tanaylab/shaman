@@ -7,6 +7,9 @@ navbar:
     - text: "Usage"
       href: articles/shaman-package.html
       icon: fa-road
+    - text: "Import"
+      href: articles/import.html
+      icon: fa-filter
     - text: "Reference"
       href: reference/index.html
       icon: fa-th-list
@@ -15,7 +18,7 @@ navbar:
       href: https://bitbucket.org/tanaylab/shaman
 
 reference:
-- title: Data processing 
+- title: Data processing
   desc:  Normalization ...
   contents:
   - shaman_shuffle_hic_track
@@ -23,10 +26,10 @@ reference:
   - shaman_shuffle_and_score_hic_mat
   - shaman_score_hic_points
   - shaman_score_hic_mat
-  - shaman_kk_norm 
+  - shaman_kk_norm
   - shaman_generate_feature_grid
 - title: Visualization
-  desc:  Methods for graphical visualizing 
+  desc:  Methods for graphical visualizing
   contents:
   - shaman_plot_map_score_with_annotations
   - shaman_gplot_map_score
@@ -36,7 +39,7 @@ reference:
   - shaman_score_pal
 - title: configuration
   desc: Parameter configuration utility functions
-  contents: 
+  contents:
   - get_param_list
   - get_param
   - init_params
