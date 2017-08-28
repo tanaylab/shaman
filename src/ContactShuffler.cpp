@@ -43,17 +43,9 @@ ContactShuffler::~ContactShuffler() {
 	//delete(m_grid);
 }
 
-long ContactShuffler::load_contacts(const char* fn, bool symetric) {
-	ifstream input(fn);
-	if (!input.is_open()) {
-		cerr << "could not open input file " << fn << endl;
-	        return -1;
-	}
-	vector<string> header;
-	Parser parser;
-	parser.split_line(input, header);
-	parser.read_int_table(input, 2, m_contacts);
-	input.close();
+long ContactShuffler::load_contacts(const vector<vector<int> >& contacts, bool symetric)
+{
+	m_contacts = contacts;
 	m_contact_count = m_contacts.size();
 	if (!symetric) {
 		cerr << "adding " << m_contact_count << " symmetric contacts" << endl;
@@ -302,7 +294,6 @@ int ContactShuffler::init_proposal_from_contacts(long proposal_shuffle) {
 	for (int bin=0; bin<max_bins; bin++) {
 		m_proposal_freq[bin] -= sum_proposal;
 	}
-	cerr << "finished init_proposal_from_contacts" << endl;
 	return(1);
 }
 
@@ -348,6 +339,10 @@ int ContactShuffler::shuffle_contacts(int shuffle_factor, float transition_corre
 			//while (transitions < shuffle_factor) {
 			samples++;
 			transitions += simple_sample();
+			if (samples > 1000 && transitions == 0) {
+				cerr << "not making any transitions... stopping early" << endl;
+				return(0);
+			}
 
 			if (transitions % transitions_per_correction == 0) {
 				correct_proposal_dist();
