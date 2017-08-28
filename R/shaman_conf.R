@@ -50,7 +50,7 @@
     options(op.shaman)
 
     .shaman_check_config("shaman.shuffle_exe")
-    gset_input_mode(autocompletion = FALSE, interactive = FALSE)
+#    gset_input_mode(autocompletion = FALSE, interactive = FALSE)
 
     invisible()
 }
