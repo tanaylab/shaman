@@ -13,52 +13,43 @@ This package provides a normalization scheme, along with basic analysis and stat
 The normalization workflow consists of the following steps:
 
 1. Start with observed HiC data.
-1. Shuffle observed data to generate expected data.
-1. Compute the normalized score of each observed data point.
-1. Visualize normalized contact maps.
-1. Quantify contact enrichment acoording to features.
+2. Shuffle observed data to generate expected data.
+3. Compute the normalized score of each observed data point.
+4. Visualize normalized contact maps.
+5. Quantify contact enrichment acoording to features.
 
-## Installation
+
 ### Requirements:
 The native environment for this package is the misha track database, i.e. start with an observed 2D track,
-generate ane expected 2D track and compute a score track. This process is CPU intensive and therefore requires SGE to be availabe,
-for distributed computing. However, inline functions which compute the expected and score values for a specific region are provided
-as well.
+generate ane expected 2D track and compute a score track. This process is CPU intensive and therefore it is recommended to
+have SGE (sun grid engine) cluster availabe for distributed computing. However, inline functions which compute the 
+expected and score values for a specific region are provided as well.
 The requirements are for all functions to work:
 
 - _Perl_
-- R packages:
-    * _devtools_.
-    * _misha_.
-    * _RANN_.
-    * _data.table_.
-    * _ggplot2_
-    * _reshape2_
-    * _grid_
-    * _Gviz_
+- _devtools_ R package
+- _Gviz_ package from bioconductor
 
-#### Installing misha package:
-Since _misha_ package is not in CRAN, we will need to install it directly as follows:
-Install the package:
-```{r, eval=FALSE}
-install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/misha_3.4.3.tar.gz", repos=NULL) #Installs misha package from file
+## Installation
+The quickest way to install *shaman* is use the following command: 
+
+```{r, eval = FALSE}
+devtools::install_bitbucket('tanaylab/shaman@default', 
+                            vignette = TRUE, 
+                            repos=c(getOption('repos'), 'https://tanaylab.bitbucket.io/repo'))
 ```
-#### Installing Gviz from bioconductor:
+
+If devtools fails to install all the bioconductor requirments please install _Gviz_ manually from bioconductor:
+
 ```{r, eval=FALSE}
 source("https://bioconductor.org/biocLite.R")
 biocLite("Gviz")
-```
-#### Installing shaman package:
-Download and install _shaman_:
-```{r, eval=FALSE}
-devtools::install_bitubucket("tanaylab/shaman", ref='default', vignette=TRUE)
-library(shaman)
 ```
 
 ### Options
 The following options are available for this package:
 
-####system parameters
+#### System parameters
 
 * shaman.sge_support = 0 - Set to 1 if Sun Grid Engine is available for distributed computing.
 * shaman.sge_flags = ""  - SGE paramters to be passed to qsub (e.g. threads, queue, etc').
