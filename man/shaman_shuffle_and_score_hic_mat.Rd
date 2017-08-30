@@ -47,7 +47,6 @@ NULL if insufficient observed data, otherwise resturns a list containing 3 eleme
 1) points - start1, start2 and score for all observed points.
 2) obs - the observed points.
 3) exp - the expected points.
-4) obs_fn - the name of the observed data file
 4) exp_fn - the name of the expected (shuffled) data file
 }
 \description{
@@ -57,6 +56,13 @@ NULL if insufficient observed data, otherwise resturns a list containing 3 eleme
 This function generates an expected 2D hic matrix based on observed hic data, and computes its score.
 }
 \examples{
-init_shaman_examples...
-shaman_shuffle_and_score_hic_mat(...)
+
+#Set misha db to test
+gsetroot(shaman_get_test_track_db()) 
+mat_score = shaman_shuffle_and_score_hic_mat(obs_track_nms="hic_obs", 
+interval=gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06),
+expand=5e05,
+work_dir=tempdir())
+shaman_gplot_map_score(mat_score$points)
+
 }

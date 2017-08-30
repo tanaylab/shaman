@@ -23,6 +23,21 @@
 #' @param smooth Number of bins to use for smoothing the MCMC target function: the decay curve.
 #' If NA, value is determined based on observed data (recommended).
 #'
+#' @examples
+#' 
+#' # The example below runs on the test misha db provided with shaman.
+#' # Note that this is a toy db sampled from K562 ela data - shuffling the observed track will not produce the expected track.
+#' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
+#' options(shaman.mc_support=1)    #configuring multi-core mode
+#' ret <- shaman_shuffle_hic_track(shaman_get_test_track_db(), 
+#'	obs_track_nm="hic_obs", 
+#'	work_dir=tempdir(),     	   # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+#'	shuffle=1, 			   # default is set to 80
+#'	grid_step_iter=1, 		   # default is set to 40
+#'	max_jobs=parallel::detectCores())  # optimally set to number of chromosomes
+#' gdb.reload()
+#' gtrack.ls("hic_obs_shuffle") #new shuffled track that was created
+#'
 #' @export
 ##########################################################################################################
 shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
@@ -232,6 +247,23 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' lower resolution maps, decrease k.
 #' @param max_jobs Maximal number of qsub jobs.
 #'
+#' @examples
+#' 
+#' # The example below runs on the test misha db provided with shaman.
+#' # Note that this is a toy db sampled from K562 ela data - 
+#' # scoring based on the observed and expected tracks will not produce the score track,
+#' # as most of the genome is missing (you will see message: number of points in focus interval < 1000)
+#' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
+#' options(shaman.mc_support=1)    #configuring multi-core mode
+#' ret <- shaman_score_hic_track(shaman_get_test_track_db(), 
+#'	work_dir=tempdir(),   		  # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+#'	score_track_nm="hic_score_new",
+#'	obs_track_nms="hic_obs", 
+#'	exp_track_nms="hic_exp",
+#' 	near_cis=1e09, 			  # this test db contains very little data, can increase the size of each job
+#'	max_jobs=parallel::detectCores()) # increase number of jobs for optimal runtime when running in sge mode
+#' gdb.reload()
+#' gtrack.ls("hic_obs_shuffle") #new shuffled track that was created
 #' @export
 ##########################################################################################################
 shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track_nms,
@@ -316,7 +348,7 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 
   #cleanup work dir from all temporary files
   for (track in obs_track_nms) {
-    try(system(sprintf('rm %s%s*', work_dir, track)))
+    try(system(sprintf('rm %s/%s*', work_dir, track)))
   }
 }
 
@@ -414,6 +446,15 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 #' 2) obs - the observed points.
 #' 3) exp - the expected points.
 #'
+#' @examples
+#' 
+#' #Set misha db to test
+#' gsetroot(shaman_get_test_track_db()) 
+#' mat_score = shaman_score_hic_mat(obs_track_nms="hic_obs", exp_track_nms="hic_exp",
+#'	focus_interval=gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06),
+#'	regional_interval=gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06))
+#' shaman_gplot_map_score(mat_score$points)
+#'
 #' @export
 ##########################################################################################################
 shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, regional_interval,
@@ -461,6 +502,14 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #' 2) obs - the observed points.
 #' 3) exp - the expected points.
 #'
+#' @examples
+#' 
+#' #Set misha db to test
+#' gsetroot(shaman_get_test_track_db()) 
+#' points <- gextract("hic_obs", gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06), band=c(-2e06, -1024))
+#' mat_score <- shaman_score_hic_points(obs_track_nms="hic_obs", exp_track_nms="hic_exp",
+#'	points=points, regional_interval=gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06))
+#' shaman_gplot_map_score(mat_score$points)
 #' @export
 ##########################################################################################################
 shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist=1024, k=100, k_exp=2*k)
@@ -555,12 +604,18 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
 #' 1) points - start1, start2 and score for all observed points.
 #' 2) obs - the observed points.
 #' 3) exp - the expected points.
-#' 4) obs_fn - the name of the observed data file
 #' 4) exp_fn - the name of the expected (shuffled) data file
 #'
 #' @examples
-#' init_shaman_examples...
-#' shaman_shuffle_and_score_hic_mat(...)
+#' 
+#' #Set misha db to test
+#' gsetroot(shaman_get_test_track_db()) 
+#' mat_score = shaman_shuffle_and_score_hic_mat(obs_track_nms="hic_obs", 
+#'	interval=gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06),
+#'	expand=5e05,
+#'	work_dir=tempdir())
+#' shaman_gplot_map_score(mat_score$points)
+#'	
 #' @export
 ##########################################################################################################
 
@@ -616,7 +671,6 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
   exp = as.data.frame(data.table::fread(shuf_fn, header=T))
 
   ret = shaman_kk_norm(obs, exp, points, k=k, k_exp=2*k)
-  ret$obs_fn = raw_fn
   ret$exp_fn = shuf_fn
   return(ret)
 }
@@ -642,6 +696,16 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 #' 1) points - start1, start2 and score for all observed points.
 #' 2) obs - the observed points.
 #' 3) exp - the expected points.
+#'
+#' @examples
+#' 
+#' #Set misha db to test
+#' gsetroot(shaman_get_test_track_db()) 
+#' points <- gextract("hic_obs", gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06), band=c(-2e06, -1024))
+#' obs <- gextract("hic_obs", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), band=c(-2e06, -1024))
+#' exp <- gextract("hic_exp", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), band=c(-2e06, -1024))
+#' mat_score = shaman_kk_norm(obs, exp, points, k_exp=100* nrow(exp)/nrow(obs))
+#' shaman_gplot_map_score(mat_score$points)
 #'
 #' @export
 ##########################################################################################################

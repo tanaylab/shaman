@@ -30,28 +30,28 @@
 #' @param shaman_config Parameter file
 #'
 #'
-.shaman_load_config <- function(config_dir, shaman_config=file.path(config_dir, "shaman.conf"))
+.shaman_load_config <- function(config_dir, shaman_config=file.path(config_dir, "shaman.conf"), reset=FALSE)
 {
     op <- options()
-    all_paths <- list(
-        "shaman.shaman_conf_path"=shaman_config)
+    all_paths <- list("shaman.shaman_conf_path"=shaman_config)
 
     op.shaman <- init_params(shaman_config)
     op.shaman<- c(op.shaman, all_paths)
 
     # Check if some params were saved already
     already_set <- names(op) %in% names(op.shaman)
-    if (any(already_set))
+    if (any(already_set) & reset==TRUE)
     {
         message(sprintf("%i parameters were already defined in this sessions and they will be overwritten!",
                 sum(already_set)))
     }
 
+    if (!reset) {
+	op.shaman = op.shaman[!already_set]
+    }
     options(op.shaman)
 
-    .shaman_check_config("shaman.shuffle_exe")
 #    gset_input_mode(autocompletion = FALSE, interactive = FALSE)
-
     invisible()
 }
 

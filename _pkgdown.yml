@@ -34,7 +34,6 @@ reference:
   - shaman_plot_map_score_with_annotations
   - shaman_gplot_map_score
   - shaman_gplot_map
-  - shaman_plot_tracks_and_annotations
   - shaman_plot_feature_grid
   - shaman_score_pal
 - title: configuration

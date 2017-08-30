@@ -38,3 +38,13 @@ enrichment: (-1,1), obs,exp: (-4.5, -3)}
 \details{
 After contact feature grids are generated via shaman_generate_feature_grid, use this function to visualize them.
 }
+\examples{
+
+#Set misha db to test
+gsetroot(shaman_get_test_track_db()) 
+grid = shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs", 
+exp_track_nm="hic_exp", score_track_nm="hic_score")
+shaman_plot_feature_grid(list(grid), 25000, 500, 500)
+shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
+shaman_plot_feature_grid(list(grid), 25000, 500, 2000)
+}

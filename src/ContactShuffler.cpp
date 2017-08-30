@@ -319,7 +319,7 @@ void ContactShuffler::debug(ostream& out, int id) {
 
 int ContactShuffler::shuffle_contacts(int shuffle_factor, float transition_correction_factor,
 		float transition_cooling_update, int debug) {
-	cerr << "shuffling..." << shuffle_factor << " iterations debug=" << debug << endl;
+	cerr << "shuffling..." << shuffle_factor << " iterations"<< endl;
 
 	int transitions_per_correction = floor(m_contact_count*0.0001);
 	int percentile = floor((m_contact_count)/10);

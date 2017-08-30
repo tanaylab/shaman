@@ -58,3 +58,9 @@ to be displayed in the region.}
 Plots observerved hic contact matrix color-coded by normalized scores, aligned with
 linear data such as gene annotations, rna, chromatin, transcription factor binding, etc').
 }
+\examples{
+
+gsetroot(shaman_get_test_track_db())
+points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames="score")
+shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 175e06, 178e06))
+}

@@ -50,3 +50,14 @@ get_param_list = function(nm, params)
         return(NA)
     }
 }
+
+############################################
+#' returns test misha db
+#'
+#' \code{shaman_get_test_track_db}
+#' @export
+
+
+shaman_get_test_track_db <- function() {
+  return(sprintf("%s/test", system.file("trackdb", package="shaman")))
+}

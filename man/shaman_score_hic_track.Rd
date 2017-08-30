@@ -51,3 +51,21 @@ Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf
 Each step creates temporary files of the matrix scores which are then joined to a track.
 Temporary files are deleted upon track creation.
 }
+\examples{
+
+# The example below runs on the test misha db provided with shaman.
+# Note that this is a toy db sampled from K562 ela data - 
+# scoring based on the observed and expected tracks will not produce the score track,
+# as most of the genome is missing (you will see message: number of points in focus interval < 1000)
+# options(shaman.sge_support=1) #configuring sge engine mode - preferred
+options(shaman.mc_support=1)    #configuring multi-core mode
+ret <- shaman_score_hic_track(shaman_get_test_track_db(), 
+work_dir=tempdir(),   		  # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+score_track_nm="hic_score_new",
+obs_track_nms="hic_obs", 
+exp_track_nms="hic_exp",
+	near_cis=1e09, 			  # this test db contains very little data, can increase the size of each job
+max_jobs=parallel::detectCores()) # increase number of jobs for optimal runtime when running in sge mode
+gdb.reload()
+gtrack.ls("hic_obs_shuffle") #new shuffled track that was created
+}
