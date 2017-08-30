@@ -9,6 +9,13 @@
 #' @param point_size Cex size of the points in the plot.
 #' @param add_axis Binary flag, indicating if axis should be added to plot.
 #' @return gplot containing the map
+#' 
+#' @examples
+#' 
+#' #Set misha db to test
+#' gsetroot(shaman_get_test_track_db()) 
+#' points <- gextract("hic_obs", gintervals.2d(2, 176e06, 177e06, 2, 176e06, 177e06))
+#' shaman_gplot_map(points)
 #' @export
 ##########################################################################################################
 shaman_gplot_map <- function(points, interval_range=NA, rotate=TRUE, point_size=0.1, add_axis=TRUE) {
@@ -66,6 +73,13 @@ shaman_gplot_map <- function(points, interval_range=NA, rotate=TRUE, point_size=
 #' @param point_size Cex size of the points in the plot.
 #' @param add_axis Binary flag, indicating if axis should be added to plot.
 #' @return gplot containing the map
+#'
+#' @examples
+#' 
+#' #Set misha db to test
+#' gsetroot(shaman_get_test_track_db()) 
+#' points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames="score")
+#' shaman_gplot_map_score(points)
 #' @export
 ##########################################################################################################
 shaman_gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE, point_size=0.1, add_axis=TRUE) {
@@ -139,6 +153,10 @@ shaman_gplot_map_score <- function(points_score, interval_range=NA, rotate=TRUE,
 #' @param track_size Size of track view
 #' @param annot_size Size of annotation view
 #'
+#' @examples
+#' 
+#' gsetroot(shaman_get_test_track_db())
+#' shaman_plot_tracks_and_annotations("hg19", gintervals(2, 175.5e06, 177.5e06))
 #' @export
 ##########################################################################################################
 shaman_plot_tracks_and_annotations <- function(genome, interval_range,
@@ -211,6 +229,11 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #' @param fig_width Width in pixels of output png figure.
 #' @param fig_height Height in pixels of output png figure.
 #'
+#' @examples
+#' 
+#' gsetroot(shaman_get_test_track_db())
+#' points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames="score")
+#' shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 175e06, 178e06))
 #' @export
 ##########################################################################################################
 

@@ -49,3 +49,8 @@ Plots 1D tracks in UCSC format. Along with gene annotations and chromosomal axis
 function plots one dimensional misha tracks (e.g. rna-seq, chip-seq data) and marks
 annotated intervals in the plotting region.
 }
+\examples{
+
+gsetroot(shaman_get_test_track_db())
+shaman_plot_tracks_and_annotations("hg19", gintervals(2, 175.5e06, 177.5e06))
+}

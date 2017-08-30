@@ -10,65 +10,37 @@ vignette: >
 ---
 
 This package provides a normalization scheme, along with basic analysis and statistical visualization of HiC experimental data.
-The normalization workflow consists of the following steps:
 
-1. Start with observed HiC data.
+## Workflow overview
+1. [Import](https://tanaylab.bitbucket.io/shaman/articles/import.html) observed HiC data to misha db.
 2. Shuffle observed data to generate expected data.
 3. Compute the normalized score of each observed data point.
 4. Visualize normalized contact maps.
 5. Quantify contact enrichment acoording to features.
 
 
-### Requirements:
-The native environment for this package is the misha track database, i.e. start with an observed 2D track,
-generate ane expected 2D track and compute a score track. This process is CPU intensive and therefore it is recommended to
-have SGE (sun grid engine) cluster availabe for distributed computing. However, inline functions which compute the 
-expected and score values for a specific region are provided as well.
-The requirements are for all functions to work:
-
-- _Perl_
-- _devtools_ R package
-- _Gviz_ package from bioconductor
-
-## Installation
-The quickest way to install *shaman* is use the following command: 
-
-```{r, eval = FALSE}
-devtools::install_bitbucket('tanaylab/shaman@default', 
-                            vignette = TRUE, 
-                            repos=c(getOption('repos'), 'https://tanaylab.bitbucket.io/repo'))
-```
-
-If devtools fails to install all the bioconductor requirments please install _Gviz_ manually from bioconductor:
-
-```{r, eval=FALSE}
-source("https://bioconductor.org/biocLite.R")
-biocLite("Gviz")
-```
-
-### Options
-The following options are available for this package:
-
-#### System parameters
-
-* shaman.sge_support = 0 - Set to 1 if Sun Grid Engine is available for distributed computing.
-* shaman.sge_flags = ""  - SGE paramters to be passed to qsub (e.g. threads, queue, etc').
-
 ## Workflow
-### Distributed mode (based on sun grid engine)
-- Set configuration parameter "shaman.sge_support" to be 1.
+Once an observed HiC dataset is available in the misha db (refere to  [Import](https://tanaylab.bitbucket.io/shaman/articles/import.html)) for additional information), there are two possible modes to continue analysis:
+1. Distributed computation - relying on sun grid engine (sge), or using a single machine with multi-cores.
+2. Local computation - for computing normalized matrices in small genomic regions
+
+### Distributed mode 
+- Set configuration parameter "shaman.sge_support" for sge or "shaman.mc_support" for multi-core to 1.
+```{r, eval=FALSE, warning=FALSE}
+options(shaman.mc_support=1)
+```
 - Generate expected HiC misha 2D track
 ```{r, eval=FALSE, warning=FALSE}
-shaman_shuffle_hic_track(track_db="db", obs_track_nm="obs", work_dir="work_dir")
+shaman_shuffle_hic_track(track_db=shaman_get_test_track_db(), obs_track_nm="hic_obs", work_dir=tempdir())
 ```
 - Generate score 2D track 
 ```{r, eval=FALSE, warning=FALSE}
-shaman_score_hic_track(track_db="db", work_dir="work_dir", score_track_nm="score_track", obs_track_nms=c("obs"))
+shaman_score_hic_track(track_db=shaman_get_test_track_db(), work_dir=tempdir(), score_track_nm="hic_score_new", obs_track_nms="hic_obs")
 ```
 - Visualize region
 ```{r, eval=FALSE, warning=FALSE}
-point_score = gextract("score_track", region, colnames="score")
-shaman_plot_map_score_with_annotations("hg19", point_score$points, region, misha_tracks=list("K56.k27ac", "rna-seq"), annotations=list("ctcf_pos", "ctcf_neg"), a_colors=c("#4572A7", "#AA4643"))
+point_score = gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames="score")
+shaman_plot_map_score_with_annotations("hg19", point_score$points, gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), misha_tracks=list("K562.k27ac", "rna-seq"), annotations=list("ctcf_forward", "ctcf_reverse"), a_colors=c("#4572A7", "#AA4643"))
 ```
 ![Example of normalized map with annotations](fig2.hoxd.example.png)
 
@@ -81,6 +53,7 @@ point_score = shaman_shuffle_and_score_hic_mat(obs_track_nms="obs", interval=int
 ```{r, eval=FALSE, warning=FALSE}
 shaman_plot_map_score_with_annotations("hg19", point_score$points, region, misha_tracks=list("K56.k27ac", "rna-seq"), annotations=list("ctcf_pos", "ctcf_neg"), a_colors=c("#4572A7", "#AA4643"))
 ```
+## Analysis
 ### Spatial contact enrichment - used to measure contact enrichemnt between two sets of genomic features.
 Relies on an existance of an expected (shuffled) 2d track.
 Builds a grid comprising of all combinations of intervals from feature 1 and feature 2 that fall within a band 
@@ -97,3 +70,20 @@ grid = shaman_generate_feature_grid(feature1, feature2, obs_track, exp_track, ra
 shaman_plot_feature_grid(grid, range=25000, grid_resolution=500, plot_resolution=1000)
 ```
 ![Example of spatial contact enrichment for converging CTCF pairs: log10(obs) on the left, log2(obs/exp) on the right ](hic.K562.ela_k562.ctcf_neg.ctcf_pos.1k.png)
+
+
+### Options
+The following options are available for this package:
+
+#### System parameters
+
+* shaman.mc_support = 0 - Set to 1 if multi-core is available for distributed computing.
+* shaman.sge_support = 0 - Set to 1 if Sun Grid Engine is available for distributed computing.
+* shaman.sge_flags = ""  - SGE paramters to be passed to qsub (e.g. threads, queue, etc').
+Note that for some shaman package methods either muli-core or sge support is required.
+
+#### Visualization parameters
+
+* shaman.score_pal_0_col = 'lightgrey' - the color to display zero score points, points that are not enriched or depleted in contacts
+* shaman.score_pal_pos_col = c('lightgrey', 'pink', 'red', 'orange', 'yellow') - the color palette to use for contact enrichment (from low to high)
+* shaman.score_pal_neg_col = c('lightgrey', 'lightblue', 'blue', 'black') - the color palette to use for contact depletion (from low to high)

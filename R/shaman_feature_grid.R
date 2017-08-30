@@ -28,9 +28,16 @@
 #' @return list containing obs - observed matrix, sum of the number of observed contacts in each bin in the window,
 #' exp - expected matrix, sum of the number of expected contacts in each bin in the window,
 #' grid_size - number of windows included in statistics
+#'
+#' @examples
+#'
+#' #Set misha db to test
+#' gsetroot(shaman_get_test_track_db()) 
+#' grid = shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs", 
+#'	exp_track_nm="hic_exp", score_track_nm="hic_score")
+#' shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
 #' @export
 ##########################################################################################################
-
 
 shaman_generate_feature_grid <- function(feature1, feature2, obs_track_nm, exp_track_nm=paste0(obs_track_nm, "_shuffle"),
   score_track_nm=paste0(obs_track_nm, "_score"), score_filter=30, range=25000, resolution=500,
@@ -78,6 +85,16 @@ shaman_generate_feature_grid <- function(feature1, feature2, obs_track_nm, exp_t
 #' @param pal Color palette to use for image
 #' @param zlim The minimum and maximum values for which colors should be plotted. Suggested zlim values by type:
 #' enrichment: (-1,1), obs,exp: (-4.5, -3)
+#'
+#' @examples
+#'
+#' #Set misha db to test
+#' gsetroot(shaman_get_test_track_db()) 
+#' grid = shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs", 
+#'	exp_track_nm="hic_exp", score_track_nm="hic_score")
+#' shaman_plot_feature_grid(list(grid), 25000, 500, 500)
+#' shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
+#' shaman_plot_feature_grid(list(grid), 25000, 500, 2000)
 #' @export
 ##########################################################################################################
 

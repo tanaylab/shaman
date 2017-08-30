@@ -46,3 +46,19 @@ Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf 
 Each step creates temporary files of the shuffled matrices which are then joined to a track.
 Temporary files are deleted upon track creation.
 }
+\examples{
+
+# The example below runs on the test misha db provided with shaman.
+# Note that this is a toy db sampled from K562 ela data - shuffling the observed track will not produce the expected track.
+# options(shaman.sge_support=1) #configuring sge engine mode - preferred
+options(shaman.mc_support=1)    #configuring multi-core mode
+ret <- shaman_shuffle_hic_track(shaman_get_test_track_db(), 
+obs_track_nm="hic_obs", 
+work_dir=tempdir(),     	   # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+shuffle=1, 			   # default is set to 80
+grid_step_iter=1, 		   # default is set to 40
+max_jobs=parallel::detectCores())  # optimally set to number of chromosomes
+gdb.reload()
+gtrack.ls("hic_obs_shuffle") #new shuffled track that was created
+
+}
