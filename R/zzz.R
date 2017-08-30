@@ -1,4 +1,8 @@
-.onLoad <- function(libname, pkgname) {
+.onLoad <- function(lib, pkg){
+
+}
+
+.onAttach <- function(libname, pkgname) {
   db_example_track_db = sprintf("%s/%s", system.file("trackdb", package="shaman"), "test")
   if (!file.exists(db_example_track_db)) {
     message("building example db...")

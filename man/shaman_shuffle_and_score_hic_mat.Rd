@@ -58,8 +58,8 @@ This function generates an expected 2D hic matrix based on observed hic data, an
 \examples{
 
 #Set misha db to test
-gsetroot(shaman_get_test_track_db()) 
-mat_score = shaman_shuffle_and_score_hic_mat(obs_track_nms="hic_obs", 
+gsetroot(shaman_get_test_track_db())
+mat_score = shaman_shuffle_and_score_hic_mat(obs_track_nms="hic_obs",
 interval=gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06),
 expand=5e05,
 work_dir=tempdir())
