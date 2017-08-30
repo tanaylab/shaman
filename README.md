@@ -3,11 +3,11 @@ The shaman pacakge - sampling HiC contact matrices for a-parametric normalizatio
 
 This package provides a normalization scheme, along with basic analysis and statistical visualization of HiC experimental data. The normalization workflow consists of the following steps:
 
-1.  Start with observed HiC data.
+1.  [Import](https://tanaylab.bitbucket.io/shaman/articles/import.html) observed HiC data to misha db.
 2.  Shuffle observed data to generate expected data.
 3.  Compute the normalized score of each observed data point.
 4.  Visualize normalized contact maps.
-5.  Quantify contact enrichment acoording to features.
+5.  Quantify contact enrichment acoording to genomic features.
 
 ### Code
 
@@ -17,7 +17,7 @@ Source code can be found at: <https://bitbucket.org/tanaylab/shaman>
 
 -   *Perl*
 -   *devtools* R package
--   *Gviz* package from bioconductor
+-   *System:* multi-core unix / linux based system or SGE (sun grid engine) cluster for distributed computing are required for large HiC datasets.
 
 ### Installation
 
@@ -38,10 +38,4 @@ biocLite("Gviz")
 
 #### Using the package
 
-Please refer to the package vignette for usage and workflow.
-
-``` r
-browseVignettes('shaman') 
-```
-
-Alternatively, see the usage section in the website: <https://tanaylab.bitbucket.io/shaman/articles/shaman-package.html>
+Please refer to <https://tanaylab.bitbucket.io/shaman/articles/shaman-package.html> for usage and workflow.
