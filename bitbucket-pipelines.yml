@@ -4,9 +4,10 @@ pipelines:
   default:
     - step:
         script:
+          - apt-get update -qq && apt-get -y --no-install-recommends install libxml2-dev libcairo2-dev   libsqlite-dev libmariadbd-dev libmariadb-client-lgpl-dev libpq-dev libssh2-1-dev 
           - cd /opt/atlassian/pipelines/agent/build
           - Rscript -e 'install.packages("devtools")'
           - Rscript -e 'devtools::install_deps(".", dependencies=TRUE, upgrade=FALSE)'
           - Rscript -e 'devtools::build()'
-          - Rscript -e 'devtools::install(upgrade_dependencies = FALSE, build_vignettes = TRUE)'
+          - Rscript -e "devtools::install(upgrade_dependencies = FALSE, build_vignettes = TRUE, repos=c(getOption('repos'), 'https://tanaylab.bitbucket.io/repo'))"
           - Rscript -e 'devtools::check()'
