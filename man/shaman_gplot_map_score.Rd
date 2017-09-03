@@ -30,7 +30,7 @@ score_hic_mat, shuffle_and_score_hic_mat
 \examples{
 
 #Set misha db to test
-gsetroot(shaman_get_test_track_db()) 
+gsetroot(shaman_get_test_track_db())
 points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames="score")
 shaman_gplot_map_score(points)
 }
