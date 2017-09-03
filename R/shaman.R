@@ -83,7 +83,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
      res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
     } else {
 	doMC::registerDoMC(cores=max_jobs)
-	res=plyr::ddply(intervals, .(chrom, start), function(x) {
+	res=plyr::ddply(intervals, plyr::.(chrom, start), function(x) {
 		shaman_shuffle_hic_mat_for_track(track_db, obs_track_nm, work_dir, x$chrom[1],
 			x$start[1], x$end[1], x$start[1], x$end[1], min_dist=1024,
 			dist_resolution=dist_resolution, decay_smooth=smooth, shuffle=shuffle,
@@ -325,7 +325,7 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
      res <- .gcluster.run2(command.list = commands, opt.flags=sge_flags, max.jobs=max_jobs)
    } else {
      doMC::registerDoMC(cores=max_jobs)
-     res=plyr::ddply(near_cis_2d_upper_mat, .(chrom1, start1, start2), function(x) {
+     res=plyr::ddply(near_cis_2d_upper_mat, plyr::.(chrom1, start1, start2), function(x) {
         shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
         x$chrom1[1], x$start1[1],x$end1[1], x$start2[1], x$end2[1], expand,  k)},
 	.parallel=TRUE)
