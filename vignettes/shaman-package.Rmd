@@ -39,8 +39,9 @@ shaman_score_hic_track(track_db=shaman_get_test_track_db(), work_dir=tempdir(), 
 ```
 - Visualize region
 ```{r, eval=FALSE, warning=FALSE}
-point_score = gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames="score")
-shaman_plot_map_score_with_annotations("hg19", point_score$points, gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), misha_tracks=list("K562.k27ac", "rna-seq"), annotations=list("ctcf_forward", "ctcf_reverse"), a_colors=c("#4572A7", "#AA4643"))
+gsetroot(shaman_get_test_track_db())
+point_score = gextract("hic_score", gintervals(2, 175e06, 178e06, 2, 175e06, 178e06), colnames="score")
+shaman_plot_map_score_with_annotations("hg19", point_score, gintervals(2, 175e06, 178e06), misha_tracks=list("K562.k27ac", "rna-seq"), annotations=list("ctcf_forward", "ctcf_reverse"), a_colors=c("#4572A7", "#AA4643"))
 ```
 ![Example of normalized map with annotations](fig2.hoxd.example.png)
 
