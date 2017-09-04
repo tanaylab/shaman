@@ -29,6 +29,7 @@
 #' # Note that this is a toy db sampled from K562 ela data - shuffling the observed track will not produce the expected track.
 #' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
 #' options(shaman.mc_support=1)    #configuring multi-core mode
+#' if (gtrack.exists("hic_obs_shuffle")) { gtrack.rm("hic_obs_shuffle", force=TRUE) }
 #' ret <- shaman_shuffle_hic_track(shaman::shaman_get_test_track_db(),
 #'	obs_track_nm="hic_obs",
 #'	work_dir=tempdir(),     	   # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
@@ -255,6 +256,7 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' # as most of the genome is missing (you will see message: number of points in focus interval < 1000)
 #' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
 #' options(shaman.mc_support=1)    #configuring multi-core mode
+#' if (gtrack.exists("hic_score_new")) { gtrack.rm("hic_score_new", force=TRUE) }
 #' ret <- shaman_score_hic_track(shaman_get_test_track_db(),
 #'	work_dir=tempdir(),   		  # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
 #'	score_track_nm="hic_score_new",
@@ -704,7 +706,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 #' points <- gextract("hic_obs", gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06), band=c(-2e06, -1024))
 #' obs <- gextract("hic_obs", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), band=c(-2e06, -1024))
 #' exp <- gextract("hic_exp", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), band=c(-2e06, -1024))
-#' mat_score = shaman_kk_norm(obs, exp, points, k_exp=100* nrow(exp)/nrow(obs))
+#' mat_score = shaman_kk_norm(obs, exp, points, k_obs=100, k_exp=200)
 #' shaman_gplot_map_score(mat_score$points)
 #'
 #' @export
