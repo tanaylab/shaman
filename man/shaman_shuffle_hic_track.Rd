@@ -6,7 +6,7 @@
 \usage{
 shaman_shuffle_hic_track(track_db, obs_track_nm, work_dir,
   exp_track_nm = paste0(obs_track_nm, "_shuffle"), max_jobs = 25,
-  shuffle = 80, grid_small = 500000, grid_high = 1000000,
+  shuffle = 80, grid_small = 5e+05, grid_high = 1e+06,
   grid_step_iter = 40, dist_resolution = NA, smooth = NA)
 }
 \arguments{
@@ -52,6 +52,7 @@ Temporary files are deleted upon track creation.
 # Note that this is a toy db sampled from K562 ela data - shuffling the observed track will not produce the expected track.
 # options(shaman.sge_support=1) #configuring sge engine mode - preferred
 options(shaman.mc_support=1)    #configuring multi-core mode
+if (gtrack.exists("hic_obs_shuffle")) { gtrack.rm("hic_obs_shuffle", force=TRUE) }
 ret <- shaman_shuffle_hic_track(shaman::shaman_get_test_track_db(),
 obs_track_nm="hic_obs",
 work_dir=tempdir(),     	   # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
