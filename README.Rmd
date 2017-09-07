@@ -26,9 +26,9 @@ The normalization workflow consists of the following steps:
 Source code can be found at: 
 https://bitbucket.org/tanaylab/shaman
 
-#### Requirements 
+### Requirements 
 - _Perl_
-- _devtools_ R package
+- _devtools_ R package (optional, for automatic installation of *bioconductor* dependencies)
 - _System:_ multi-core unix / linux based system or SGE (sun grid engine) cluster for distributed computing are required for large HiC datasets. 
 
 
@@ -41,12 +41,31 @@ devtools::install_bitbucket('tanaylab/shaman@default',
                             repos=c(getOption('repos'), 'https://tanaylab.bitbucket.io/repo'))
 ```
 
-If devtools fails to install all the bioconductor requirments please install _Gviz_ manually from bioconductor:
+If devtools fails to install all the bioconductor requirments please install _Gviz_ and _GenomeInfoDb_ manually from bioconductor:
 
 ```{r, eval=FALSE}
 source("https://bioconductor.org/biocLite.R")
 biocLite("Gviz")
+biocLite("GenomeInfoDb")
 ```
 
-#### Using the package
+#### Installing without the *devtools* package
+In order to install without the *devtools* package, please take the following steps:
+
+1. Install *Gviz* and *GenomeInfoDb* from *bioconductor*:
+
+```{r, eval = FALSE}
+source("https://bioconductor.org/biocLite.R")
+biocLite("Gviz")
+biocLite("GenomeInfoDb")
+```
+
+2. Install *shaman*:
+
+```{r, eval=FALSE}
+install.packages('shaman', repos=c(getOption('repos'), 'https://tanaylab.bitbucket.io/repo')) 
+```
+
+
+### Using the package
 Please refer to  https://tanaylab.bitbucket.io/shaman/articles/shaman-package.html for usage and workflow.
