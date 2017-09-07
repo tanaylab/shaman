@@ -36,4 +36,5 @@ Imports:
 Remotes:
     bioc::3.3/Gviz,
     bioc::3.3/GenomeInfoDb,
-    bitbucket::tanaylab/misha-package@default
+URL: http://tanaylab.bitbucket.io/shaman, https://bitbucket.com/tanaylab/shaman
+BugReports: https://bitbucket.com/tanaylab/shaman/issues

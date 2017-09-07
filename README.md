@@ -1,3 +1,4 @@
+
 The shaman pacakge - sampling HiC contact matrices for a-parametric normalization
 =================================================================================
 

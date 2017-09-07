@@ -6,7 +6,7 @@
 \usage{
 shaman_score_hic_track(track_db, work_dir, score_track_nm, obs_track_nms,
   exp_track_nms = paste0(obs_track_nms, "_shuffle"),
-  points_track_nms = obs_track_nms, near_cis = 5e+06, expand = 2e+06,
+  points_track_nms = obs_track_nms, near_cis = 5000000, expand = 2000000,
   k = 100, max_jobs = 100)
 }
 \arguments{
@@ -59,7 +59,10 @@ Temporary files are deleted upon track creation.
 # as most of the genome is missing (you will see message: number of points in focus interval < 1000)
 # options(shaman.sge_support=1) #configuring sge engine mode - preferred
 options(shaman.mc_support=1)    #configuring multi-core mode
-if (gtrack.exists("hic_score_new")) { gtrack.rm("hic_score_new", force=TRUE) }
+if (gtrack.exists("hic_score_new")) {
+    gtrack.rm("hic_score_new", force=TRUE)
+    gdb.reload()
+}
 ret <- shaman_score_hic_track(shaman_get_test_track_db(),
 work_dir=tempdir(),   		  # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
 score_track_nm="hic_score_new",
@@ -68,5 +71,5 @@ exp_track_nms="hic_exp",
 	near_cis=1e09, 			  # this test db contains very little data, can increase the size of each job
 max_jobs=parallel::detectCores()) # increase number of jobs for optimal runtime when running in sge mode
 gdb.reload()
-gtrack.ls("hic_obs_shuffle") #new shuffled track that was created
+gtrack.ls("hic_score_new") #new shuffled track that was created
 }

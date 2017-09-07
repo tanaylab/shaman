@@ -19,7 +19,6 @@ navbar:
 
 reference:
 - title: Data processing
-  desc:  Normalization ...
   contents:
   - shaman_shuffle_hic_track
   - shaman_score_hic_track
