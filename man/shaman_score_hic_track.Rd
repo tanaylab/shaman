@@ -6,7 +6,7 @@
 \usage{
 shaman_score_hic_track(track_db, work_dir, score_track_nm, obs_track_nms,
   exp_track_nms = paste0(obs_track_nms, "_shuffle"),
-  points_track_nms = obs_track_nms, near_cis = 5000000, expand = 2000000,
+  points_track_nms = obs_track_nms, near_cis = 5e+06, expand = 2e+06,
   k = 100, max_jobs = 100)
 }
 \arguments{
@@ -47,6 +47,8 @@ over the distances of the k-nearest neighbors in the observed compared to the ex
 High scores represent contact enrichment while low scores depict insulation.
 Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
 Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters), 
+depending on the number of cores available.
 
 Each step creates temporary files of the matrix scores which are then joined to a track.
 Temporary files are deleted upon track creation.
