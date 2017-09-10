@@ -38,6 +38,7 @@ reference:
 - title: configuration
   desc: Parameter configuration utility functions
   contents:
+  - shaman_get_test_track_db
   - get_param_list
   - get_param
   - init_params

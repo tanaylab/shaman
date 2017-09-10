@@ -55,6 +55,12 @@ get_param_list = function(nm, params)
 #' returns test misha db
 #'
 #' \code{shaman_get_test_track_db}
+#' Sets the current misha DB to the example database provided with shaman.
+#' In the example misha database provided in this package we have created a low-footprint 
+#' matrix to examplify the shaman workflow. We included 4.6 million contacts from 
+#' ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions. 
+#' Processing the complete matrix from this study requires downloading the full contact list 
+#' and regenerating the reshuffled matrix.
 #' @export
 
 
