@@ -73,13 +73,14 @@ gdb.init('mm10')
 
 ## Import HiC observed contacts
 In order to import observed HiC contacts to an existing misha database (e.g. "hg19"):
+
 1. create tab delimited text files (e.g. "hic.obs.txt") with the following columns:
-  * chrom1 - the first chromosome of the contact (must start with "chr")
-  * start1 - the first genomic coordinate
-  * end1 - should be set to start1+1
-  * chrom2 - the second chromosome of the  contact (must start with "chr")
-  * start2 - the second genomic coordinate of the contact
-  * end2 - should be set to start2+1
+- chrom1 - the first chromosome of the contact (must start with "chr")
+- start1 - the first genomic coordinate
+- end1 - should be set to start1+1
+- chrom2 - the second chromosome of the  contact (must start with "chr")
+- start2 - the second genomic coordinate of the contact
+- end2 - should be set to start2+1
   NOTE: misha uses 0-based coordinates!
   
 2. run the following _misha_ command:
