@@ -7,8 +7,7 @@
 shaman_generate_feature_grid(feature1, feature2, obs_track_nm,
   exp_track_nm = paste0(obs_track_nm, "_shuffle"),
   score_track_nm = paste0(obs_track_nm, "_score"), score_filter = 30,
-  range = 25000, resolution = 500, min_dist = 200000,
-  max_dist = 1000000)
+  range = 25000, resolution = 500, min_dist = 2e+05, max_dist = 1e+06)
 }
 \arguments{
 \item{feature1}{1d intervals representing feature 1. Strand, if provided will be ignored.}
@@ -58,5 +57,5 @@ Note that grid contains only points in which feature 1 position is smaller than 
 gsetroot(shaman_get_test_track_db()) 
 grid = shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs", 
 exp_track_nm="hic_exp")
-shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
+plot = shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
 }

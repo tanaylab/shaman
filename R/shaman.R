@@ -4,8 +4,10 @@
 #'
 #' This function generates an expected 2D hic track based on observed hic data.
 #' Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
-#' Note that this function requires sge (qsub) or multicore to be enables.
+#' Note that this function requires sge (qsub) or multicore to be enabled.
 #' Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+#' Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine 
+#' with one core per chromosome.
 #'
 #' Each step creates temporary files of the shuffled matrices which are then joined to a track.
 #' Temporary files are deleted upon track creation.
@@ -232,7 +234,9 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' High scores represent contact enrichment while low scores depict insulation.
 #' Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
 #' Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
-#'
+#' Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters), 
+#' depending on the number of cores available.
+#' 
 #' Each step creates temporary files of the matrix scores which are then joined to a track.
 #' Temporary files are deleted upon track creation.
 #' @param track_db Directory of the misha database.
