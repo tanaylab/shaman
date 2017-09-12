@@ -31,8 +31,7 @@ Imports:
     Gviz,
     plyr,
     parallel (>= 3.3.2) ,
-    doMC (>= 1.3.4),
-    Rcpp
+    doMC (>= 1.3.4)
 Remotes:
     bioc::3.3/Gviz,
     bioc::3.3/GenomeInfoDb,

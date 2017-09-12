@@ -77,7 +77,7 @@ install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/misha_3.5.6.ta
 source("https://bioconductor.org/biocLite.R") #installing Gviz
 biocLite("Gviz")
 biocLite("GenomeInfoDb")
-install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/shaman.2.0.tar.gz", , repos=NULL) # Download and install shaman package)
+install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/shaman_2.0.tar.gz", , repos=NULL) # Download and install shaman package)
 ```
 
 
