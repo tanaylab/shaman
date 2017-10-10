@@ -81,7 +81,11 @@ In order to import observed HiC contacts to an existing misha database (e.g. "hg
 - chrom2 - the second chromosome of the  contact (must start with "chr")
 - start2 - the second genomic coordinate of the contact
 - end2 - should be set to start2+1
-  NOTE: misha uses 0-based coordinates!
+- contacts - contains the number of reads found for this contact
+IMPORTANT NOTES: 
+misha uses 0-based coordinates!
+File must contain a header line with the following columns: chrom1, start1, end1, chrom2, start2, end2, contacts in this order.
+Coordinates must be unique - cannot have the same contact more than once.
   
 2. run the following _misha_ command:
 ```{r, eval = FALSE}
