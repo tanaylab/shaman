@@ -295,8 +295,14 @@ shaman_score_pal <- function() {
 }
 
 .shaman_get_ucsc <- function(genome, interv, stacking="dense") {
-  genetrack=Gviz::UcscTrack(track="RefSeq Genes", table="refGene",
-	trackType="GeneRegionTrack",chromosome=as.character(interv$chrom), genome=genome,
+   track="RefSeq Genes"
+   table = "refGene"
+   if (genome == "mm10" | genome == "hg38") {
+	track = "NCBI RefSeq"
+   }
+#  genetrack=Gviz::UcscTrack(track="RefSeq Genes", table="refGene",
+   genetrack=Gviz::UcscTrack(genome=genome, track=track, table="refGene",
+	trackType="GeneRegionTrack",chromosome=as.character(interv$chrom), 
         rstart="exonStarts", rends="exonEnds", gene="name", symbol="name2",
         transcript="name", strand="strand", name="RefSeq Genes",
         feature="name2", stacking=stacking,
