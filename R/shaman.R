@@ -215,8 +215,8 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
   if (sort_uniq) {
       ret=1
       system(sprintf("echo -e \"chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tobs\" > %s.uniq", shuf_fn))
-      system(sprintf("cat %s | grep -v start | sort | uniq -c | awk '{ print \"%s\" \"\t\" $2 \"\t\" ($2+1) \"\t\" \"%s\" \"\t\" $3 \"\t\" ($3+1) \"\t\" $1}' >> %s.uniq",
-          shuf_fn, chrom, chrom, shuf_fn))
+      system(sprintf("cat %s | grep -v start | sort -T %s | uniq -c | awk '{ print \"%s\" \"\t\" $2 \"\t\" ($2+1) \"\t\" \"%s\" \"\t\" $3 \"\t\" ($3+1) \"\t\" $1}' >> %s.uniq",
+          shuf_fn, work_dir, chrom, chrom, shuf_fn))
   }
   return(ret)
 }
