@@ -120,7 +120,10 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
       shuffle, ", based on", obs_track_nm), files)
 
     # cleanup work dir from all temporary files
+   debug <- getOption("shaman.debug")
+   if (!debug) {
     try(system(sprintf("rm %s%s*", work_dir, obs_track_nm)))
+   }
 }
 
 
