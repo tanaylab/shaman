@@ -297,7 +297,7 @@ shaman_score_pal <- function() {
 .shaman_get_ucsc <- function(genome, interv, stacking="dense") {
    track="RefSeq Genes"
    table = "refGene"
-   if (genome == "mm10" | genome == "hg38") {
+   if (genome == "mm10" | genome == "hg38" | genome == "hg19") {
 	track = "NCBI RefSeq"
    }
 #  genetrack=Gviz::UcscTrack(track="RefSeq Genes", table="refGene",

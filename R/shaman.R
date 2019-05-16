@@ -187,7 +187,7 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
       a <- gextract(track, scope, band=c(-max_dist, -min_dist + 1), colnames="contact")
       if (is.null(nrow(a))) {
           message("not shuffling, no data")
-          system(paste("perl -e'print\"start1\tstart2\n\";' > ", shuf_fn))
+          system(paste("echo 'start1\tstart2' > ", shuf_fn))
           return(0)
       }
       # multiply each line according to the number of observed counts
@@ -217,7 +217,7 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
   }
   if (sort_uniq) {
       ret=1
-      system(sprintf("echo -e \"chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tobs\" > %s.uniq", shuf_fn))
+      system(sprintf("echo 'chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tobs' > %s.uniq", shuf_fn))
       system(sprintf("cat %s | grep -v start | sort -T %s | uniq -c | awk '{ print \"%s\" \"\t\" $2 \"\t\" ($2+1) \"\t\" \"%s\" \"\t\" $3 \"\t\" ($3+1) \"\t\" $1}' >> %s.uniq",
           shuf_fn, work_dir, chrom, chrom, shuf_fn))
   }
@@ -411,7 +411,7 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
   focus_interval = gintervals.2d(chrom, start1, end1, chrom, start2, end2)
   n = shaman_score_hic_mat(obs_track_nms, exp_track_nms, focus_interval, regional_interval, points_track_nms=points_track_nms, min_dist=min_dist, k=k)
   if (is.null(n)) {
-    system(paste("perl -e'print\"chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tscore\";' > ", fn))
+    system(paste("echo 'chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tscore' > ", fn))
     #insufficient data in region - not writing region file
         return(0);
   }
