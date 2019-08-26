@@ -16,7 +16,7 @@ In the example misha database provided in this package we have created a low-foo
 
 ### Code
 
-Source code can be found at: <https://bitbucket.org/tanaylab/shaman>
+Source code can be found at: <https://github.com/tanaylab/shaman>
 
 ### Requirements
 
@@ -29,7 +29,7 @@ Source code can be found at: <https://bitbucket.org/tanaylab/shaman>
 The quickest way to install *shaman* is to use the following command:
 
 ``` r
-devtools::install_bitbucket('tanaylab/shaman@default', 
+devtools::install_github('tanaylab/shaman', 
                             vignette = TRUE, 
                             repos=c(getOption('repos'), 'https://tanaylab.bitbucket.io/repo'))
 ```
