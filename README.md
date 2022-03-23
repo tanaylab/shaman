@@ -15,7 +15,7 @@ In the example misha database provided in this package we have created a low-foo
 
 ### Code
 
-Source code can be found at: <https://github.org/tanaylab/shaman>
+Source code can be found at: <https://github.com/tanaylab/shaman>
 
 ### Requirements
 
