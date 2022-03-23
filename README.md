@@ -1,6 +1,5 @@
 
-The shaman package - sampling HiC contact matrices for a-parametric normalization
-=================================================================================
+# The shaman package - sampling HiC contact matrices for a-parametric normalization
 
 Shaman package impelements functions for resampling Hi-C matrices in order to generate expected contact distributions given constraints on marginal coverage and contact-distance probability distributions. The package also provides support for visualizing normalized matrices and statistical analysis of contact distributions around selected landmarks. It is an R package embedding algorithms implemened in C++, which is built over support from the Tanay's lab *Misha* genomic database system that is provided with the package.
 
@@ -16,12 +15,12 @@ In the example misha database provided in this package we have created a low-foo
 
 ### Code
 
-Source code can be found at: <https://github.com/tanaylab/shaman>
+Source code can be found at: <https://github.org/tanaylab/shaman>
 
 ### Requirements
 
 -   *Perl*
--   *devtools* R package (optional, for automatic installation of *bioconductor* dependencies)
+-   *remotes* R package (optional, for automatic installation of *bioconductor* dependencies)
 -   *System:* multi-core unix / linux based system or SGE (sun grid engine) cluster for distributed computing are required for large HiC datasets.
 
 ### Installation
@@ -29,35 +28,15 @@ Source code can be found at: <https://github.com/tanaylab/shaman>
 The quickest way to install *shaman* is to use the following command:
 
 ``` r
-devtools::install_github('tanaylab/shaman', 
-                            vignette = TRUE, 
-                            repos=c(getOption('repos'), 'https://tanaylab.github.io/repo'))
+remotes::install_github('tanaylab/shaman')
 ```
 
-If devtools fails to install all the bioconductor requirments please install *Gviz* and *GenomeInfoDb* manually from bioconductor:
+If remotes fails to install all the bioconductor requirments please install *Gviz* and *GenomeInfoDb* manually from bioconductor:
 
 ``` r
 source("https://bioconductor.org/biocLite.R")
 biocLite("Gviz")
 biocLite("GenomeInfoDb")
-```
-
-#### Installing without the *devtools* package
-
-In order to install without the *devtools* package, please take the following steps:
-
-1.  Install *Gviz* and *GenomeInfoDb* from *bioconductor*:
-
-``` r
-source("https://bioconductor.org/biocLite.R")
-biocLite("Gviz")
-biocLite("GenomeInfoDb")
-```
-
-1.  Install *shaman*:
-
-``` r
-install.packages('shaman', repos=c(getOption('repos'), 'https://tanaylab.github.io/repo')) 
 ```
 
 #### When all else fails:
