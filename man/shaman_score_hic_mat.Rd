@@ -4,9 +4,16 @@
 \alias{shaman_score_hic_mat}
 \title{generate a score matrix for observed data based on the expected for a given 2D focus interval}
 \usage{
-shaman_score_hic_mat(obs_track_nms, exp_track_nms, focus_interval,
-  regional_interval, points_track_nms = obs_track_nms, min_dist = 1024,
-  k = 100, k_exp = 2 * k)
+shaman_score_hic_mat(
+  obs_track_nms,
+  exp_track_nms,
+  focus_interval,
+  regional_interval,
+  points_track_nms = obs_track_nms,
+  min_dist = 1024,
+  k = 100,
+  k_exp = 2 * k
+)
 }
 \arguments{
 \item{obs_track_nms}{Names of observed 2D genomic tracks for the hic data. Pooling of multiple
@@ -50,11 +57,12 @@ The score for a point is the KS D-statistic of the distances to the points k-nea
 }
 \examples{
 
-#Set misha db to test
+# Set misha db to test
 gsetroot(shaman_get_test_track_db())
-mat_score = shaman_score_hic_mat(obs_track_nms="hic_obs", exp_track_nms="hic_exp",
-focus_interval=gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06),
-regional_interval=gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06))
+mat_score <- shaman_score_hic_mat(
+    obs_track_nms = "hic_obs", exp_track_nms = "hic_exp",
+    focus_interval = gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06),
+    regional_interval = gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06)
+)
 shaman_gplot_map_score(mat_score$points)
-
 }

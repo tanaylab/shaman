@@ -4,14 +4,27 @@
 \alias{shaman_plot_map_score_with_annotations}
 \title{plots hic normalized map with annotations}
 \usage{
-shaman_plot_map_score_with_annotations(genome, points_score, interval_range,
-  point_size = 0.1, misha_tracks = list(),
-  mt_colors = getOption("shaman.track_colors"), mt_ylims = NULL,
-  annotations = list(), a_colors = getOption("shaman.annotation_colors"),
-  add_genes = T, add_ideogram = T, add_axis = T,
-  gene_stacking = "squish", gene_size = 0.7, track_size = 0.8,
-  annotation_size = 0.7, fig_fn = "", fig_width = 900, fig_height = 5/6
-  * 900)
+shaman_plot_map_score_with_annotations(
+  genome,
+  points_score,
+  interval_range,
+  point_size = 0.1,
+  misha_tracks = list(),
+  mt_colors = getOption("shaman.track_colors"),
+  mt_ylims = NULL,
+  annotations = list(),
+  a_colors = getOption("shaman.annotation_colors"),
+  add_genes = T,
+  add_ideogram = T,
+  add_axis = T,
+  gene_stacking = "squish",
+  gene_size = 0.7,
+  track_size = 0.8,
+  annotation_size = 0.7,
+  fig_fn = "",
+  fig_width = 900,
+  fig_height = 5/6 * 900
+)
 }
 \arguments{
 \item{genome}{Name of reference genome (e.g. "hg19", "mm10")}
@@ -61,6 +74,6 @@ linear data such as gene annotations, rna, chromatin, transcription factor bindi
 \examples{
 
 gsetroot(shaman_get_test_track_db())
-points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames="score")
+points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames = "score")
 shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 175e06, 178e06))
 }

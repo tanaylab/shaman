@@ -4,9 +4,21 @@
 \alias{shaman_score_hic_mat_for_track}
 \title{generate a score matrix for observed data based on the expected}
 \usage{
-shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms,
-  points_track_nms, chrom, start1, end1, start2, end2, expand = 2e+06,
-  k = 100, min_dist = 1024)
+shaman_score_hic_mat_for_track(
+  track_db,
+  work_dir,
+  obs_track_nms,
+  exp_track_nms,
+  points_track_nms,
+  chrom,
+  start1,
+  end1,
+  start2,
+  end2,
+  expand = 2000000,
+  k = 100,
+  min_dist = 1024
+)
 }
 \arguments{
 \item{track_db}{Directory of the misha database.}

@@ -3,8 +3,4 @@
 \docType{package}
 \name{shaman}
 \alias{shaman}
-\alias{shaman-package}
 \title{shaman.}
-\description{
-shaman.
-}

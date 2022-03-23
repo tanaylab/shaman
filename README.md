@@ -6,7 +6,7 @@ Shaman package impelements functions for resampling Hi-C matrices in order to ge
 
 The normalization workflow consists of the following steps:
 
-1.  [Import](https://tanaylab.bitbucket.io/shaman/articles/import.html) observed HiC data to misha db. In order to utilize full functionality of the shaman package, you need to construct a Misha database for your genome of interest, and import your Hi-C data to Misha binary Quad-tree format.
+1.  [Import](https://tanaylab.github.io/shaman/articles/import.html) observed HiC data to misha db. In order to utilize full functionality of the shaman package, you need to construct a Misha database for your genome of interest, and import your Hi-C data to Misha binary Quad-tree format.
 2.  Shuffle observed data to generate expected data. Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine with one core per chromosome. Note that shaman can also run distributed using Sun Grid Engine.
 3.  Compute the normalized score of each observed data point. This computation can be conducted inline for a specific genomic region, or pre-processed on the entire dataset using distributed computation. Score computation on 1 billion reads on a distributed system may take 4-10 hours, depending on the number of cores available.
 4.  Visualize normalized contact maps. Precomputed normalized scores allow for flexible analysis of contact distributions.
@@ -31,7 +31,7 @@ The quickest way to install *shaman* is to use the following command:
 ``` r
 devtools::install_github('tanaylab/shaman', 
                             vignette = TRUE, 
-                            repos=c(getOption('repos'), 'https://tanaylab.bitbucket.io/repo'))
+                            repos=c(getOption('repos'), 'https://tanaylab.github.io/repo'))
 ```
 
 If devtools fails to install all the bioconductor requirments please install *Gviz* and *GenomeInfoDb* manually from bioconductor:
@@ -57,7 +57,7 @@ biocLite("GenomeInfoDb")
 1.  Install *shaman*:
 
 ``` r
-install.packages('shaman', repos=c(getOption('repos'), 'https://tanaylab.bitbucket.io/repo')) 
+install.packages('shaman', repos=c(getOption('repos'), 'https://tanaylab.github.io/repo')) 
 ```
 
 #### When all else fails:
@@ -74,4 +74,4 @@ install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/shaman_2.0.tar
 
 ### Using the package
 
-Please refer to <https://tanaylab.bitbucket.io/shaman/articles/shaman-package.html> for usage and workflow.
+Please refer to <https://tanaylab.github.io/shaman/articles/shaman-package.html> for usage and workflow.

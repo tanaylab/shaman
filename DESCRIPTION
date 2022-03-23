@@ -13,7 +13,7 @@ Description: Generate expected HiC data maintaining marginal coverage,
 License: GPL
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 7.1.2
 LinkingTo: Rcpp
 SystemRequirements: C++11
 Suggests: knitr,
@@ -35,5 +35,6 @@ Imports:
 Remotes:
     bioc::3.3/Gviz,
     bioc::3.3/GenomeInfoDb,
-URL: http://tanaylab.bitbucket.io/shaman, https://bitbucket.com/tanaylab/shaman
-BugReports: https://bitbucket.com/tanaylab/shaman/issues
+    tanaylab/misha
+URL: http://tanaylab.github.io/shaman, https://github.com/tanaylab/shaman
+BugReports: https://github.com/tanaylab/shaman/issues

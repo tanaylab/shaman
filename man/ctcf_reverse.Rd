@@ -4,7 +4,9 @@
 \name{ctcf_reverse}
 \alias{ctcf_reverse}
 \title{Human CTCF motifs found on reverse strand on hg19 genome}
-\format{An object of class \code{data.frame} with 8842 rows and 3 columns.}
+\format{
+An object of class \code{data.frame} with 8842 rows and 3 columns.
+}
 \usage{
 ctcf_reverse
 }

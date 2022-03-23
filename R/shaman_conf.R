@@ -6,16 +6,13 @@
 #'
 #'
 
-.shaman_dump_config <- function(config_dir)
-{
-    config_files <- dir(system.file("config", package='shaman'), full.names=T)
-    dir.create(config_dir, recursive=T, showWarnings=FALSE)
-    ret <- file.copy(config_files, config_dir, recursive=T, overwrite=FALSE)
-    if (!all(ret))
-    {
+.shaman_dump_config <- function(config_dir) {
+    config_files <- dir(system.file("config", package = "shaman"), full.names = T)
+    dir.create(config_dir, recursive = T, showWarnings = FALSE)
+    ret <- file.copy(config_files, config_dir, recursive = T, overwrite = FALSE)
+    if (!all(ret)) {
         warning("couldn't dump config files to ", config_dir, "\n  Perhaps they're already there? ")
-    } else
-    {
+    } else {
         message("Dumped config files to: ", config_dir)
     }
 }
@@ -30,28 +27,28 @@
 #' @param shaman_config Parameter file
 #'
 #'
-.shaman_load_config <- function(config_dir, shaman_config=file.path(config_dir, "shaman.conf"), reset=FALSE)
-{
+.shaman_load_config <- function(config_dir, shaman_config = file.path(config_dir, "shaman.conf"), reset = FALSE) {
     op <- options()
-    all_paths <- list("shaman.shaman_conf_path"=shaman_config)
+    all_paths <- list("shaman.shaman_conf_path" = shaman_config)
 
     op.shaman <- init_params(shaman_config)
-    op.shaman<- c(op.shaman, all_paths)
+    op.shaman <- c(op.shaman, all_paths)
 
     # Check if some params were saved already
     already_set <- names(op) %in% names(op.shaman)
-    if (any(already_set) & reset==TRUE)
-    {
-        message(sprintf("%i parameters were already defined in this sessions and they will be overwritten!",
-                sum(already_set)))
+    if (any(already_set) & reset == TRUE) {
+        message(sprintf(
+            "%i parameters were already defined in this sessions and they will be overwritten!",
+            sum(already_set)
+        ))
     }
 
     if (!reset) {
-	op.shaman = op.shaman[!already_set]
+        op.shaman <- op.shaman[!already_set]
     }
     options(op.shaman)
 
-#    gset_input_mode(autocompletion = FALSE, interactive = FALSE)
+    #    gset_input_mode(autocompletion = FALSE, interactive = FALSE)
     invisible()
 }
 
@@ -62,8 +59,7 @@
 # internal function for checking that the configuration has been loaded
 ########################################################################
 .shaman_check_config <- function(params) {
-  if (!all( params %in% names(options()) ))
-    {
-        .shaman_load_config(system.file("config", package="shaman"))
+    if (!all(params %in% names(options()))) {
+        .shaman_load_config(system.file("config", package = "shaman"))
     }
 }

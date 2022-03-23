@@ -14,8 +14,8 @@ navbar:
       href: reference/index.html
       icon: fa-th-list
   right:
-    - icon: fa-bitbucket-square
-      href: https://bitbucket.org/tanaylab/shaman
+    - icon: fa-github-square
+      href: https://github.org/tanaylab/shaman
 
 reference:
 - title: Data processing

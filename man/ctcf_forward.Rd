@@ -4,7 +4,9 @@
 \name{ctcf_forward}
 \alias{ctcf_forward}
 \title{Human CTCF motifs found on forward strand on hg19 genome}
-\format{An object of class \code{data.frame} with 8791 rows and 3 columns.}
+\format{
+An object of class \code{data.frame} with 8791 rows and 3 columns.
+}
 \usage{
 ctcf_forward
 }

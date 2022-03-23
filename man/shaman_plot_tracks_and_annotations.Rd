@@ -4,12 +4,22 @@
 \alias{shaman_plot_tracks_and_annotations}
 \title{plots misha 1D tracks and annotations}
 \usage{
-shaman_plot_tracks_and_annotations(genome, interval_range,
-  misha_tracks = list(), mt_colors = getOption("shaman.track_colors"),
-  mt_ylims = NULL, annotations = list(),
-  a_colors = getOption("shaman.annotation_colors"), add_genes = T,
-  add_ideogram = T, add_axis = T, gene_stacking = "squish",
-  gene_size = 0.7, track_size = 0.8, annotation_size = 0.7)
+shaman_plot_tracks_and_annotations(
+  genome,
+  interval_range,
+  misha_tracks = list(),
+  mt_colors = getOption("shaman.track_colors"),
+  mt_ylims = NULL,
+  annotations = list(),
+  a_colors = getOption("shaman.annotation_colors"),
+  add_genes = T,
+  add_ideogram = T,
+  add_axis = T,
+  gene_stacking = "squish",
+  gene_size = 0.7,
+  track_size = 0.8,
+  annotation_size = 0.7
+)
 }
 \arguments{
 \item{genome}{Name of reference genome (e.g. "hg19", "mm10")}

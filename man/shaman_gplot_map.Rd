@@ -4,8 +4,13 @@
 \alias{shaman_gplot_map}
 \title{plot an observed or expected hic map}
 \usage{
-shaman_gplot_map(points, interval_range = NA, rotate = TRUE,
-  point_size = 0.1, add_axis = TRUE)
+shaman_gplot_map(
+  points,
+  interval_range = NA,
+  rotate = TRUE,
+  point_size = 0.1,
+  add_axis = TRUE
+)
 }
 \arguments{
 \item{points}{A dataframe containing the points (start1, start2).}
@@ -27,7 +32,7 @@ Plots hic contact matrix.
 }
 \examples{
 
-#Set misha db to test
+# Set misha db to test
 gsetroot(shaman::shaman_get_test_track_db())
 points <- gextract("hic_obs", gintervals.2d(2, 176e06, 177e06, 2, 176e06, 177e06))
 shaman_gplot_map(points)

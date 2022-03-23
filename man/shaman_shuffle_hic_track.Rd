@@ -4,10 +4,19 @@
 \alias{shaman_shuffle_hic_track}
 \title{generate an expected hic track based on observed hic data}
 \usage{
-shaman_shuffle_hic_track(track_db, obs_track_nm, work_dir,
-  exp_track_nm = paste0(obs_track_nm, "_shuffle"), max_jobs = 25,
-  shuffle = 80, grid_small = 5e+05, grid_high = 1e+06,
-  grid_step_iter = 40, dist_resolution = NA, smooth = NA)
+shaman_shuffle_hic_track(
+  track_db,
+  obs_track_nm,
+  work_dir,
+  exp_track_nm = paste0(obs_track_nm, "_shuffle"),
+  max_jobs = 25,
+  shuffle = 80,
+  grid_small = 500000,
+  grid_high = 1000000,
+  grid_step_iter = 40,
+  dist_resolution = NA,
+  smooth = NA
+)
 }
 \arguments{
 \item{track_db}{Directory of the misha database.}
@@ -42,7 +51,7 @@ This function generates an expected 2D hic track based on observed hic data.
 Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
 Note that this function requires sge (qsub) or multicore to be enabled.
 Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
-Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine 
+Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine
 with one core per chromosome.
 
 Each step creates temporary files of the shuffled matrices which are then joined to a track.
@@ -53,18 +62,18 @@ Temporary files are deleted upon track creation.
 # The example below runs on the test misha db provided with shaman.
 # Note that this is a toy db sampled from K562 ela data - shuffling the observed track will not produce the expected track.
 # options(shaman.sge_support=1) #configuring sge engine mode - preferred
-options(shaman.mc_support=1)    #configuring multi-core mode
+options(shaman.mc_support = 1) # configuring multi-core mode
 if (gtrack.exists("hic_obs_shuffle")) {
-    gtrack.rm("hic_obs_shuffle", force=TRUE)
+    gtrack.rm("hic_obs_shuffle", force = TRUE)
     gdb.reload()
 }
 ret <- shaman_shuffle_hic_track(shaman::shaman_get_test_track_db(),
-obs_track_nm="hic_obs",
-work_dir=tempdir(),     	   # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
-shuffle=1, 			   # default is set to 80
-grid_step_iter=1, 		   # default is set to 40
-max_jobs=parallel::detectCores())  # optimally set to number of chromosomes
+    obs_track_nm = "hic_obs",
+    work_dir = tempdir(), # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+    shuffle = 1, # default is set to 80
+    grid_step_iter = 1, # default is set to 40
+    max_jobs = parallel::detectCores()
+) # optimally set to number of chromosomes
 gdb.reload()
-gtrack.ls("hic_obs_shuffle") #new shuffled track that was created
-
+gtrack.ls("hic_obs_shuffle") # new shuffled track that was created
 }

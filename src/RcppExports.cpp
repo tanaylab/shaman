@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // shaman_hic_matrix_shuffler_cpp
 int shaman_hic_matrix_shuffler_cpp(Rcpp::DataFrame& raw_contacts, std::string shuf_contacts, int shuffle_factor, int proposal_from_contacts, double proposal_iterations_d, int dist_resolution, int decay_smooth, int decay_regularization, double proposal_correction_factor_d, int max_dist, int min_dist, int grid_switch_bin_dist, int grid_x_min_bin, int grid_x_max_bin, int grid_x_increase, int grid_x_increase_iter, int input_symmetric_mat, int output_symmetric_mat);
 RcppExport SEXP _shaman_shaman_hic_matrix_shuffler_cpp(SEXP raw_contactsSEXP, SEXP shuf_contactsSEXP, SEXP shuffle_factorSEXP, SEXP proposal_from_contactsSEXP, SEXP proposal_iterations_dSEXP, SEXP dist_resolutionSEXP, SEXP decay_smoothSEXP, SEXP decay_regularizationSEXP, SEXP proposal_correction_factor_dSEXP, SEXP max_distSEXP, SEXP min_distSEXP, SEXP grid_switch_bin_distSEXP, SEXP grid_x_min_binSEXP, SEXP grid_x_max_binSEXP, SEXP grid_x_increaseSEXP, SEXP grid_x_increase_iterSEXP, SEXP input_symmetric_matSEXP, SEXP output_symmetric_matSEXP) {

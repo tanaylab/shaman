@@ -4,8 +4,13 @@
 \alias{shaman_gplot_map_score}
 \title{plot a normlized hic map}
 \usage{
-shaman_gplot_map_score(points_score, interval_range = NA, rotate = TRUE,
-  point_size = 0.1, add_axis = TRUE)
+shaman_gplot_map_score(
+  points_score,
+  interval_range = NA,
+  rotate = TRUE,
+  point_size = 0.1,
+  add_axis = TRUE
+)
 }
 \arguments{
 \item{points_score}{A dataframe containing the points (start1, start2) and their normalized score.}
@@ -29,8 +34,8 @@ score_hic_mat, shuffle_and_score_hic_mat
 }
 \examples{
 
-#Set misha db to test
+# Set misha db to test
 gsetroot(shaman_get_test_track_db())
-points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames="score")
+points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames = "score")
 shaman_gplot_map_score(points)
 }

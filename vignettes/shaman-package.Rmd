@@ -14,7 +14,7 @@ Shaman package impelements functions for resampling Hi-C matrices in order to ge
 
 The normalization workflow consists of the following steps:
 
-1. [Import](https://tanaylab.bitbucket.io/shaman/articles/import.html) observed HiC data to misha db. In order to utilize full functionality of the shaman package, you need to construct a Misha database for your genome of interest, and import your Hi-C data to Misha binary Quad-tree format.
+1. [Import](https://tanaylab.github.io/shaman/articles/import.html) observed HiC data to misha db. In order to utilize full functionality of the shaman package, you need to construct a Misha database for your genome of interest, and import your Hi-C data to Misha binary Quad-tree format.
 2. Shuffle observed data to generate expected data. Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine with one core per chromosome. Note that shaman can also run distributed using Sun Grid Engine.
 3. Compute the normalized score of each observed data point. This computation can be conducted inline for a specific genomic region, or pre-processed on the entire dataset using distributed computation. Score computation on 1 billion reads on a distributed system may take 4-10 hours, depending on the number of cores available.
 4. Visualize normalized contact maps. Precomputed normalized scores allow for flexible analysis of contact distributions.
@@ -23,7 +23,7 @@ The normalization workflow consists of the following steps:
 In the example misha database provided in this package we have created a low-footprint matrix to examplify the shaman workflow. We included 4.6 million contacts from ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions. Processing the complete matrix from this study requires downloading the full contact list and regenerating the reshuffled matrix.
 
 ## Workflow
-Once an observed HiC dataset is available in the misha db (refere to  [Import](https://tanaylab.bitbucket.io/shaman/articles/import.html)) for additional information), there are two possible modes to continue analysis:
+Once an observed HiC dataset is available in the misha db (refere to  [Import](https://tanaylab.github.io/shaman/articles/import.html)) for additional information), there are two possible modes to continue analysis:
 1. Distributed computation - relying on sun grid engine (sge), or using a single machine with multi-cores.
 2. Local computation - for computing normalized matrices in small genomic regions
 

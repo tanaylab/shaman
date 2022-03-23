@@ -4,10 +4,18 @@
 \alias{shaman_plot_feature_grid}
 \title{Plot spatial enrichment of contacts between two features}
 \usage{
-shaman_plot_feature_grid(grids, range, grid_resolution, plot_resolution,
-  type = "enrichment", fig_fn = "", fig_width = 400, fig_height = 400,
+shaman_plot_feature_grid(
+  grids,
+  range,
+  grid_resolution,
+  plot_resolution,
+  type = "enrichment",
+  fig_fn = "",
+  fig_width = 400,
+  fig_height = 400,
   pal = colorRampPalette(c("blue", "#87FFFF", "white", "#FF413D", "black")),
-  zlim = c(-1, 1))
+  zlim = c(-1, 1)
+)
 }
 \arguments{
 \item{grids}{List of grids generated for the same two feature sets from replicate observed / expected hic tracks.}
@@ -40,10 +48,11 @@ After contact feature grids are generated via shaman_generate_feature_grid, use 
 }
 \examples{
 
-#Set misha db to test
-gsetroot(shaman_get_test_track_db()) 
-grid = shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs", 
-exp_track_nm="hic_exp", score_track_nm="hic_score")
+# Set misha db to test
+gsetroot(shaman_get_test_track_db())
+grid <- shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs",
+    exp_track_nm = "hic_exp", score_track_nm = "hic_score"
+)
 shaman_plot_feature_grid(list(grid), 25000, 500, 500)
 shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
 shaman_plot_feature_grid(list(grid), 25000, 500, 2000)
