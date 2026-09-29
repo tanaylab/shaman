@@ -22,16 +22,22 @@ inline int min(int f1, int f2) { return(f1 < f2 ? f1 : f2); }
 inline float min(int f1, float f2) { return(f1 < f2 ? f1 : f2); }
 inline float min(float f1, int f2) { return(f1 < f2 ? f1 : f2); }
 
+// For d < -17, exp(d) < 2^-24, so 1 + exp(d) rounds to 1 and log(1 + exp(d))
+// is exactly 0: skip the exp and log calls (exp underflow is slow).
+inline float log_one_plus_exp(float d) {
+	return(d < -17 ? 0.0f : log(1 + exp(d)));
+}
+
 inline void log_sum_log(float &l1, float l2) {
 	if(l1 > l2) {
 		if(!isinf(l2)) {
-			l1 += log(1+ exp(l2-l1));
+			l1 += log_one_plus_exp(l2-l1);
 		}
 	} else {
 		if(isinf(l1)) {
 			l1 = l2;
 		} else {
-			l1 = l2 + log(1 + exp(l1-l2));
+			l1 = l2 + log_one_plus_exp(l1-l2);
 		}
 	}
 }
