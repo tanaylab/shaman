@@ -5,3 +5,7 @@ shaman_hic_matrix_shuffler_cpp <- function(raw_contacts, shuf_contacts, shuffle_
     .Call('_shaman_shaman_hic_matrix_shuffler_cpp', PACKAGE = 'shaman', raw_contacts, shuf_contacts, shuffle_factor, proposal_from_contacts, proposal_iterations_d, dist_resolution, decay_smooth, decay_regularization, proposal_correction_factor_d, max_dist, min_dist, grid_switch_bin_dist, grid_x_min_bin, grid_x_max_bin, grid_x_increase, grid_x_increase_iter, input_symmetric_mat, output_symmetric_mat)
 }
 
+shaman_merge_ks_cpp <- function(o_dist, e_dist) {
+    .Call('_shaman_shaman_merge_ks_cpp', PACKAGE = 'shaman', o_dist, e_dist)
+}
+
