@@ -11,7 +11,7 @@ using namespace std;
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-int shaman_hic_matrix_shuffler_cpp(Rcpp::DataFrame& raw_contacts,
+int shaman_hic_matrix_shuffler_cpp(Rcpp::IntegerMatrix raw_contacts,
 		std::string shuf_contacts,
 		int shuffle_factor,
 		int proposal_from_contacts,
@@ -52,8 +52,9 @@ int shaman_hic_matrix_shuffler_cpp(Rcpp::DataFrame& raw_contacts,
 			proposal_correction_factor,  decay_smooth,
 			decay_regularization, min_dist, max_dist);
 
-	vector< vector <int > > r_contacts = Rcpp::as<vector<vector<int> > >(raw_contacts);
-	int contacts = shuffler.load_contacts(r_contacts, input_symmetric_mat);
+	// raw_contacts is 2 x n: column i is contact i
+	const int* r_contacts = INTEGER(raw_contacts);
+	int contacts = shuffler.load_contacts(r_contacts, r_contacts + 1, 2, raw_contacts.ncol(), input_symmetric_mat);
 	Rcerr << "finished loading from contacts" << endl;
 
 	shuffler.init_exp_decay_from_obs();
