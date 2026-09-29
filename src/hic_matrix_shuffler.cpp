@@ -53,6 +53,9 @@ int shaman_hic_matrix_shuffler_cpp(Rcpp::IntegerMatrix raw_contacts,
 			decay_regularization, min_dist, max_dist);
 
 	// raw_contacts is 2 x n: column i is contact i
+	if (raw_contacts.nrow() != 2) {
+		Rcpp::stop("raw_contacts must have 2 rows (start1, start2)");
+	}
 	const int* r_contacts = INTEGER(raw_contacts);
 	int contacts = shuffler.load_contacts(r_contacts, r_contacts + 1, 2, raw_contacts.ncol(), input_symmetric_mat);
 	Rcerr << "finished loading from contacts" << endl;

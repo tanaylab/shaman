@@ -42,6 +42,7 @@ ContactShuffler::ContactShuffler(int dist_log_scale, int dist_resolution,
    m_dist_log_scale(dist_log_scale),
    m_dist_resolution(dist_resolution),
    m_log_log_scale(log(dist_log_scale)),
+   m_small_dist(0),
    m_grid_x_binsize(grid_x_resolution),
    //m_grid_dist_resolution(grid_dist_resolution),
    m_grid_switch_bin_dist(grid_switch_bin_dist),
@@ -237,7 +238,7 @@ int ContactShuffler::simple_sample() {
 	// prefetch the cells of those contacts. Prefetches do not change results.
 	for (int k=3; k<=6; k++) {
 		int next = floor(Random::peek_fraction(k) * m_contact_count);
-		__builtin_prefetch(&m_contact_cell[next]);
+		__builtin_prefetch(m_contact_cell.data() + next);
 	}
 
 	select_switch_partners(i, cell_i, grid_index_i, cell_j, grid_index_j);
