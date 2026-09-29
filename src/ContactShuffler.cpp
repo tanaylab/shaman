@@ -229,6 +229,13 @@ int ContactShuffler::simple_sample() {
 	int i;
 	int cell_i, cell_j, grid_index_i, grid_index_j;
 	i = floor(Random::fraction_truncated() * m_contact_count);
+	// The next sample starts with the draw 3 to 6 draws from now (one for the
+	// member of the cell, one per partner try, maybe one for acceptance):
+	// prefetch the cells of those contacts. Prefetches do not change results.
+	for (int k=3; k<=6; k++) {
+		int next = floor(Random::peek_fraction(k) * m_contact_count);
+		__builtin_prefetch(&m_contact_cell[next]);
+	}
 
 	select_switch_partners(i, cell_i, grid_index_i, cell_j, grid_index_j);
 	const GridContact& ci = m_contact_grid[cell_i][grid_index_i];
@@ -242,10 +249,13 @@ int ContactShuffler::simple_sample() {
 	if (dist_ij_bin < 0 || dist_ji_bin < 0) {
 		return(0);
 	}
-	float acceptance_prob = exp(m_decay_exp[dist_ij_bin] + m_decay_exp[dist_ji_bin]-
+	float log_acceptance = m_decay_exp[dist_ij_bin] + m_decay_exp[dist_ji_bin]-
 			m_decay_exp[dist_i_bin]-m_decay_exp[dist_j_bin] +
 			m_proposal_freq[dist_i_bin] + m_proposal_freq[dist_j_bin] -
-			m_proposal_freq[dist_ij_bin]- m_proposal_freq[dist_ji_bin]);
+			m_proposal_freq[dist_ij_bin]- m_proposal_freq[dist_ji_bin];
+	// exp(x) > 1 for x > 1, so the move is accepted either way; skip the exp
+	// (it overflows, slowly, for the large x of moves out of zeroed bins)
+	float acceptance_prob = log_acceptance > 1 ? log_acceptance : exp(log_acceptance);
 
 	if (acceptance_prob > 1 || Random::fraction() < acceptance_prob) {
 		grid_move(cell_i, grid_index_i, cell_j, grid_index_j, dist_ij_bin, dist_ji_bin);
@@ -471,6 +481,7 @@ void	ContactShuffler::select_switch_partners(int contact, int& cell1, int& grid_
 	//selecting random member from grid s1, s2
 	grid_index1 = floor(Random::fraction_truncated() * m_contact_grid[cell1].size());
 	const GridContact& c1 = m_contact_grid[cell1][grid_index1];
+	__builtin_prefetch(&c1);
 
 	//building cumsum vector
 	int* cumsum = m_pool_cumsum.data();
@@ -498,6 +509,12 @@ void	ContactShuffler::select_switch_partners(int contact, int& cell1, int& grid_
 
 		//reaching this point, we have our grid bin (d1,d2)
 		const GridContact& c2 = m_contact_grid[pool_cell[i]][grid_index2];
+		// prefetch the partner the next try would draw
+		int next = floor(Random::peek_fraction(1) * total_pool);
+		int k = 0;
+		while (k < pool_cells - 1 && cumsum[k] < next) k++;
+		if (k > 0) next = next - cumsum[k-1] - 1;
+		__builtin_prefetch(m_contact_grid[pool_cell[k]].data() + next);
 		if (abs(c2.x - c1.x) < max_dist &&
 			abs(c2.y - c1.y) < max_dist) {
 			cell2 = pool_cell[i];

@@ -28,6 +28,7 @@ public:
 
         static float fraction();			// returns [0,1]
         static float fraction_truncated();  // returns [0,1)
+        static float peek_fraction(int k);	// what fraction() returns k calls from now; no state change
 };
 
 #if HAS_RAND48
@@ -40,6 +41,13 @@ inline uint Random::bits() {
 inline float Random::fraction() {
         state48 = (state48 * 0x5DEECE66DULL + 0xBULL) & 0xFFFFFFFFFFFFULL;
         return(float(double(state48) * 0x1p-48));
+}
+inline float Random::peek_fraction(int k) {
+        uint64_t state = state48;
+        for (int i = 0; i < k; i++) {
+                state = (state * 0x5DEECE66DULL + 0xBULL) & 0xFFFFFFFFFFFFULL;
+        }
+        return(float(double(state) * 0x1p-48));
 }
 inline float Random::fraction_truncated() {
 	float ret = Random::fraction();
