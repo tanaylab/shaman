@@ -17,6 +17,20 @@
 #include <fstream>
 #include <cstdio>
 #include <charconv>
+#include <sys/mman.h>
+
+void* HugePageResource::do_allocate(size_t bytes, size_t alignment) {
+	void* p = mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (p == MAP_FAILED) {
+		throw std::bad_alloc();
+	}
+	madvise(p, bytes, MADV_HUGEPAGE);
+	return(p);
+}
+
+void HugePageResource::do_deallocate(void* p, size_t bytes, size_t alignment) {
+	munmap(p, bytes);
+}
 
 ContactShuffler::ContactShuffler(int dist_log_scale, int dist_resolution,
 		int grid_x_resolution,
@@ -31,6 +45,7 @@ ContactShuffler::ContactShuffler(int dist_log_scale, int dist_resolution,
    m_grid_x_binsize(grid_x_resolution),
    //m_grid_dist_resolution(grid_dist_resolution),
    m_grid_switch_bin_dist(grid_switch_bin_dist),
+   m_contact_cell(&m_huge_pages),
    //m_grid_switch_x_dist(grid_switch_x_dist),
    m_correction_factor(log(correction_factor)),
    m_decay_smooth(decay_smooth),
@@ -132,17 +147,26 @@ int ContactShuffler::init_obs_decay_from_contacts() {
 // in index order, then frees those per-index vectors.
 void ContactShuffler::build_grid() {
 	m_grid_size = floor((m_max_x-m_min_x)/m_grid_x_binsize) + 1;
-	vector< vector<GridContact> >().swap(m_contact_grid);
-	m_contact_grid.resize((size_t)m_grid_size * m_grid_size);
+	size_t cells = (size_t)m_grid_size * m_grid_size;
 	m_contact_cell.resize(m_contact_count);
-	vector<int> cell_count(m_contact_grid.size(), 0);
+	vector<int> cell_count(cells, 0);
+	size_t capacity = 0;
 	for (long i=0; i<m_contact_count; i++) {
 		m_contact_cell[i] = get_grid_bin(m_x[i]) * m_grid_size + get_grid_bin(m_y[i]);
 		cell_count[m_contact_cell[i]]++;
 	}
-	for (size_t c=0; c<m_contact_grid.size(); c++) {
+	for (size_t c=0; c<cells; c++) {
 		// headroom: cell sizes drift while shuffling
-		m_contact_grid[c].reserve(cell_count[c] + cell_count[c] / 16 + 8);
+		cell_count[c] += cell_count[c] / 16 + 8;
+		capacity += cell_count[c];
+	}
+	// the cells must go before the pool that holds them
+	vector< std::pmr::vector<GridContact> >().swap(m_contact_grid);
+	m_grid_pool.reset(new std::pmr::monotonic_buffer_resource(capacity * sizeof(GridContact), &m_huge_pages));
+	m_contact_grid.reserve(cells);
+	for (size_t c=0; c<cells; c++) {
+		m_contact_grid.emplace_back(m_grid_pool.get());
+		m_contact_grid[c].reserve(cell_count[c]);
 	}
 	for (long i=0; i<m_contact_count; i++) {
 		GridContact gc = {(int)i, m_x[i], m_y[i], m_contacts_dist_bins[i]};
@@ -496,14 +520,14 @@ void ContactShuffler::grid_move(int cell_i, int grid_index_i, int cell_j, int gr
 	int bin_j_0 = cell_j / m_grid_size;
 	int bin_j_1 = cell_j % m_grid_size;
 	if (bin_i_1 != bin_j_1) {
-		vector<GridContact>& grid_i = m_contact_grid[cell_i];
+		std::pmr::vector<GridContact>& grid_i = m_contact_grid[cell_i];
 		grid_i[grid_index_i] = grid_i.back();
 		grid_i.pop_back();
 		int to_i = bin_i_0 * m_grid_size + bin_j_1;
 		m_contact_grid[to_i].push_back(new_i);
 		m_contact_cell[new_i.idx] = to_i;
 
-		vector<GridContact>& grid_j = m_contact_grid[cell_j];
+		std::pmr::vector<GridContact>& grid_j = m_contact_grid[cell_j];
 		grid_j[grid_index_j] = grid_j.back();
 		grid_j.pop_back();
 		int to_j = bin_j_0 * m_grid_size + bin_i_1;

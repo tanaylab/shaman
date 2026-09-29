@@ -11,6 +11,8 @@
 #include <map>
 #include <unordered_map>
 #include <iostream>
+#include <memory>
+#include <memory_resource>
 using namespace std;
 
 class GenomeGridLog;
@@ -23,6 +25,15 @@ struct GridContact {
 	int x;
 	int y;
 	int dist_bin;
+};
+
+// Memory mapped with MADV_HUGEPAGE: the grid is read at random, and with 4k
+// pages nearly every access would also need a page-table walk.
+class HugePageResource : public std::pmr::memory_resource {
+protected:
+	void* do_allocate(size_t bytes, size_t alignment) override;
+	void do_deallocate(void* p, size_t bytes, size_t alignment) override;
+	bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override { return this == &other; }
 };
 
 class ContactShuffler final {
@@ -75,9 +86,11 @@ protected:
 	int						m_grid_x_binsize;
 	int						m_grid_switch_bin_dist;
 	int						m_grid_size;
+	HugePageResource		m_huge_pages;
+	unique_ptr<std::pmr::monotonic_buffer_resource> m_grid_pool;	// storage of the grid cells
 	// m_grid_size x m_grid_size cells, cell (bin1, bin2) at bin1 * m_grid_size + bin2
-	vector< vector<GridContact> > m_contact_grid;
-	vector<int>				m_contact_cell;		// grid cell of each contact
+	vector< std::pmr::vector<GridContact> > m_contact_grid;
+	std::pmr::vector<int>	m_contact_cell;		// grid cell of each contact
 	vector<int>				m_pool_cumsum;		// scratch for select_switch_partners
 	vector<int>				m_pool_cell;
 
