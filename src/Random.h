@@ -42,11 +42,20 @@ inline float Random::fraction() {
         state48 = (state48 * 0x5DEECE66DULL + 0xBULL) & 0xFFFFFFFFFFFFULL;
         return(float(double(state48) * 0x1p-48));
 }
-inline float Random::peek_fraction(int k) {
-        uint64_t state = state48;
+// k steps of the LCG at once: X_k = A_k * X + C_k (mod 2^48)
+struct Lcg48Jump { uint64_t a; uint64_t c; };
+constexpr Lcg48Jump lcg48_jump(int k) {
+        Lcg48Jump j = {1, 0};
         for (int i = 0; i < k; i++) {
-                state = (state * 0x5DEECE66DULL + 0xBULL) & 0xFFFFFFFFFFFFULL;
+                j.a = (j.a * 0x5DEECE66DULL) & 0xFFFFFFFFFFFFULL;
+                j.c = (j.c * 0x5DEECE66DULL + 0xBULL) & 0xFFFFFFFFFFFFULL;
         }
+        return(j);
+}
+constexpr Lcg48Jump lcg48_jumps[8] = {lcg48_jump(0), lcg48_jump(1), lcg48_jump(2), lcg48_jump(3),
+        lcg48_jump(4), lcg48_jump(5), lcg48_jump(6), lcg48_jump(7)};
+inline float Random::peek_fraction(int k) {	// 0 < k < 8
+        uint64_t state = (lcg48_jumps[k].a * state48 + lcg48_jumps[k].c) & 0xFFFFFFFFFFFFULL;
         return(float(double(state) * 0x1p-48));
 }
 inline float Random::fraction_truncated() {

@@ -215,11 +215,14 @@ void	ContactShuffler::init_contact_dist_bins() {
 	m_max_x = 0;
 	cerr << "init_contact_dist_bins" << endl;
 	for (int i=0; i<m_contact_count; i++) {
-		m_contacts_dist_bins[i] = get_dist_bin(m_x[i], m_y[i]);
 		if (m_x[i] < m_min_x) m_min_x = m_x[i];
 		if (m_y[i] < m_min_x) m_min_x = m_y[i];
 		if (m_x[i] > m_max_x) m_max_x = m_x[i];
 		if (m_y[i] > m_max_x) m_max_x = m_y[i];
+	}
+	init_dist_bin_table();
+	for (int i=0; i<m_contact_count; i++) {
+		m_contacts_dist_bins[i] = get_dist_bin(m_x[i], m_y[i]);
 	}
 	cerr << "m_min_x=" << m_min_x << endl;
 	cerr << "m_max_x=" << m_max_x << endl;
@@ -273,11 +276,75 @@ int ContactShuffler::simple_sample() {
 
 int	ContactShuffler::get_dist_bin(int x, int y) {
 	int dist = abs(x - y);
-	int dist_bin = floor(m_dist_resolution * log(1+dist) / m_log_log_scale) - m_min_dist;
+	int dist_bin;
+	if (dist < m_small_dist) {
+		dist_bin = m_small_dist_bin[dist];
+	} else if (!m_dist_sub_range.empty()) {
+		int octave = 31 - __builtin_clz(dist);
+		const DistSubRange& r = m_dist_sub_range[((octave - 12) << 10) | ((dist >> (octave - 10)) & 1023)];
+		dist_bin = r.bin + (dist >= r.next_bin_dist);
+	} else {
+		dist_bin = dist_bin_formula(dist);
+	}
 	if (dist_bin < 0) {
 		return(-1);
 	}
 	return(dist_bin);
+}
+
+int	ContactShuffler::dist_bin_formula(int dist) {
+	int dist_bin = floor(m_dist_resolution * log(1+dist) / m_log_log_scale) - m_min_dist;
+	return(dist_bin);
+}
+
+// Tabulates dist_bin_formula for 0 <= dist <= m_max_x - m_min_x. The formula is
+// non-decreasing in dist (log(1+dist) of consecutive integers differ by ~1/dist,
+// far more than its rounding error). Distances >= 4096 are split into 1024
+// sub-ranges per octave; each is checked to span at most two consecutive bins,
+// and the first distance of the second bin is found by bisection, so the lookup
+// returns exactly what the formula does. If a check fails, get_dist_bin keeps
+// using the formula.
+void ContactShuffler::init_dist_bin_table() {
+	int max_dist = m_max_x - m_min_x;
+	m_small_dist = min(4096, max_dist + 1);
+	m_small_dist_bin.resize(m_small_dist);
+	for (int dist=0; dist<m_small_dist; dist++) {
+		m_small_dist_bin[dist] = dist_bin_formula(dist);
+	}
+	m_dist_sub_range.clear();
+	if (max_dist < 4096) {
+		return;
+	}
+	int max_octave = 31 - __builtin_clz(max_dist);
+	vector<DistSubRange> table((size_t)(max_octave - 11) << 10);
+	for (int octave=12; octave<=max_octave; octave++) {
+		for (int sub=0; sub<1024; sub++) {
+			long lo = (long)(1024 + sub) << (octave - 10);
+			long hi = lo + (1L << (octave - 10)) - 1;
+			if (lo > max_dist) {
+				break;
+			}
+			if (hi > max_dist) {
+				hi = max_dist;
+			}
+			DistSubRange& r = table[((octave - 12) << 10) | sub];
+			r.bin = dist_bin_formula(lo);
+			r.next_bin_dist = INT_MAX;
+			int hi_bin = dist_bin_formula(hi);
+			if (hi_bin == r.bin + 1) {
+				long a = lo, b = hi;	// dist_bin_formula(a) == r.bin, dist_bin_formula(b) == r.bin + 1
+				while (b - a > 1) {
+					long mid = (a + b) / 2;
+					if (dist_bin_formula(mid) > r.bin) b = mid; else a = mid;
+				}
+				r.next_bin_dist = b;
+			} else if (hi_bin != r.bin) {
+				cerr << "distance bin table not used (sub-range " << lo << "-" << hi << ")" << endl;
+				return;
+			}
+		}
+	}
+	m_dist_sub_range.swap(table);
 }
 
 float ContactShuffler::get_bin_dist(int bin) {

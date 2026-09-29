@@ -62,6 +62,8 @@ protected:
 	void	init_contact_dist_bins();
 	int		simple_sample();
 	int		get_dist_bin(int x, int y);
+	int		dist_bin_formula(int dist);
+	void	init_dist_bin_table();
 	float 	get_bin_dist(int bin);
 	int		get_grid_bin(int x);
 	void 	regularize_decay(vector<float>& decay);
@@ -82,6 +84,13 @@ protected:
 	vector<int>				m_x;
 	vector<int>				m_y;
 	vector <int> 			m_contacts_dist_bins;
+	// get_dist_bin by table lookup instead of a log (see init_dist_bin_table):
+	// dist < m_small_dist: bin in m_small_dist_bin; larger dist: sub-range of
+	// 1/1024 of an octave, holding its first bin and where the next bin starts.
+	struct DistSubRange { int bin; int next_bin_dist; };
+	int						m_small_dist;
+	vector<int>				m_small_dist_bin;
+	vector<DistSubRange>	m_dist_sub_range;
 	vector <int>			m_transitions;
 	int						m_grid_x_binsize;
 	int						m_grid_switch_bin_dist;
