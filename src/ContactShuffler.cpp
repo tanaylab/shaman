@@ -256,9 +256,10 @@ int ContactShuffler::simple_sample() {
 			m_decay_exp[dist_i_bin]-m_decay_exp[dist_j_bin] +
 			m_proposal_freq[dist_i_bin] + m_proposal_freq[dist_j_bin] -
 			m_proposal_freq[dist_ij_bin]- m_proposal_freq[dist_ji_bin];
-	// exp(x) > 1 for x > 1, so the move is accepted either way; skip the exp
-	// (it overflows, slowly, for the large x of moves out of zeroed bins)
-	float acceptance_prob = log_acceptance > 1 ? log_acceptance : exp(log_acceptance);
+	// exp(x) > 1 for x > 1, and exp(x) is exactly 0 in float for x < -104:
+	// skip the exp (it over/underflows slowly) for moves out of or into zeroed bins
+	float acceptance_prob = log_acceptance > 1 ? log_acceptance :
+			(log_acceptance < -104 ? 0.0f : exp(log_acceptance));
 
 	if (acceptance_prob > 1 || Random::fraction() < acceptance_prob) {
 		grid_move(cell_i, grid_index_i, cell_j, grid_index_j, dist_ij_bin, dist_ji_bin);
