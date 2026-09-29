@@ -570,9 +570,9 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
         message(paste("0 data found in intervals, focus interval=", nrow(points)))
         return(NULL)
     }
-    obs <- plyr::ddply(obs, c("contacts"), function(x) {
-        return(x[rep(seq_len(nrow(x)), each = x$contact[1]), ])
-    })
+    # repeat each point by its number of contacts, in the row order plyr::ddply(obs, "contacts", ...) gave
+    o <- order(obs$contacts)
+    obs <- as.data.frame(lapply(obs, `[`, rep(o, obs$contacts[o])))
     if (nrow(obs) < k) {
         message(paste("insufficient data found in intervals: obs=", nrow(obs)))
         return(NULL)
@@ -587,9 +587,9 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
         message(paste("0 data found in intervals: exp"))
         return(NULL)
     }
-    exp <- plyr::ddply(exp, c("contacts"), function(x) {
-        return(x[rep(seq_len(nrow(x)), each = x$contact[1]), ])
-    })
+    # repeat each point by its number of contacts, in the row order plyr::ddply(exp, "contacts", ...) gave
+    o <- order(exp$contacts)
+    exp <- as.data.frame(lapply(exp, `[`, rep(o, exp$contacts[o])))
     if (nrow(exp) < k) {
         message(paste("insufficient data found in intervals: exp=", nrow(exp)))
         return(NULL)
