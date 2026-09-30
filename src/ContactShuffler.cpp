@@ -19,16 +19,19 @@
 #include <charconv>
 #include <sys/mman.h>
 
-void* HugePageResource::do_allocate(size_t bytes, size_t alignment) {
+// mmap returns page-aligned memory, which covers any alignment asked for
+void* HugePageResource::do_allocate(size_t bytes, size_t /* alignment */) {
 	void* p = mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	if (p == MAP_FAILED) {
 		throw std::bad_alloc();
 	}
+#ifdef MADV_HUGEPAGE	// Linux only; elsewhere the pages are just not promoted
 	madvise(p, bytes, MADV_HUGEPAGE);
+#endif
 	return(p);
 }
 
-void HugePageResource::do_deallocate(void* p, size_t bytes, size_t alignment) {
+void HugePageResource::do_deallocate(void* p, size_t bytes, size_t /* alignment */) {
 	munmap(p, bytes);
 }
 

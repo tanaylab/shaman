@@ -32,6 +32,7 @@ public:
 };
 
 #if HAS_RAND48
+// mrand48() uses the libc rand48 state, which fraction() does not advance (the shuffler does not use bits())
 inline uint Random::bits() {
         uint raw = mrand48();
         return(raw ^ (raw >> 16));
