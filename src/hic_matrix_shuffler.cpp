@@ -66,18 +66,18 @@ int shaman_hic_matrix_shuffler_cpp(Rcpp::IntegerMatrix raw_contacts,
 	Rcerr << "finished loading from contacts" << endl;
 
 	shuffler.init_exp_decay_from_obs();
-	cerr << "finished init exp decay from observed" << endl;
+	Rcerr << "finished init exp decay from observed" << endl;
 
 	if (proposal_from_constant) {
 		shuffler.init_proposal_const();
-		cerr << "finished init proposal to constant" << endl;
+		Rcerr << "finished init proposal to constant" << endl;
 	} else {
 	 if (proposal_from_contacts) {
 		shuffler.init_proposal_from_contacts(floor(proposal_iterations * contacts));
-		cerr << "finished init proposal from contacts" << endl;
+		Rcerr << "finished init proposal from contacts" << endl;
 	 } else {
 		shuffler.init_proposal_from_area();
-		cerr << "finished init proposal from area" << endl;
+		Rcerr << "finished init proposal from area" << endl;
 	 }
 	}
 	int iter = 0;
@@ -90,7 +90,7 @@ int shaman_hic_matrix_shuffler_cpp(Rcpp::IntegerMatrix raw_contacts,
 		}
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-		cerr << "run time = " << elapsed_secs/60/60 << " hours" << endl;
+		Rcerr << "run time = " << elapsed_secs/60/60 << " hours" << endl;
 	}
 	shuffler.save_contacts(shuf_contacts.c_str(), output_symmetric_mat, output_header);
 	return(seed);

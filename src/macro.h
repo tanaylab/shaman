@@ -8,16 +8,18 @@
 #ifndef MACRO_H_
 #define MACRO_H_
 
-#include <iostream>
+#include <sstream>
+#include <stdexcept>
 
 
 #ifndef NDEBUG
 #   define ASSERT(condition, message) \
     do { \
         if (! (condition)) { \
-            std::cerr << "Assertion `" #condition "` failed in " << __FILE__ \
-                      << " line " << __LINE__ << ": " << message << std::endl; \
-            std::terminate(); \
+            std::ostringstream assert_msg; \
+            assert_msg << "Assertion `" #condition "` failed in " << __FILE__ \
+                      << " line " << __LINE__ << ": " << message; \
+            throw std::logic_error(assert_msg.str()); \
         } \
     } while (false)
 #else
