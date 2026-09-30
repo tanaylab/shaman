@@ -597,16 +597,13 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
         k_exp <- round(k * n_exp / n_obs)
     }
     message(paste0("n_obs = ", n_obs, ", n_exp = ", n_exp, ", k_exp = ", k_exp))
-    # expected first: its kNN search has the highest peak memory, so run it while only the observed
-    # points, not their kNN distances, are held
-    e_knn <- round(RANN::nn2(exp[, c("start1", "start2")], points[, c("start1", "start2")], k = k_exp)$nn.dist)
-    rm(exp)
-    gc()
-    o_knn <- round(RANN::nn2(obs[, c("start1", "start2")], points[, c("start1", "start2")], k = k)$nn.dist)
-    rm(obs)
-    gc()
-    s_ks <- shaman_merge_ks_cpp(o_knn, e_knn)
-    rm(o_knn, e_knn)
+    # same values as shaman_merge_ks_cpp(round(RANN::nn2(obs, points, k)$nn.dist),
+    # round(RANN::nn2(exp, points, k_exp)$nn.dist)), without the n x k matrices
+    s_ks <- shaman_knn_ks_cpp(
+        obs$start1, obs$start2, exp$start1, exp$start2, points$start1, points$start2,
+        k, k_exp, getOption("shaman.score.threads", 1)
+    )
+    rm(obs, exp)
 
     points$score <- 100 * ifelse(-s_ks$V1 < s_ks$V2, s_ks$V2, s_ks$V1)
 
