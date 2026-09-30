@@ -86,13 +86,16 @@ shaman_get_test_track_db <- function() {
             stop("failed to extract the shaman example database from ", tarball)
         }
         # The example db has no sequence. Current misha (5.11) refuses a root without a seq directory,
-        # and it adds the "chr" prefix to the names in chrom_sizes.txt ("1", "2", ...) only when chr*.seq
-        # files exist, so without this the names would not match the track files (chr1-chr1, ...).
+        # and it adds the "chr" prefix to the names in chrom_sizes.txt ("1", "2", ...) only when
+        # seq/chr*.seq files exist; without it the names would not match the track files (chr1-chr1, ...).
+        # Empty placeholder files are enough. Older misha (4.x) always adds the prefix and ignores them.
         db_dir <- file.path(tmp_dir, "trackdb", "test")
         dir.create(file.path(db_dir, "seq"))
-        chrom_sizes <- file.path(db_dir, "chrom_sizes.txt")
-        writeLines(paste0("chr", readLines(chrom_sizes)), chrom_sizes)
-        if (!file.rename(file.path(tmp_dir, "trackdb"), file.path(cache_dir, "trackdb"))) {
+        chroms <- sub("\t.*", "", readLines(file.path(db_dir, "chrom_sizes.txt")))
+        file.create(file.path(db_dir, "seq", paste0("chr", chroms, ".seq")))
+        # another process may have put the database in place in the meantime
+        moved <- suppressWarnings(file.rename(file.path(tmp_dir, "trackdb"), file.path(cache_dir, "trackdb")))
+        if (!moved && !dir.exists(track_db)) {
             stop("failed to move the shaman example database into ", cache_dir)
         }
     }
