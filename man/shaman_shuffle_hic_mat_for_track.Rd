@@ -26,7 +26,8 @@ shaman_shuffle_hic_mat_for_track(
   grid_high = 1000000,
   grid_increase = 500000,
   grid_step_iter = 40,
-  sort_uniq = FALSE
+  sort_uniq = FALSE,
+  seed = NULL
 )
 }
 \arguments{
@@ -77,6 +78,13 @@ If NA, value is determined based on observed data (recommended).}
 \item{sort_uniq}{Binary flag, indicating whether the shuffled matrix file should be sorted and
 contacts combined. This is required prior to importing the track to misha, and should be applied
 to full chromosomes only.}
+
+\item{seed}{Seed for the shuffler: NULL (default) seeds it from the current time (in seconds), or a
+whole number between 0 and 2^31 - 1. The shuffler prints the seed it uses.}
+}
+\value{
+The seed the shuffler used, or NA if the matrix was not shuffled here (no or too few
+contacts, or the shuffled file already existed).
 }
 \description{
 \code{shuffle_hic_mat_for_track}

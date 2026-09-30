@@ -15,7 +15,8 @@ shaman_shuffle_hic_track(
   grid_high = 1000000,
   grid_step_iter = 40,
   dist_resolution = NA,
-  smooth = NA
+  smooth = NA,
+  seed = NULL
 )
 }
 \arguments{
@@ -42,6 +43,11 @@ based on observed data (recommended).}
 
 \item{smooth}{Number of bins to use for smoothing the MCMC target function: the decay curve.
 If NA, value is determined based on observed data (recommended).}
+
+\item{seed}{Seed for the shuffler: NULL (default) seeds each chromosome from the time (in seconds) its
+shuffle starts. With a whole number, chromosome i of \code{gintervals.all()} is shuffled with seed + i - 1
+(modulo 2^31), so the same seed gives the same track. The seed each chromosome was shuffled with is
+stored in the track attribute \code{seed} (NA for chromosomes this call did not shuffle).}
 }
 \description{
 \code{shaman_shuffle_hic_track}

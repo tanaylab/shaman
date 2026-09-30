@@ -18,7 +18,8 @@ shaman_shuffle_and_score_hic_mat(
   grid_small = 500000,
   grid_high = 1000000,
   grid_increase = 500000,
-  grid_step_iter = 40
+  grid_step_iter = 40,
+  seed = NULL
 )
 }
 \arguments{
@@ -52,6 +53,9 @@ If NA, value is determined based on observed data (recommended).}
 \item{grid_increase}{Grid increase size}
 
 \item{grid_step_iter}{Number of iterations in each grid size}
+
+\item{seed}{Seed for the shuffler: NULL (default) seeds it from the current time (in seconds), or a
+whole number between 0 and 2^31 - 1. The shuffler prints the seed it uses.}
 }
 \value{
 NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
