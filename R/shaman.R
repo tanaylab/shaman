@@ -249,6 +249,8 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
 #' Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters),
 #' depending on the number of cores available.
+#' \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
+#' threads (default 1); in multi-core mode each of the max_jobs processes uses N threads.
 #'
 #' Each step creates temporary files of the matrix scores which are then joined to a track.
 #' Temporary files are deleted upon track creation.
@@ -424,10 +426,12 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 #' lower resolution maps, decrease k.
 #' @param min_dist The minimum distance between points.
 #'
-#' chrom, start1, end1, start2 and end2 can be vectors, to score several matrices in one call. Matrices
-#' with the same chrom, start1 and end1 then share one extraction of each track over the union of their
-#' expanded intervals, instead of one extraction per matrix (each extraction of a 2D track reads the
-#' whole chromosome pair). The output files are the same as scoring the matrices one by one.
+#' @details chrom, start1, end1, start2 and end2 can be vectors, to score several matrices in one call.
+#' Matrices with the same chrom, start1 and end1 then share one extraction of each track over the union
+#' of their expanded intervals, instead of one extraction per matrix (each extraction of a 2D track reads
+#' the whole chromosome pair). The output files are the same as scoring the matrices one by one.
+#'
+#' \code{options(shaman.score.threads = N)} computes the kNN distances and scores on N threads (default 1).
 #'
 #' @return 0, 1 or -1 per matrix.
 #' @export

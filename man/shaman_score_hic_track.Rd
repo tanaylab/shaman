@@ -57,6 +57,8 @@ Note that this function requires either sge (qsub) or multicore to compute in a 
 Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
 Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters),
 depending on the number of cores available.
+\code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
+threads (default 1); in multi-core mode each of the max_jobs processes uses N threads.
 
 Each step creates temporary files of the matrix scores which are then joined to a track.
 Temporary files are deleted upon track creation.
