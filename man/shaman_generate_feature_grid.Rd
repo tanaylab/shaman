@@ -62,9 +62,13 @@ Note that grid contains only points in which feature 1 position is smaller than 
 \examples{
 
 # Set misha db to test
+library(misha)
 gsetroot(shaman_get_test_track_db())
-grid <- shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs",
-    exp_track_nm = "hic_exp"
+# the test db has chr2 only, with contacts in chr2:176.5e06-177e06
+grid <- shaman_generate_feature_grid(
+    ctcf_forward[ctcf_forward$chrom == "chr2", ], ctcf_reverse[ctcf_reverse$chrom == "chr2", ],
+    "hic_obs",
+    exp_track_nm = "hic_exp", min_dist = 1e05, max_dist = 5e05
 )
 plot <- shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
 }

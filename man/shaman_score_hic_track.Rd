@@ -77,21 +77,28 @@ The finished score files stay in work_dir, so a rerun with the same work_dir com
 # The example below runs on the test misha db provided with shaman.
 # Note that this is a toy db sampled from K562 ela data -
 # scoring based on the observed and expected tracks will not produce the score track,
-# as most of the genome is missing (you will see message: number of points in focus interval < 1000)
+# as most of the genome is missing.
+library(misha)
+track_db <- shaman_get_test_track_db()
+gsetroot(track_db)
 # options(shaman.sge_support=1) #configuring sge engine mode - preferred
-options(shaman.mc_support = 1) # configuring multi-core mode
+old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 if (gtrack.exists("hic_score_new")) {
     gtrack.rm("hic_score_new", force = TRUE)
     gdb.reload()
 }
-ret <- shaman_score_hic_track(shaman_get_test_track_db(),
-    work_dir = tempdir(), # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+ret <- shaman_score_hic_track(track_db,
+    # work_dir can be tempdir() only in multi-core mode.
+    # For sge mode, work_dir must be accessible by all jobs.
+    work_dir = tempdir(),
     score_track_nm = "hic_score_new",
     obs_track_nms = "hic_obs",
     exp_track_nms = "hic_exp",
     near_cis = 1e09, # this test db contains very little data, can increase the size of each job
-    max_jobs = parallel::detectCores()
+    k = 20, # default is set to 100
+    max_jobs = 2
 ) # increase number of jobs for optimal runtime when running in sge mode
 gdb.reload()
-gtrack.ls("hic_score_new") # new shuffled track that was created
+gtrack.ls("hic_score_new") # new score track that was created
+options(old_opts)
 }
