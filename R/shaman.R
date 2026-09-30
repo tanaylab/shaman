@@ -225,11 +225,24 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
     }
     if (sort_uniq) {
         ret <- 1
-        system(sprintf("echo 'chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tobs' > %s.uniq", shuf_fn))
-        system(sprintf(
-            "cat %s | grep -v start | sort -T %s | uniq -c | awk '{ print \"%s\" \"\t\" $2 \"\t\" ($2+1) \"\t\" \"%s\" \"\t\" $3 \"\t\" ($3+1) \"\t\" $1}' >> %s.uniq",
-            shuf_fn, work_dir, chrom, chrom, shuf_fn
-        ))
+        # count identical contacts in memory (the lines sort | uniq -c gave, ordered by start1, start2),
+        # in one thread like the shuffle itself (more threads gain little here)
+        threads <- data.table::setDTthreads(1)
+        on.exit(data.table::setDTthreads(threads), add = TRUE)
+        a <- data.table::fread(shuf_fn, sep = "\t", header = TRUE, colClasses = "integer")
+        data.table::setorderv(a)
+        id <- data.table::rleidv(a)
+        obs <- tabulate(id, max(0L, id)) # max(0L, ...): no contacts give no bins, not one empty bin
+        rm(id)
+        first <- cumsum(obs) - obs + 1L
+        start1 <- a$start1[first]
+        start2 <- a$start2[first]
+        rm(a)
+        chroms <- rep(chrom, length(obs))
+        data.table::fwrite(list(
+            chrom1 = chroms, start1 = start1, end1 = start1 + 1L,
+            chrom2 = chroms, start2 = start2, end2 = start2 + 1L, obs = obs
+        ), paste0(shuf_fn, ".uniq"), sep = "\t")
     }
     return(ret)
 }
