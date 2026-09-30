@@ -1,0 +1,5 @@
+^CRAN_PLAN\.md$
+^_pkgdown\.yml$
+^README\.Rmd$
+^.*\.Rproj$
+^\.Rproj\.user$
