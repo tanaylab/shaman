@@ -50,7 +50,8 @@ shaman_generate_feature_grid <- function(feature1, feature2, obs_track_nm, exp_t
     if (!gtrack.exists(exp_track_nm)) {
         stop(paste("Missing exp_track_nm (", exp_track_nm, ") in track db"))
     }
-    options(gmultitasking = FALSE)
+    old_opts <- options(gmultitasking = FALSE)
+    on.exit(options(old_opts), add = TRUE)
     expand <- seq(0 - range, range, by = resolution)
     filter_vtrack <- NA
     if (gtrack.exists(score_track_nm)) {
@@ -125,8 +126,11 @@ shaman_plot_feature_grid <- function(grids, range, grid_resolution, plot_resolut
     }
     if (fig_fn != "") {
         png(fig_fn, width = fig_width, height = fig_height)
+        par(mar = c(0, 0, 0, 0))
+    } else {
+        old_par <- par(mar = c(0, 0, 0, 0))
+        on.exit(par(old_par), add = TRUE)
     }
-    par(mar = c(0, 0, 0, 0))
     if (type == "enrichment") {
         image(as.matrix(log2((obs / sum(obs, na.rm = TRUE)) / (exp / sum(exp, na.rm = TRUE)))),
             zlim = zlim, col = pal(1000), xaxt = "n", yaxt = "n"
@@ -181,7 +185,7 @@ shaman_plot_feature_grid <- function(grids, range, grid_resolution, plot_resolut
         grid <- gscreen(sprintf("%s > %s", filter_vtrack, filter_value), intervals = grid, iterator = grid, band = band)
     }
     message(paste("found ", nrow(grid), "regions"))
-    interv_set_out <- gsub("+", "", paste(track, paste(rev(-(band)), collapse = "_"), sep = "_"), fixed = T)
+    interv_set_out <- gsub("+", "", paste(track, paste(rev(-(band)), collapse = "_"), sep = "_"), fixed = TRUE)
     if (!gintervals.exists(interv_set_out)) {
         giterator.intervals(track, band = band, intervals.set.out = interv_set_out)
     }
@@ -196,7 +200,7 @@ shaman_plot_feature_grid <- function(grids, range, grid_resolution, plot_resolut
         cut(a$start2 - a$grid.start2, breaks = expand2, include.lowest = TRUE)
     )
 
-    interv_set_out <- gsub("+", "", paste(shuffled_track, paste(rev(-(band)), collapse = "_"), sep = "_"), fixed = T)
+    interv_set_out <- gsub("+", "", paste(shuffled_track, paste(rev(-(band)), collapse = "_"), sep = "_"), fixed = TRUE)
     if (!gintervals.exists(interv_set_out)) {
         giterator.intervals(shuffled_track, band = band, intervals.set.out = interv_set_out)
     }

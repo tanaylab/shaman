@@ -7,9 +7,9 @@
 #'
 
 .shaman_dump_config <- function(config_dir) {
-    config_files <- dir(system.file("config", package = "shaman"), full.names = T)
-    dir.create(config_dir, recursive = T, showWarnings = FALSE)
-    ret <- file.copy(config_files, config_dir, recursive = T, overwrite = FALSE)
+    config_files <- dir(system.file("config", package = "shaman"), full.names = TRUE)
+    dir.create(config_dir, recursive = TRUE, showWarnings = FALSE)
+    ret <- file.copy(config_files, config_dir, recursive = TRUE, overwrite = FALSE)
     if (!all(ret)) {
         warning("couldn't dump config files to ", config_dir, "\n  Perhaps they're already there? ")
     } else {
