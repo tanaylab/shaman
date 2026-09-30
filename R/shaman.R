@@ -349,8 +349,9 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
     while (nrow(near_cis_2d_upper_mat) > 0) {
         # compute scores for each of the small matrices
         if (sge_support) {
+            # gcluster.run jobs do not inherit the misha root, so each job sets it
             commands <- paste0(
-                "{library(shaman); shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms, \"",
+                "{library(shaman); gsetroot(track_db); shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms, \"",
                 near_cis_2d_upper_mat$chrom1, "\", ", near_cis_2d_upper_mat$start1, ", ",
                 near_cis_2d_upper_mat$end1, ",", near_cis_2d_upper_mat$start2, ", ",
                 near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")}"
@@ -825,207 +826,17 @@ shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
 
 
 
+# Runs commands on SGE via misha::gcluster.run. Commands are given either as expressions in '...'
+# or as strings in 'command.list'. The call is evaluated in the caller's frame, so the jobs get
+# the caller's variables (e.g. track_db, work_dir), as with a direct gcluster.run call.
 .gcluster.run2 <- function(..., command.list = NULL, opt.flags = "", max.jobs = 400, debug = FALSE, R = "R") {
     if (!is.null(command.list)) {
-        commands <- plyr::llply(command.list, function(x) parse(text = x))
+        commands <- lapply(command.list, str2lang)
     } else {
         commands <- as.list(substitute(list(...))[-1L])
     }
-
-    if (length(commands) < 1) {
-          stop("Usage: gculster.run(..., command.list=NULL, opt.flags = \"\" max.jobs = 400, debug = FALSE)",
-              call. = F
-          )
-      }
-    if (!length(system("which qsub", ignore.stderr = T, intern = T))) {
-          stop("gcluster.run must run on a host that supports Sun Grid Engine (qsub)",
-              call. = F
-          )
-      }
-    .gcheckroot()
-    tmp.dirname <- ""
-    submitted.jobs <- c()
-    tryCatch(
-        {
-            tmp.dirname <- tempfile(pattern = "", tmpdir = paste(get("GROOT"),
-                "/tmp",
-                sep = ""
-            ))
-            if (!dir.create(tmp.dirname, recursive = T, mode = "0777")) {
-                  stop(sprintf("Failed to create a directory %s", tmp.dirname),
-                      call. = F
-                  )
-              }
-            cat("Preparing for distribution...\n")
-            save(.GLIBDIR, file = paste(tmp.dirname, "libdir", sep = "/"))
-            vars <- ls(all.names = TRUE, envir = parent.frame())
-            envir <- parent.frame()
-            while (!identical(envir, .GlobalEnv)) {
-                envir <- parent.env(envir)
-                vars <- union(vars, ls(all.names = TRUE, envir = envir))
-            }
-            save(list = vars, file = paste(tmp.dirname, "envir",
-                sep = "/"
-            ), envir = parent.frame())
-            .GSGECMD <- commands
-            save(.GSGECMD, file = paste(tmp.dirname, "commands",
-                sep = "/"
-            ))
-            opts <- options()
-            save(opts, file = paste(tmp.dirname, "opts", sep = "/"))
-            cat("Running the commands...\n")
-            completed.jobs <- c()
-            progress <- -1
-            repeat {
-                num.running.jobs <- length(submitted.jobs) - length(completed.jobs)
-                if (length(submitted.jobs) < length(commands) &&
-                    num.running.jobs < max.jobs) {
-                    istart <- length(submitted.jobs) + 1
-                    iend <- min(length(commands), istart + (max.jobs -
-                        num.running.jobs) - 1)
-                    for (i in istart:iend) {
-                        out.file <- sprintf(
-                            "%s/%d.out", tmp.dirname,
-                            i
-                        )
-                        err.file <- sprintf(
-                            "%s/%d.err", tmp.dirname,
-                            i
-                        )
-                        script <- paste(get(".GLIBDIR"), "exec", "sgjob.sh",
-                            sep = "/"
-                        )
-                        command <- sprintf(
-                            "unset module; qsub -terse -S /bin/bash -o %s -e %s -V %s %s %d '%s' '%s'",
-                            out.file, err.file, opt.flags, script, i,
-                            tmp.dirname, R
-                        )
-                        jobid <- system(command, intern = TRUE)
-                        if (length(jobid) != 1) {
-                              stop("Failed to run qsub", call. = FALSE)
-                          }
-                        if (debug) {
-                              cat(sprintf(
-                                  "\tSubmitted job %d (id: %s)\n",
-                                  i, jobid
-                              ))
-                          }
-                        submitted.jobs <- c(submitted.jobs, jobid)
-                    }
-                }
-                Sys.sleep(3)
-                running.jobs <- .gcluster.running.jobs(submitted.jobs)
-                old.completed.jobs <- completed.jobs
-                completed.jobs <- setdiff(submitted.jobs, running.jobs)
-                if (debug) {
-                    delta.jobs <- setdiff(completed.jobs, old.completed.jobs)
-                    if (length(delta.jobs) > 0) {
-                        for (jobid in delta.jobs) {
-                            cat(sprintf(
-                                "\tJob %d (id: %s) completed\n",
-                                match(jobid, submitted.jobs), jobid
-                            ))
-                        }
-                    }
-                    if (!length(running.jobs) && length(submitted.jobs) ==
-                        length(commands)) {
-                          break
-                      }
-                    new.progress <- length(completed.jobs)
-                    if (new.progress != progress) {
-                        progress <- new.progress
-                        cat(sprintf(
-                            "\t%d job(s) still in progress\n",
-                            length(commands) - progress
-                        ))
-                    }
-                } else {
-                    if (!length(running.jobs) && length(submitted.jobs) ==
-                        length(commands)) {
-                          break
-                      }
-                    new.progress <- as.integer(100 * length(completed.jobs) / length(commands))
-                    if (new.progress != progress) {
-                        progress <- new.progress
-                        cat(sprintf("%d%%...", progress))
-                    } else {
-                        cat(".")
-                    }
-                }
-            }
-            if (!debug && progress != -1 && progress != 100) {
-                  cat("100%\n")
-              }
-        },
-        interrupt = function(interrupt) {
-            cat("\n")
-            stop("Command interrupted!", call. = FALSE)
-        },
-        finally = {
-            cleanup.finished <- FALSE
-            while (!cleanup.finished) {
-                tryCatch(
-                    {
-                        if (length(submitted.jobs) > 0) {
-                            running.jobs <- .gcluster.running.jobs(submitted.jobs)
-                            answer <- c()
-                            for (i in 1:length(commands)) {
-                                res <- list()
-                                res$exit.status <- NA
-                                res$retv <- NA
-                                res$stdout <- NA
-                                res$stderr <- NA
-                                if (submitted.jobs[i] %in% running.jobs) {
-                                      res$exit.status <- "interrupted"
-                                  } else {
-                                    fname <- sprintf(
-                                        "%s/%d.retv", tmp.dirname,
-                                        i
-                                    )
-                                    if (file.exists(fname)) {
-                                        load(fname)
-                                        res$exit.status <- "success"
-                                        res$retv <- retv
-                                    } else {
-                                        res$exit.status <- "failure"
-                                    }
-                                }
-                                out.file <- sprintf(
-                                    "%s/%d.out", tmp.dirname,
-                                    i
-                                )
-                                if (file.exists(out.file)) {
-                                    f <- file(out.file, "rc")
-                                    res$stdout <- readChar(f, 1000000)
-                                    close(f)
-                                }
-                                err.file <- sprintf(
-                                    "%s/%d.err", tmp.dirname,
-                                    i
-                                )
-                                if (file.exists(err.file)) {
-                                    f <- file(err.file, "rc")
-                                    res$stderr <- readChar(f, 1000000)
-                                    close(f)
-                                }
-                                answer[[i]] <- res
-                            }
-                            for (job in running.jobs) {
-                                system(sprintf(
-                                    "qdel %s",
-                                    job
-                                ), ignore.stderr = T, intern = T)
-                            }
-                            unlink(tmp.dirname, recursive = TRUE)
-                            return(answer)
-                        }
-                        unlink(tmp.dirname, recursive = TRUE)
-                        cleanup.finished <- TRUE
-                    },
-                    interrupt = function(interrupt) {
-                    }
-                )
-            }
-        }
+    do.call(misha::gcluster.run,
+        c(commands, list(opt.flags = opt.flags, max.jobs = max.jobs, debug = debug, R = R)),
+        envir = parent.frame()
     )
 }
