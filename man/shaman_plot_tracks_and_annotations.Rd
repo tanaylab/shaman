@@ -68,11 +68,17 @@ annotated intervals in the plotting region.
 library(misha)
 gsetroot(shaman_get_test_track_db())
 # the test db has chr2 only
-ctcf <- list(ctcf_forward[ctcf_forward$chrom == "chr2", ], ctcf_reverse[ctcf_reverse$chrom == "chr2", ])
+ctcf <- list(
+    ctcf_forward[ctcf_forward$chrom == "chr2", ],
+    ctcf_reverse[ctcf_reverse$chrom == "chr2", ]
+)
+\donttest{
+# loading Gviz takes a few seconds
 if (requireNamespace("Gviz", quietly = TRUE)) {
     shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06),
         annotations = ctcf, add_genes = FALSE, add_ideogram = FALSE
     )
+}
 }
 \dontrun{
 # gene annotations and the ideogram are downloaded from UCSC
