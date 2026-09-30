@@ -1,4 +1,7 @@
 #' Read params from files
+#' @param fn Parameter file, one \code{name=value} per line.
+#' @param prev_params Previously read parameters; names found in both are an error.
+#' @return A named list of the parameters.
 init_params <- function(fn, prev_params = NULL) {
     t <- read.table(fn, sep = "=", fill = TRUE, strip.white = TRUE, stringsAsFactors = FALSE, quote = "")
     params <- as.character(t[, 2])
@@ -24,6 +27,9 @@ init_params <- function(fn, prev_params = NULL) {
     return(params)
 }
 #' Get params from saved var
+#' @param nm Parameter name.
+#' @param params Named list of parameters.
+#' @return The parameter, or NA if it is missing.
 get_param <- function(nm, params) {
     if (nm %in% names(params)) {
         return(params[nm])
@@ -33,6 +39,9 @@ get_param <- function(nm, params) {
     }
 }
 #' Get params from saved var
+#' @param nm Parameter name.
+#' @param params Named list of parameters.
+#' @return The comma-separated parameter split into a list, or NA if it is missing.
 get_param_list <- function(nm, params) {
     if (nm %in% names(params)) {
         return(strsplit(as.character(params[nm]), ","))

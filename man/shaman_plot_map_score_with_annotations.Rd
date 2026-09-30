@@ -14,9 +14,9 @@ shaman_plot_map_score_with_annotations(
   mt_ylims = NULL,
   annotations = list(),
   a_colors = getOption("shaman.annotation_colors"),
-  add_genes = T,
-  add_ideogram = T,
-  add_axis = T,
+  add_genes = TRUE,
+  add_ideogram = TRUE,
+  add_axis = TRUE,
   gene_stacking = "squish",
   gene_size = 0.7,
   track_size = 0.8,
@@ -33,9 +33,14 @@ shaman_plot_map_score_with_annotations(
 
 \item{interval_range}{1D interval (chrom, start, end) specifying the region to plot}
 
+\item{point_size}{Cex size of the points in the plot.}
+
 \item{misha_tracks}{List of 1D track expressions (virtual tracks also supported) which can be extracted from.}
 
 \item{mt_colors}{Array of colors, one for each misha_track, which will be used to plot each 1d track.}
+
+\item{mt_ylims}{Y-axis limits for each misha track. If not provided, generated automatically based on the data
+to be displayed in the region.}
 
 \item{annotations}{List of gintervals highlighting annotated regions.}
 
@@ -53,16 +58,16 @@ shaman_plot_map_score_with_annotations(
 
 \item{track_size}{Size of track view.}
 
+\item{annotation_size}{Size of annotation view.}
+
 \item{fig_fn}{Name of png file to output to. Empty string will cause the figure to be plotted to the current device.}
 
 \item{fig_width}{Width in pixels of output png figure.}
 
 \item{fig_height}{Height in pixels of output png figure.}
-
-\item{my_ylims}{Y-axis limits for each misha track. If not provided, generated automatically based on the data
-to be displayed in the region.}
-
-\item{annot_size}{Size of annotation view.}
+}
+\value{
+No return value, called for the plot.
 }
 \description{
 \code{shaman_plot_map_score_with_annotations}

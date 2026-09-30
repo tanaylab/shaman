@@ -15,6 +15,8 @@
 files as those that were exported with \code{shaman_dump_config}.}
 
 \item{shaman_config}{Parameter file}
+
+\item{reset}{Whether to overwrite options that are already set.}
 }
 \description{
 Loads the configuration files which were filled by the user. Accepts either directory path

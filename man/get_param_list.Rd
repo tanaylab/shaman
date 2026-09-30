@@ -6,6 +6,14 @@
 \usage{
 get_param_list(nm, params)
 }
+\arguments{
+\item{nm}{Parameter name.}
+
+\item{params}{Named list of parameters.}
+}
+\value{
+The comma-separated parameter split into a list, or NA if it is missing.
+}
 \description{
 Get params from saved var
 }

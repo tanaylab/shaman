@@ -15,6 +15,8 @@ shaman_gplot_map_score(
 \arguments{
 \item{points_score}{A dataframe containing the points (start1, start2) and their normalized score.}
 
+\item{interval_range}{Data frame with the start and end of the range to plot. If NA, the range of start1 in points_score.}
+
 \item{rotate}{Binary flag, indicating if the plot should be rotated by 45 degrees.}
 
 \item{point_size}{Cex size of the points in the plot.}
@@ -25,7 +27,7 @@ shaman_gplot_map_score(
 gplot containing the map
 }
 \description{
-\code{shaman_golot_map_score}
+\code{shaman_gplot_map_score}
 }
 \details{
 Plots observerved hic contact matrix color-coded by normalized scores.

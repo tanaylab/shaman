@@ -11,8 +11,8 @@ shaman_shuffle_hic_track(
   exp_track_nm = paste0(obs_track_nm, "_shuffle"),
   max_jobs = 25,
   shuffle = 80,
-  grid_small = 500000,
-  grid_high = 1000000,
+  grid_small = 5e+05,
+  grid_high = 1e+06,
   grid_step_iter = 40,
   dist_resolution = NA,
   smooth = NA,
@@ -50,6 +50,10 @@ shuffle starts. With a whole number, chromosome i of \code{gintervals.all()} is 
 stored in the track attribute \code{seed} (NA for chromosomes this call did not shuffle).
 A chromosome's seed depends on its position in \code{gintervals.all()}, so the same seed reproduces a
 track only in a database with the same chromosomes; the \code{seed} attribute reproduces each chromosome.}
+}
+\value{
+No return value, called for side effects: creates the 2D track exp_track_nm in track_db, with the
+seeds in its attribute \code{seed}.
 }
 \description{
 \code{shaman_shuffle_hic_track}

@@ -25,6 +25,7 @@
 #' @param config_dir A directory with all the defined config files. Should have the same
 #' files as those that were exported with \code{shaman_dump_config}.
 #' @param shaman_config Parameter file
+#' @param reset Whether to overwrite options that are already set.
 #'
 #'
 .shaman_load_config <- function(config_dir, shaman_config = file.path(config_dir, "shaman.conf"), reset = FALSE) {

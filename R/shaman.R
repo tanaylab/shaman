@@ -30,6 +30,8 @@
 #' stored in the track attribute \code{seed} (NA for chromosomes this call did not shuffle).
 #' A chromosome's seed depends on its position in \code{gintervals.all()}, so the same seed reproduces a
 #' track only in a database with the same chromosomes; the \code{seed} attribute reproduces each chromosome.
+#' @return No return value, called for side effects: creates the 2D track exp_track_nm in track_db, with the
+#' seeds in its attribute \code{seed}.
 #'
 #' @examples
 #'
@@ -320,6 +322,7 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' @param k The number of neighbor distances used for the score. For higher resolution maps, increase k. For
 #' lower resolution maps, decrease k.
 #' @param max_jobs Maximal number of qsub jobs.
+#' @return No return value, called for side effects: creates the 2D score track score_track_nm in track_db.
 #'
 #' @examples
 #'
@@ -662,6 +665,8 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #' @param min_dist The minimum distance between points.
 #' @param k The number of neighbor distances used for the score. For higher resolution maps, increase k. For
 #' lower resolution maps, decrease k.
+#' @param k_exp The number of neighbor distances used for the score on the expected tracks (see
+#' \code{shaman_score_hic_mat}).
 #'
 #' @return NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
 #' 1) points - start1, start2 and score for all observed points.

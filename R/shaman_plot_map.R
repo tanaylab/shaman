@@ -5,6 +5,7 @@
 #' Plots hic contact matrix.
 #'
 #' @param points A dataframe containing the points (start1, start2).
+#' @param interval_range Data frame with the start and end of the range to plot. If NA, the range of start1 in points.
 #' @param rotate Binary flag, indicating if the plot should be rotated by 45 degrees.
 #' @param point_size Cex size of the points in the plot.
 #' @param add_axis Binary flag, indicating if axis should be added to plot.
@@ -73,13 +74,14 @@ shaman_gplot_map <- function(points, interval_range = NA, rotate = TRUE, point_s
 
 #' plot a normlized hic map
 #'
-#' \code{shaman_golot_map_score}
+#' \code{shaman_gplot_map_score}
 #'
 #' Plots observerved hic contact matrix color-coded by normalized scores.
 #' Data can be either extracted directly from score track or computed via the functions:
 #' score_hic_mat, shuffle_and_score_hic_mat
 #'
 #' @param points_score A dataframe containing the points (start1, start2) and their normalized score.
+#' @param interval_range Data frame with the start and end of the range to plot. If NA, the range of start1 in points_score.
 #' @param rotate Binary flag, indicating if the plot should be rotated by 45 degrees.
 #' @param point_size Cex size of the points in the plot.
 #' @param add_axis Binary flag, indicating if axis should be added to plot.
@@ -163,7 +165,7 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 #' @param interval_range 1D interval (chrom, start, end) specifying the region to plot
 #' @param misha_tracks List of 1D track expressions (virtual tracks also supported) which can be extracted from.
 #' @param mt_colors Array of colors, one for each misha_track, which will be used to plot each 1d track.
-#' @param my_ylims Y-axis limits for each misha track. If not provided, generated automatically based on the data
+#' @param mt_ylims Y-axis limits for each misha track. If not provided, generated automatically based on the data
 #' to be displayed in the region.
 #' @param annotations List of gintervals highlighting annotated regions.
 #' @param a_colors Array of colors, one for each annotation set.
@@ -173,7 +175,8 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 #' @param gene_stacking Describes the viewing option of the genes track. Can be either "squish", or "dense"
 #' @param gene_size Size of gene annotation view
 #' @param track_size Size of track view
-#' @param annot_size Size of annotation view
+#' @param annotation_size Size of annotation view
+#' @return Called for the plot. Returns what \code{Gviz::plotTracks()} returns, invisibly.
 #'
 #' @examples
 #'
@@ -234,9 +237,10 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #' @param genome Name of reference genome (e.g. "hg19", "mm10")
 #' @param points_score A dataframe containing the points (start1, start2) and their normalized score.
 #' @param interval_range 1D interval (chrom, start, end) specifying the region to plot
+#' @param point_size Cex size of the points in the plot.
 #' @param misha_tracks List of 1D track expressions (virtual tracks also supported) which can be extracted from.
 #' @param mt_colors Array of colors, one for each misha_track, which will be used to plot each 1d track.
-#' @param my_ylims Y-axis limits for each misha track. If not provided, generated automatically based on the data
+#' @param mt_ylims Y-axis limits for each misha track. If not provided, generated automatically based on the data
 #' to be displayed in the region.
 #' @param annotations List of gintervals highlighting annotated regions.
 #' @param a_colors Array of colors, one for each annotation set.
@@ -246,10 +250,11 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #' @param gene_stacking Describes the viewing option of the genes track. Can be either "squish", or "dense".
 #' @param gene_size Size of gene annotation view.
 #' @param track_size Size of track view.
-#' @param annot_size Size of annotation view.
+#' @param annotation_size Size of annotation view.
 #' @param fig_fn Name of png file to output to. Empty string will cause the figure to be plotted to the current device.
 #' @param fig_width Width in pixels of output png figure.
 #' @param fig_height Height in pixels of output png figure.
+#' @return No return value, called for the plot.
 #'
 #' @examples
 #'
@@ -291,6 +296,7 @@ shaman_plot_map_score_with_annotations <- function(genome, points_score, interva
 #'
 #' \code{shaman_score_pal}
 #'
+#' @return A vector of 201 colors, for scores -100 to 100.
 #' @export
 ##########################################################################################################
 

@@ -13,8 +13,8 @@ shaman_generate_feature_grid(
   score_filter = 30,
   range = 25000,
   resolution = 500,
-  min_dist = 200000,
-  max_dist = 1000000
+  min_dist = 2e+05,
+  max_dist = 1e+06
 )
 }
 \arguments{

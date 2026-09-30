@@ -6,6 +6,14 @@
 \usage{
 init_params(fn, prev_params = NULL)
 }
+\arguments{
+\item{fn}{Parameter file, one \code{name=value} per line.}
+
+\item{prev_params}{Previously read parameters; names found in both are an error.}
+}
+\value{
+A named list of the parameters.
+}
 \description{
 Read params from files
 }
