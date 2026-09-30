@@ -10,8 +10,8 @@ init_params <- function(fn, prev_params = NULL) {
     }
 
     if (!is.null(prev_params)) {
-        if (any(names(prev_params)) %in% names(params)) {
-            stop(sprintf("duplicaterd parameters: %s", names(prev_parames)[names(prev_params) %in% names(params)]))
+        if (any(names(prev_params) %in% names(params))) {
+            stop(sprintf("duplicated parameters: %s", paste(names(prev_params)[names(prev_params) %in% names(params)], collapse = ", ")))
         }
     }
     params <- as.list(params)
