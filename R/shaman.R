@@ -831,8 +831,12 @@ shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
 # Extractions of whole rows of matrices, kept while shaman_score_hic_mat_for_track() scores the row
 .shaman_extract_cache <- new.env(parent = emptyenv())
 
-# TRUE when interval (one 2D interval) has integer coordinates and lies inside outer
+# TRUE when interval and outer are single 2D intervals and interval has integer coordinates and lies
+# inside outer
 .shaman_interval_within <- function(interval, outer) {
+    if (NROW(interval) != 1 || NROW(outer) != 1) {
+        return(FALSE)
+    }
     co <- c(interval$start1, interval$end1, interval$start2, interval$end2)
     all(co == round(co)) && as.character(interval$chrom1) == as.character(outer$chrom1) &&
         as.character(interval$chrom2) == as.character(outer$chrom2) &&
