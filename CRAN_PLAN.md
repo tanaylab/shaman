@@ -40,7 +40,7 @@ constructor initializer list now has `#ifndef __APPLE__` lines next to it); `fea
 touches the same examples and Rd files in `R/shaman.R` as the example commit 5314deb.
 
 git-lfs is not installed here, so `inst/trackdb.tar.gz` is the 134-byte LFS pointer in this
-checkout. Git commands ran with `-c filter.lfs.*=` and `core.hooksPath=/dev/null`.
+checkout. Merges and commits ran with `-c filter.lfs.*=` and `core.hooksPath=/dev/null`.
 
 ## Open decisions
 
@@ -86,8 +86,8 @@ Details:
   (46,735 / 88,264 / 45,150 contacts with start1 < start2, stored in both orientations as in the
   full DB). Layout as in PR #7: `chrom_sizes.txt` with `2`, an empty `seq/chr2.seq`. Building
   takes 0.6 s; later calls reuse it. It restores the previous misha root (`gdb.info()`, misha >=
-  5.3). The window has the HOXD13 end of the cluster and 4 convergent CTCF pairs 100-500 kb apart,
-  used by the feature grid examples. The data file was made with:
+  5.3). The window has 4 convergent pairs of the bundled `ctcf_forward`/`ctcf_reverse` sites
+  100-500 kb apart, used by the feature grid examples. The data file was made with:
 
   ```r
   library(misha)
@@ -151,7 +151,7 @@ R 4.4.1, misha 5.11.23 (CRAN), `R CMD build` + `R CMD check --as-cran` of a `git
 branch, with `_R_CHECK_THINGS_IN_OTHER_DIRS_` and `_R_CHECK_THINGS_IN_TEMP_DIR_` on, a scratch
 HOME/TMPDIR, pinned to 8 cores. TeX (TinyTeX), qpdf and tidy were installed into the scratchpad,
 so the PDF manual, HTML manual and PDF size checks ran. Integration base, for comparison
-(`--no-examples`, no manual): 4 WARNINGs, 9 NOTEs.
+(`--no-examples`, no manual, no qpdf yet): 4 WARNINGs (one of them the missing qpdf), 9 NOTEs.
 
 | build | result |
 |---|---|
@@ -169,9 +169,10 @@ The 4 NOTEs:
    compiled packages.
 3. "unable to verify current time": this machine cannot reach the time server. Environment.
 4. "new files in some other directories": `/tmp/tmp*wandb-media`, `/tmp/tmp*wandb-artifacts`.
-   They are created and removed every few minutes by other processes of yours on the node (the
-   hox_swap `103_watch_stop_rule.py` watchers); the check ran with its own TMPDIR and shaman has
-   no Python. Environment.
+   Directories owned by you that some other process on the node creates and removes (they came
+   and went between my looks; I did not pin down which process). wandb is a Python library,
+   shaman has no Python, and the check ran with its own TMPDIR. Environment; the clang run did
+   not get it.
 
 Sanitizers (clang 18, `-fsanitize=address,undefined`, libstdc++, run with the ASAN runtime
 preloaded; all examples including `\donttest`, the tests, and the assessment's synthetic
@@ -186,8 +187,9 @@ shuffle + score script):
 
 Compared: the integration base e48958d ("base"), this branch at 260b71f ("new"; later commits
 change only NEWS and roxygen comments), and 260b71f with the macOS branch forced on Linux
-("fallback"). Each was installed with R's default flags (g++ 13.3 -O2) and run by the same script
-on a hard-linked copy of the same database. `time()` was fixed with an `LD_PRELOAD` shim
+("fallback"). base and new were installed with R's default flags (g++ 13.3, -g -O2), fallback
+with `-Wall -pedantic` added; each was run by the same script on a hard-linked copy of the same
+database. `time()` was fixed with an `LD_PRELOAD` shim
 (`FAKE_TIME=1700000000`), so `Random::reset(-1)` seeds the shuffler the same way in every run.
 Every output file was compared with `cmp`.
 
@@ -217,8 +219,8 @@ The small DB itself: `gextract()` of its three tracks over chr2:176.5e06-177e06 
 `gextract()` of the full DB over the same region (every row and value, including the float
 scores), apart from the chromosome factor levels.
 
-This compares the branch with the merged PRs. That the PRs match stock shaman is their own claim
-(and the seeds of the shuffle PR); it is not re-checked here.
+This compares the branch with the merged PRs. That the PRs match stock shaman is what the PRs
+report; it is not re-checked here.
 
 ## Likely questions from a CRAN reviewer
 
