@@ -31,6 +31,9 @@ included in the expanded matrix.}
 
 \item{k}{The number of neighbor distances used for the score. For higher resolution maps, increase k. For
 lower resolution maps, decrease k.}
+
+\item{k_exp}{The number of neighbor distances used for the score on the expected tracks (see
+\code{shaman_score_hic_mat}).}
 }
 \value{
 NULL if insufficient observed data, otherwise resturns a list containing 3 elements:

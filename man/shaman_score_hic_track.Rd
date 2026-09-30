@@ -11,8 +11,8 @@ shaman_score_hic_track(
   obs_track_nms,
   exp_track_nms = paste0(obs_track_nms, "_shuffle"),
   points_track_nms = obs_track_nms,
-  near_cis = 5000000,
-  expand = 2000000,
+  near_cis = 5e+06,
+  expand = 2e+06,
   k = 100,
   max_jobs = 100
 )
@@ -42,6 +42,9 @@ Note that for each observed point, its k-nearest neighbors must be included in t
 lower resolution maps, decrease k.}
 
 \item{max_jobs}{Maximal number of qsub jobs.}
+}
+\value{
+No return value, called for side effects: creates the 2D score track score_track_nm in track_db.
 }
 \description{
 \code{shaman_score_hic_track}

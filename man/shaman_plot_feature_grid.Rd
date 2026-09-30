@@ -40,6 +40,9 @@ shaman_plot_feature_grid(
 \item{zlim}{The minimum and maximum values for which colors should be plotted. Suggested zlim values by type:
 enrichment: (-1,1), obs,exp: (-4.5, -3)}
 }
+\value{
+A list with the observed (obs) and expected (exp) matrices summed over the grids, at plot_resolution.
+}
 \description{
 \code{shaman_plot_feature_grid}
 }

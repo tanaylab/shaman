@@ -15,7 +15,7 @@ shaman_score_hic_mat_for_track(
   end1,
   start2,
   end2,
-  expand = 2000000,
+  expand = 2e+06,
   k = 100,
   min_dist = 1024
 )

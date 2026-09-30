@@ -88,6 +88,7 @@ shaman_generate_feature_grid <- function(feature1, feature2, obs_track_nm, exp_t
 #' @param pal Color palette to use for image
 #' @param zlim The minimum and maximum values for which colors should be plotted. Suggested zlim values by type:
 #' enrichment: (-1,1), obs,exp: (-4.5, -3)
+#' @return A list with the observed (obs) and expected (exp) matrices summed over the grids, at plot_resolution.
 #'
 #' @examples
 #'
