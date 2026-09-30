@@ -181,6 +181,7 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 #' @param track_size Size of track view
 #' @param annotation_size Size of annotation view
 #' @return Called for the plot. Returns what \code{Gviz::plotTracks()} returns, invisibly.
+#' Needs the Bioconductor package Gviz.
 #'
 #' @examples
 #'
@@ -188,9 +189,11 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 #' gsetroot(shaman_get_test_track_db())
 #' # the test db has chr2 only
 #' ctcf <- list(ctcf_forward[ctcf_forward$chrom == "chr2", ], ctcf_reverse[ctcf_reverse$chrom == "chr2", ])
-#' shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06),
-#'     annotations = ctcf, add_genes = FALSE, add_ideogram = FALSE
-#' )
+#' if (requireNamespace("Gviz", quietly = TRUE)) {
+#'     shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06),
+#'         annotations = ctcf, add_genes = FALSE, add_ideogram = FALSE
+#'     )
+#' }
 #' \dontrun{
 #' # gene annotations and the ideogram are downloaded from UCSC
 #' shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06), annotations = ctcf)
@@ -202,6 +205,7 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
                                                annotations = list(), a_colors = getOption("shaman.annotation_colors"),
                                                add_genes = TRUE, add_ideogram = TRUE, add_axis = TRUE, gene_stacking = "squish", gene_size = 0.7,
                                                track_size = 0.8, annotation_size = 0.7) {
+    .shaman_check_gviz()
     tracks <- list()
     if (add_axis) {
         tracks <- list(Gviz::GenomeAxisTrack())
@@ -267,7 +271,7 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #' @param fig_fn Name of png file to output to. Empty string will cause the figure to be plotted to the current device.
 #' @param fig_width Width in pixels of output png figure.
 #' @param fig_height Height in pixels of output png figure.
-#' @return No return value, called for the plot.
+#' @return No return value, called for the plot. Needs the Bioconductor package Gviz.
 #'
 #' @examples
 #'
@@ -276,9 +280,11 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #' points <- gextract("hic_score", gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06),
 #'     colnames = "score"
 #' )
-#' shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06),
-#'     add_genes = FALSE, add_ideogram = FALSE
-#' )
+#' if (requireNamespace("Gviz", quietly = TRUE)) {
+#'     shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06),
+#'         add_genes = FALSE, add_ideogram = FALSE
+#'     )
+#' }
 #' \dontrun{
 #' # gene annotations and the ideogram are downloaded from UCSC
 #' shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06))
@@ -294,6 +300,7 @@ shaman_plot_map_score_with_annotations <- function(genome, points_score, interva
     if (!all(c("start1", "start2", "score") %in% colnames(points_score))) {
         stop("points_score data frame must contain the following columns: start1, start2, score")
     }
+    .shaman_check_gviz()
     map_score <- shaman_gplot_map_score(points_score, interval_range, rotate = TRUE, point_size = point_size, add_axis = FALSE)
     if (fig_fn != "") {
         png(fig_fn, width = fig_width, height = fig_height)
@@ -349,6 +356,12 @@ shaman_score_pal <- function() {
         colorRampPalette(c(colors[length(colors)], colors[length(colors)]))(n - breaks[length(colors)])
     )
     return(colspec)
+}
+
+.shaman_check_gviz <- function() {
+    if (!requireNamespace("Gviz", quietly = TRUE)) {
+        stop("plotting tracks and annotations needs the Bioconductor package Gviz: BiocManager::install(\"Gviz\")")
+    }
 }
 
 .shaman_get_ucsc <- function(genome, interv, stacking = "dense") {

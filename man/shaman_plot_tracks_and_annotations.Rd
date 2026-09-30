@@ -53,6 +53,7 @@ to be displayed in the region.}
 }
 \value{
 Called for the plot. Returns what \code{Gviz::plotTracks()} returns, invisibly.
+Needs the Bioconductor package Gviz.
 }
 \description{
 \code{shaman_gplot_tracks_and_annotations}
@@ -68,9 +69,11 @@ library(misha)
 gsetroot(shaman_get_test_track_db())
 # the test db has chr2 only
 ctcf <- list(ctcf_forward[ctcf_forward$chrom == "chr2", ], ctcf_reverse[ctcf_reverse$chrom == "chr2", ])
-shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06),
-    annotations = ctcf, add_genes = FALSE, add_ideogram = FALSE
-)
+if (requireNamespace("Gviz", quietly = TRUE)) {
+    shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06),
+        annotations = ctcf, add_genes = FALSE, add_ideogram = FALSE
+    )
+}
 \dontrun{
 # gene annotations and the ideogram are downloaded from UCSC
 shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06), annotations = ctcf)
