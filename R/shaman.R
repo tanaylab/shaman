@@ -509,7 +509,22 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 ##########################################################################################################
 shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, regional_interval,
                                  points_track_nms = obs_track_nms, min_dist = 1024, k = 100, k_exp = 2 * k) {
-    points <- .shaman_combine_points_multi_tracks(points_track_nms, focus_interval, min_dist)
+    if (identical(points_track_nms, obs_track_nms) && .shaman_interval_within(focus_interval, regional_interval) &&
+        all(vapply(obs_track_nms, function(x) gtrack.info(x)$type == "points", TRUE))) {
+        # The points are then the observed contacts inside the focus interval: take them from the
+        # observed contacts of the regional interval (see .shaman_points_in) instead of another pass
+        # over the track.
+        obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
+        if (NROW(obs) < 1000) {
+            # then so are the points in the focus interval
+            message("number of points in focus interval < 1000")
+            return(NULL)
+        }
+        points <- .shaman_points_in(obs, focus_interval)
+    } else {
+        obs <- NULL
+        points <- .shaman_combine_points_multi_tracks(points_track_nms, focus_interval, min_dist)
+    }
     if (is.null(points)) {
         message("number of points in focus interval = 0")
         return(NULL)
@@ -521,7 +536,7 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 
     points <- unique(points[, c("chrom1", "start1", "end1", "chrom2", "start2", "end2")])
     message(paste0("kk norm on ", nrow(points), " points"))
-    return(shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k = k, k_exp = k_exp))
+    return(.shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k = k, k_exp = k_exp, obs = obs))
 }
 
 ##########################################################################################################
@@ -564,8 +579,16 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #' @export
 ##########################################################################################################
 shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist = 1024, k = 100, k_exp = 2 * k) {
+    .shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k = k, k_exp = k_exp)
+}
+
+# obs: the observed contacts in regional_interval as .shaman_combine_points_multi_tracks() returns
+# them, if already extracted
+.shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k, k_exp, obs = NULL) {
     message(paste("obs = ", paste(obs_track_nms, collapse = ",")))
-    obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
+    if (is.null(obs)) {
+        obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
+    }
     if (is.null(obs) | nrow(points) == 0) {
         message(paste("0 data found in intervals, focus interval=", nrow(points)))
         return(NULL)
@@ -770,6 +793,25 @@ shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
         return(p[abs(p$start1 - p$start2) > min_dist, ])
     })
     return(points[, -1])
+}
+
+# TRUE when interval (one 2D interval) has integer coordinates and lies inside outer
+.shaman_interval_within <- function(interval, outer) {
+    co <- c(interval$start1, interval$end1, interval$start2, interval$end2)
+    all(co == round(co)) && as.character(interval$chrom1) == as.character(outer$chrom1) &&
+        as.character(interval$chrom2) == as.character(outer$chrom2) &&
+        interval$start1 >= outer$start1 && interval$end1 <= outer$end1 &&
+        interval$start2 >= outer$start2 && interval$end2 <= outer$end2
+}
+
+# The contacts of a points track in interval, from its contacts in a larger interval (p, rows as
+# gextract() returns them: [x, x + 1) x [y, y + 1)). gextract() of a 2D track visits every object of
+# the chromosome pair in a fixed order and returns those inside a single scope interval, so these are
+# the same rows, in the same order, as gextract() of interval gives.
+.shaman_points_in <- function(p, interval) {
+    p <- p[p$start1 >= interval$start1 & p$start1 < interval$end1 & p$start2 >= interval$start2 & p$start2 < interval$end2, ]
+    rownames(p) <- NULL
+    p
 }
 
 .shaman_compute_marginal_multi_tracks <- function(tracks, interval, min_dist) {
