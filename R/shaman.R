@@ -351,10 +351,10 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
     gsetroot(track_db)
     # check tracks
     if (sum(gtrack.exists(obs_track_nms)) < length(obs_track_nms)) {
-        stop(paste("Missing obs_track_nm (", obs_track_nm[!gtrack.exists(obs_track_nms)], ") in track db"))
+        stop(paste("Missing obs_track_nm (", obs_track_nms[!gtrack.exists(obs_track_nms)], ") in track db"))
     }
     if (sum(gtrack.exists(exp_track_nms)) < length(exp_track_nms)) {
-        stop(paste("Missing exp_track_nm (", exp_track_nm[!gtrack.exists(exp_track_nms)], ") in track db"))
+        stop(paste("Missing exp_track_nm (", exp_track_nms[!gtrack.exists(exp_track_nms)], ") in track db"))
     }
     if (gtrack.exists(score_track_nm)) {
         stop(paste("score_track_nm (", score_track_nm, ") already exists in track db"))
