@@ -184,7 +184,7 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 shaman_plot_tracks_and_annotations <- function(genome, interval_range,
                                                misha_tracks = list(), mt_colors = getOption("shaman.track_colors"), mt_ylims = NULL,
                                                annotations = list(), a_colors = getOption("shaman.annotation_colors"),
-                                               add_genes = T, add_ideogram = T, add_axis = T, gene_stacking = "squish", gene_size = 0.7,
+                                               add_genes = TRUE, add_ideogram = TRUE, add_axis = TRUE, gene_stacking = "squish", gene_size = 0.7,
                                                track_size = 0.8, annotation_size = 0.7) {
     tracks <- list()
     if (add_axis) {
@@ -219,7 +219,7 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
         ideo_track <- Gviz::IdeogramTrack(genome = genome, chromosome = as.character(interval_range$chrom))
         tracks[[length(tracks) + 1]] <- ideo_track
     }
-    Gviz::plotTracks(tracks, from = interval_range$start, to = interval_range$end, panel.only = T, labelPos = "below")
+    Gviz::plotTracks(tracks, from = interval_range$start, to = interval_range$end, panel.only = TRUE, labelPos = "below")
 }
 
 ##########################################################################################################
@@ -262,7 +262,7 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 shaman_plot_map_score_with_annotations <- function(genome, points_score, interval_range, point_size = 0.1,
                                                    misha_tracks = list(), mt_colors = getOption("shaman.track_colors"), mt_ylims = NULL,
                                                    annotations = list(), a_colors = getOption("shaman.annotation_colors"),
-                                                   add_genes = T, add_ideogram = T, add_axis = T, gene_stacking = "squish", gene_size = 0.7,
+                                                   add_genes = TRUE, add_ideogram = TRUE, add_axis = TRUE, gene_stacking = "squish", gene_size = 0.7,
                                                    track_size = 0.8, annotation_size = 0.7, fig_fn = "", fig_width = 900, fig_height = 5 / 6 * 900) {
     if (!all(c("start1", "start2", "score") %in% colnames(points_score))) {
         stop("points_score data frame must contain the following columns: start1, start2, score")
@@ -336,7 +336,7 @@ shaman_score_pal <- function() {
         rstart = "exonStarts", rends = "exonEnds", gene = "name", symbol = "name2",
         transcript = "name", strand = "strand", name = "RefSeq Genes",
         feature = "name2", stacking = stacking,
-        showId = T, from = interv$start, to = interv$end
+        showId = TRUE, from = interv$start, to = interv$end
     )
     return(genetrack)
 }

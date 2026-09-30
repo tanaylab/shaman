@@ -1,6 +1,6 @@
 #' Read params from files
 init_params <- function(fn, prev_params = NULL) {
-    t <- read.table(fn, sep = "=", fill = T, strip.white = T, stringsAsFactors = FALSE, quote = "")
+    t <- read.table(fn, sep = "=", fill = TRUE, strip.white = TRUE, stringsAsFactors = FALSE, quote = "")
     params <- as.character(t[, 2])
     names(params) <- t[, 1]
 
@@ -37,7 +37,6 @@ get_param_list <- function(nm, params) {
     if (nm %in% names(params)) {
         return(strsplit(as.character(params[nm]), ","))
     } else {
-        assign("shaman_miss_conf_err", TRUE, envir = .GlobalEnv)
         message("missing params ", nm)
         return(NA)
     }

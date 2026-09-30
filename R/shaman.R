@@ -204,8 +204,8 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
     if (!file.exists(shuf_fn)) {
         x <- sample(1:10, 1)
         system(paste("sleep", x))
-        options(gmultitasking = FALSE)
-        options(gmax.data.size = 1e+09)
+        old_opts <- options(gmultitasking = FALSE, gmax.data.size = 1e+09)
+        on.exit(options(old_opts), add = TRUE)
         gsetroot(track_db)
         scope <- gintervals.2d(chrom, start1, end1, chrom, start2, end2)
         a <- gextract(track, scope, band = c(-max_dist, -min_dist + 1), colnames = "contact")
@@ -228,7 +228,7 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
         if (nrow(a) < 2000 | dist_resolution == 0) {
             message("not shuffling, leaving raw")
             data.table::fwrite(format(rbind(a, setNames(rev(a), names(a))), scientific = FALSE), shuf_fn,
-                quote = FALSE, row.names = F,
+                quote = FALSE, row.names = FALSE,
                 sep = "\t"
             )
         } else {
@@ -511,10 +511,11 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
         todo <- !file.exists(fns)
         ret <- rep(0, nrow(rects))
         on.exit(rm(list = ls(.shaman_extract_cache), envir = .shaman_extract_cache))
+        old_opts <- options(gmax.data.size = 1e09)
+        on.exit(options(old_opts), add = TRUE)
         for (r in unique(row[todo])) {
             i <- which(row == r & todo)
             if (length(i) > 1) {
-                options(gmax.data.size = 1e09)
                 .shaman_cache_extractions(unique(c(obs_track_nms, exp_track_nms, points_track_nms)), gintervals.force_range(data.frame(
                     chrom1 = rects$chrom[i[1]], start1 = rects$start1[i[1]] - expand, end1 = rects$end1[i[1]] + expand,
                     chrom2 = rects$chrom[i[1]], start2 = min(rects$start2[i]) - expand, end2 = max(rects$end2[i]) + expand
@@ -532,7 +533,8 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
     if (file.exists(fn)) {
         return(0)
     }
-    options(gmax.data.size = 1e09)
+    old_opts <- options(gmax.data.size = 1e09)
+    on.exit(options(old_opts), add = TRUE)
     regional_interval <- gintervals.force_range(data.frame(
         chrom1 = chrom, start1 = start1 - expand, end1 = end1 + expand,
         chrom2 = chrom, start2 = start2 - expand, end2 = end2 + expand
@@ -838,7 +840,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
     )
 
 
-    exp <- as.data.frame(data.table::fread(shuf_fn, header = T))
+    exp <- as.data.frame(data.table::fread(shuf_fn, header = TRUE))
 
     ret <- shaman_kk_norm(obs, exp, points, k = k, k_exp = 2 * k)
     ret$exp_fn <- shuf_fn
