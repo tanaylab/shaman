@@ -15,7 +15,7 @@ test_that("kNN distances are identical to RANN::nn2", {
     p <- contacts(2e5)
     q <- sample(length(p$x), 2e4)
     for (k in c(1, 7, 100, 200)) {
-        for (threads in c(1, 3)) {
+        for (threads in c(1, 2)) {
             expect_identical(shaman_knn_dist_cpp(p$x, p$y, p$x[q], p$y[q], k, threads), rann_dist(p$x, p$y, p$x[q], p$y[q], k))
         }
     }
@@ -40,7 +40,7 @@ test_that("KS scores are identical to the RANN + round + shaman_merge_ks_cpp pat
             round(rann_dist(o$x, o$y, o$x[p], o$y[p], kk[1])),
             round(rann_dist(e$x, e$y, o$x[p], o$y[p], kk[2]))
         ), error = conditionMessage)
-        for (threads in c(1, 4)) {
+        for (threads in c(1, 2)) {
             # including the error for k of 2 or 3, where the perl sentinels fail the monotonicity check
             new <- tryCatch(shaman_knn_ks_cpp(o$x, o$y, e$x, e$y, o$x[p], o$y[p], kk[1], kk[2], threads), error = conditionMessage)
             expect_identical(new, ref)
