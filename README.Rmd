@@ -23,7 +23,7 @@ The normalization workflow consists of the following steps:
 4. Visualize normalized contact maps. Precomputed normalized scores allow for flexible analysis of contact distributions.
 5. Quantify contact enrichment acoording to genomic features.
 
-In the example misha database provided in this package we have created a low-footprint matrix to examplify the shaman workflow. We included 4.6 million contacts from ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions. Processing the complete matrix from this study requires downloading the full contact list and regenerating the reshuffled matrix.
+The package includes a small example misha database (`shaman_get_test_track_db()`) with the observed, expected and score tracks of chr2:176.5e06-177e06, around the hoxd locus, from the ELA K562 dataset. The full example database (`shaman_get_test_track_db(full = TRUE)`, downloaded on first use, about 100MB) is a low-footprint matrix to examplify the shaman workflow: 4.6 million contacts from the ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions. Processing the complete matrix from this study requires downloading the full contact list and regenerating the reshuffled matrix.
 
 ### Code
 Source code can be found at: 
