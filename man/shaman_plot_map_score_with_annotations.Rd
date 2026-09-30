@@ -83,10 +83,13 @@ gsetroot(shaman_get_test_track_db())
 points <- gextract("hic_score", gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06),
     colnames = "score"
 )
+\donttest{
+# loading Gviz takes a few seconds
 if (requireNamespace("Gviz", quietly = TRUE)) {
     shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06),
         add_genes = FALSE, add_ideogram = FALSE
     )
+}
 }
 \dontrun{
 # gene annotations and the ideogram are downloaded from UCSC

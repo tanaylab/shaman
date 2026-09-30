@@ -188,11 +188,17 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 #' library(misha)
 #' gsetroot(shaman_get_test_track_db())
 #' # the test db has chr2 only
-#' ctcf <- list(ctcf_forward[ctcf_forward$chrom == "chr2", ], ctcf_reverse[ctcf_reverse$chrom == "chr2", ])
+#' ctcf <- list(
+#'     ctcf_forward[ctcf_forward$chrom == "chr2", ],
+#'     ctcf_reverse[ctcf_reverse$chrom == "chr2", ]
+#' )
+#' \donttest{
+#' # loading Gviz takes a few seconds
 #' if (requireNamespace("Gviz", quietly = TRUE)) {
 #'     shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06),
 #'         annotations = ctcf, add_genes = FALSE, add_ideogram = FALSE
 #'     )
+#' }
 #' }
 #' \dontrun{
 #' # gene annotations and the ideogram are downloaded from UCSC
@@ -280,10 +286,13 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #' points <- gextract("hic_score", gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06),
 #'     colnames = "score"
 #' )
+#' \donttest{
+#' # loading Gviz takes a few seconds
 #' if (requireNamespace("Gviz", quietly = TRUE)) {
 #'     shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06),
 #'         add_genes = FALSE, add_ideogram = FALSE
 #'     )
+#' }
 #' }
 #' \dontrun{
 #' # gene annotations and the ideogram are downloaded from UCSC
