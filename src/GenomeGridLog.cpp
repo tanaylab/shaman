@@ -6,6 +6,7 @@
  */
 
 #include "GenomeGridLog.h"
+#include <Rcpp.h>
 #include <cmath>
 #include <stdlib.h>
 #include <iostream>
@@ -26,7 +27,7 @@ GenomeGridLog::GenomeGridLog(int dist_resolution, int log_scale, int x_binsize,
 	m_dim1_size = floor(float(m_max_x)/m_x_binsize) + 1;
 	m_dim2_size = floor(m_dist_resolution * log(1+max_dist) / m_log_log_scale) - m_min_dist + 1;
 
-	cerr << "GenomeGrid:: " << m_dim1_size << " X " << m_dim2_size << endl <<
+	Rcpp::Rcerr << "GenomeGrid:: " << m_dim1_size << " X " << m_dim2_size << endl <<
 			"dist resolution = " << m_dist_resolution << endl <<
 			"log_scale = " << m_log_scale << endl <<
 			"x bin size = " << m_x_binsize << endl <<

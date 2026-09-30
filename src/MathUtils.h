@@ -9,6 +9,7 @@
 #define MATHUTIL_H_
 #include <cfloat>
 #include <cmath>
+#include <Rcpp.h>
 
 inline double max(double f1, double f2) { return(f1 > f2 ? f1 : f2); }
 inline float max(float f1, float f2) { return(f1 > f2 ? f1 : f2); }
@@ -79,7 +80,7 @@ inline void log_sum_log(double &l1, double l2) {
 
 inline void log_minus_log(double &l1, double l2) {
 	if(1 < exp(l2 - l1)) {
-		cerr << "NAN at log minus log "
+		Rcpp::Rcerr << "NAN at log minus log "
 			<< l1 << " " << l2 << " " << l2 - l1 << endl;
 	}
 	l1 += log(1 - exp(l2-l1));
