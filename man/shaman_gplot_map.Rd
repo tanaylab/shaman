@@ -35,7 +35,8 @@ Plots hic contact matrix.
 \examples{
 
 # Set misha db to test
-gsetroot(shaman::shaman_get_test_track_db())
-points <- gextract("hic_obs", gintervals.2d(2, 176e06, 177e06, 2, 176e06, 177e06))
+library(misha)
+gsetroot(shaman_get_test_track_db())
+points <- gextract("hic_obs", gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06))
 shaman_gplot_map(points)
 }

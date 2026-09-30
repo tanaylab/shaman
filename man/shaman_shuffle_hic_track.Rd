@@ -72,20 +72,29 @@ Temporary files are deleted upon track creation.
 \examples{
 
 # The example below runs on the test misha db provided with shaman.
-# Note that this is a toy db sampled from K562 ela data - shuffling the observed track will not produce the expected track.
+# Note that this is a toy db sampled from K562 ela data - shuffling the observed track
+# will not produce the expected track.
+library(misha)
+track_db <- shaman_get_test_track_db()
+gsetroot(track_db)
 # options(shaman.sge_support=1) #configuring sge engine mode - preferred
-options(shaman.mc_support = 1) # configuring multi-core mode
+old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 if (gtrack.exists("hic_obs_shuffle")) {
     gtrack.rm("hic_obs_shuffle", force = TRUE)
     gdb.reload()
 }
-ret <- shaman_shuffle_hic_track(shaman::shaman_get_test_track_db(),
+\donttest{
+ret <- shaman_shuffle_hic_track(track_db,
     obs_track_nm = "hic_obs",
-    work_dir = tempdir(), # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+    # work_dir can be tempdir() only in multi-core mode.
+    # For sge mode, work_dir must be accessible by all jobs.
+    work_dir = tempdir(),
     shuffle = 1, # default is set to 80
     grid_step_iter = 1, # default is set to 40
-    max_jobs = parallel::detectCores()
+    max_jobs = 2
 ) # optimally set to number of chromosomes
 gdb.reload()
 gtrack.ls("hic_obs_shuffle") # new shuffled track that was created
+}
+options(old_opts)
 }
