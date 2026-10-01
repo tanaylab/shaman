@@ -74,7 +74,7 @@ public:
 		linear_regression(raw, 2*smooth+1, a_start_margin, b_start_margin);
 
 		vector<float> end_margin(2*smooth+1);
-		std::reverse_copy(raw.end()-2*smooth-2, raw.end(), end_margin.begin());
+		std::reverse_copy(raw.end()-2*smooth-1, raw.end(), end_margin.begin());
 		float a_end_margin;
 		float b_end_margin;
 		linear_regression(end_margin, 2*smooth+1, a_end_margin, b_end_margin);
