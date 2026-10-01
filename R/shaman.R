@@ -249,6 +249,12 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
 #' Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters),
 #' depending on the number of cores available.
+#' \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
+#' threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
+#' each job does, so shaman.sge_flags should ask for N slots.
+#' Each extraction of a 2D track can keep about the whole chromosome's track file in memory;
+#' misha's \code{options(gtrack.num.chunks = 1000)} bounds that (2-3x lower peak memory on dense
+#' matrices in our runs) without changing the scores.
 #'
 #' Each step creates temporary files of the matrix scores which are then joined to a track.
 #' Temporary files are deleted upon track creation.
@@ -424,10 +430,42 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 #' lower resolution maps, decrease k.
 #' @param min_dist The minimum distance between points.
 #'
+#' @details chrom, start1, end1, start2 and end2 can be vectors, to score several matrices in one call.
+#' Matrices with the same chrom, start1 and end1 then share one extraction of each track over the union
+#' of their expanded intervals, instead of one extraction per matrix (each extraction of a 2D track reads
+#' the whole chromosome pair). The output files are the same as scoring the matrices one by one.
+#'
+#' \code{options(shaman.score.threads = N)} computes the kNN distances and scores on N threads (default 1).
+#'
+#' @return 0, 1 or -1 per matrix.
 #' @export
 ##########################################################################################################
 shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
                                            chrom, start1, end1, start2, end2, expand = 2e06, k = 100, min_dist = 1024) {
+    if (max(length(chrom), length(start1), length(end1), length(start2), length(end2)) > 1) {
+        rects <- data.frame(chrom = as.character(chrom), start1 = start1, end1 = end1, start2 = start2, end2 = end2, stringsAsFactors = FALSE)
+        fns <- paste0(work_dir, "/", paste0(obs_track_nms, collapse = "."), ".", rects$chrom, ".", rects$start1, ".", rects$start2, ".score")
+        row <- paste(rects$chrom, rects$start1, rects$end1)
+        todo <- !file.exists(fns)
+        ret <- rep(0, nrow(rects))
+        on.exit(rm(list = ls(.shaman_extract_cache), envir = .shaman_extract_cache))
+        for (r in unique(row[todo])) {
+            i <- which(row == r & todo)
+            if (length(i) > 1) {
+                options(gmax.data.size = 1e09)
+                .shaman_cache_extractions(unique(c(obs_track_nms, exp_track_nms, points_track_nms)), gintervals.force_range(data.frame(
+                    chrom1 = rects$chrom[i[1]], start1 = rects$start1[i[1]] - expand, end1 = rects$end1[i[1]] + expand,
+                    chrom2 = rects$chrom[i[1]], start2 = min(rects$start2[i]) - expand, end2 = max(rects$end2[i]) + expand
+                )))
+            }
+            for (j in i) {
+                ret[j] <- shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
+                    rects$chrom[j], rects$start1[j], rects$end1[j], rects$start2[j], rects$end2[j], expand = expand, k = k, min_dist = min_dist)
+            }
+            rm(list = ls(.shaman_extract_cache), envir = .shaman_extract_cache)
+        }
+        return(ret)
+    }
     fn <- paste0(work_dir, "/", paste0(obs_track_nms, collapse = "."), ".", chrom, ".", start1, ".", start2, ".score")
     if (file.exists(fn)) {
         return(0)
@@ -509,7 +547,22 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 ##########################################################################################################
 shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, regional_interval,
                                  points_track_nms = obs_track_nms, min_dist = 1024, k = 100, k_exp = 2 * k) {
-    points <- .shaman_combine_points_multi_tracks(points_track_nms, focus_interval, min_dist)
+    if (identical(points_track_nms, obs_track_nms) && .shaman_interval_within(focus_interval, regional_interval) &&
+        all(vapply(obs_track_nms, function(x) gtrack.info(x)$type == "points", TRUE))) {
+        # The points are then the observed contacts inside the focus interval: take them from the
+        # observed contacts of the regional interval (see .shaman_points_in) instead of another pass
+        # over the track.
+        obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
+        if (NROW(obs) < 1000) {
+            # then so are the points in the focus interval
+            message("number of points in focus interval < 1000")
+            return(NULL)
+        }
+        points <- .shaman_points_in(obs, focus_interval)
+    } else {
+        obs <- NULL
+        points <- .shaman_combine_points_multi_tracks(points_track_nms, focus_interval, min_dist)
+    }
     if (is.null(points)) {
         message("number of points in focus interval = 0")
         return(NULL)
@@ -521,7 +574,7 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 
     points <- unique(points[, c("chrom1", "start1", "end1", "chrom2", "start2", "end2")])
     message(paste0("kk norm on ", nrow(points), " points"))
-    return(shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k = k, k_exp = k_exp))
+    return(.shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k = k, k_exp = k_exp, obs = obs))
 }
 
 ##########################################################################################################
@@ -564,8 +617,16 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #' @export
 ##########################################################################################################
 shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist = 1024, k = 100, k_exp = 2 * k) {
+    .shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k = k, k_exp = k_exp)
+}
+
+# obs: the observed contacts in regional_interval as .shaman_combine_points_multi_tracks() returns
+# them, if already extracted
+.shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k, k_exp, obs = NULL) {
     message(paste("obs = ", paste(obs_track_nms, collapse = ",")))
-    obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
+    if (is.null(obs)) {
+        obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
+    }
     if (is.null(obs) | nrow(points) == 0) {
         message(paste("0 data found in intervals, focus interval=", nrow(points)))
         return(NULL)
@@ -597,16 +658,13 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
         k_exp <- round(k * n_exp / n_obs)
     }
     message(paste0("n_obs = ", n_obs, ", n_exp = ", n_exp, ", k_exp = ", k_exp))
-    # expected first: its kNN search has the highest peak memory, so run it while only the observed
-    # points, not their kNN distances, are held
-    e_knn <- round(RANN::nn2(exp[, c("start1", "start2")], points[, c("start1", "start2")], k = k_exp)$nn.dist)
-    rm(exp)
-    gc()
-    o_knn <- round(RANN::nn2(obs[, c("start1", "start2")], points[, c("start1", "start2")], k = k)$nn.dist)
-    rm(obs)
-    gc()
-    s_ks <- shaman_merge_ks_cpp(o_knn, e_knn)
-    rm(o_knn, e_knn)
+    # same values as shaman_merge_ks_cpp(round(RANN::nn2(obs, points, k)$nn.dist),
+    # round(RANN::nn2(exp, points, k_exp)$nn.dist)), without the n x k matrices
+    s_ks <- shaman_knn_ks_cpp(
+        obs$start1, obs$start2, exp$start1, exp$start2, points$start1, points$start2,
+        k, k_exp, getOption("shaman.score.threads", 1)
+    )
+    rm(obs, exp)
 
     points$score <- 100 * ifelse(-s_ks$V1 < s_ks$V2, s_ks$V2, s_ks$V1)
 
@@ -769,10 +827,66 @@ shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
 ##########################################################################################################
 .shaman_combine_points_multi_tracks <- function(tracks, interval, min_dist) {
     points <- plyr::adply(tracks, 1, function(x) {
-        p <- gextract(x, interval, colnames = c("contacts"))
+        p <- .shaman_cached_gextract(x, interval)
+        if (isFALSE(p)) {
+            p <- gextract(x, interval, colnames = c("contacts"))
+        }
         return(p[abs(p$start1 - p$start2) > min_dist, ])
     })
     return(points[, -1])
+}
+
+# Extractions of whole rows of matrices, kept while shaman_score_hic_mat_for_track() scores the row
+.shaman_extract_cache <- new.env(parent = emptyenv())
+
+# TRUE when interval and outer are single 2D intervals and interval has integer coordinates and lies
+# inside outer
+.shaman_interval_within <- function(interval, outer) {
+    if (NROW(interval) != 1 || NROW(outer) != 1) {
+        return(FALSE)
+    }
+    co <- c(interval$start1, interval$end1, interval$start2, interval$end2)
+    all(co == round(co)) && as.character(interval$chrom1) == as.character(outer$chrom1) &&
+        as.character(interval$chrom2) == as.character(outer$chrom2) &&
+        interval$start1 >= outer$start1 && interval$end1 <= outer$end1 &&
+        interval$start2 >= outer$start2 && interval$end2 <= outer$end2
+}
+
+# The contacts of a points track in interval, from its contacts in a larger interval (p, rows as
+# gextract() returns them: [x, x + 1) x [y, y + 1)). gextract() of a 2D track visits every object of
+# the chromosome pair in a fixed order and returns those inside a single scope interval, so these are
+# the same rows, in the same order, as gextract() of interval gives.
+.shaman_points_in <- function(p, interval) {
+    p <- p[p$start1 >= interval$start1 & p$start1 < interval$end1 & p$start2 >= interval$start2 & p$start2 < interval$end2, ]
+    rownames(p) <- NULL
+    p
+}
+
+.shaman_cache_extractions <- function(tracks, interval) {
+    for (x in tracks) {
+        if (gtrack.info(x)$type == "points") {
+            p <- gextract(x, interval, colnames = c("contacts"))
+            if (is.null(p)) {
+                p <- data.frame(start1 = numeric(0), end1 = numeric(0), start2 = numeric(0), end2 = numeric(0))
+            }
+            assign(x, list(interval = interval, points = p), envir = .shaman_extract_cache)
+        }
+    }
+}
+
+# gextract(track, interval, colnames = "contacts") taken from a cached extraction of a larger
+# interval (see .shaman_points_in), or FALSE if there is none
+.shaman_cached_gextract <- function(track, interval) {
+    ce <- .shaman_extract_cache[[track]]
+    if (is.null(ce) || !.shaman_interval_within(interval, ce$interval)) {
+        return(FALSE)
+    }
+    p <- .shaman_points_in(ce$points, interval)
+    # gextract() returns NULL, not an empty frame, when there are no rows
+    if (nrow(p) == 0) {
+        return(NULL)
+    }
+    p
 }
 
 .shaman_compute_marginal_multi_tracks <- function(tracks, interval, min_dist) {
