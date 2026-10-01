@@ -33,7 +33,7 @@ Imports:
     reshape2,
     grid,
     plyr,
-    doMC (>= 1.3.4)
+    parallel
 URL: https://tanaylab.github.io/shaman/, https://github.com/tanaylab/shaman
 OS_type: unix
 BugReports: https://github.com/tanaylab/shaman/issues
