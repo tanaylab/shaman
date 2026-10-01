@@ -70,8 +70,9 @@ checkout. Merges and commits ran with `-c filter.lfs.*=` and `core.hooksPath=/de
 5. Names approved: `full`, `inst/extdata/hoxd.tsv.xz`, `tempdir()/shaman_test_db`,
    `.shaman_get_full_test_track_db()`, `.shaman_check_gviz()`, and from #14 `seed` (argument and track
    attribute), the `seed = N` line, `.shaman_check_seed()`.
-6. Still for the authors: the licence stays `GPL` (unversioned, which CRAN accepts); a method
-   reference with a DOI in Description needs the right citation.
+6. Still for the authors: the licence stays `GPL` (unversioned, which CRAN accepts); the method is
+   cited as Mendelson Cohen et al. (2017) <doi:10.1101/187203> (bioRxiv preprint; bioRxiv and Crossref list no
+   journal version) in Description, `inst/CITATION` and the README (f9eb74d).
 
 ## Blockers
 
@@ -383,7 +384,7 @@ report; it is not re-checked here.
   reviewers ask for a `verbose` switch.
 - `shaman_generate_feature_grid()` writes interval sets into the misha DB (cached
   `giterator.intervals()` results); this is not documented.
-- A reference (DOI) for the method in Description.
+- A reference (DOI) for the method in Description: done (f9eb74d).
 
 ## Remaining effort (estimate)
 
