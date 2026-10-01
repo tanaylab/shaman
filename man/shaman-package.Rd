@@ -6,7 +6,7 @@
 \alias{shaman-package}
 \title{shaman: Sampling HiC Contact Matrices for Aparametric Normalization}
 \description{
-Generate expected HiC data maintaining marginal coverage, and the decay in contact probability with increasing genomic distance. Expected HiC data is used for normalization and graphical presentation of statistical significance of observed HiC contact enrichments.
+Generate expected HiC data maintaining marginal coverage, and the decay in contact probability with increasing genomic distance. Expected HiC data is used for normalization and graphical presentation of statistical significance of observed HiC contact enrichments. The method is described in Mendelson Cohen et al. (2017) \doi{10.1101/187203}.
 }
 \seealso{
 Useful links:
