@@ -36,6 +36,15 @@ test_that("local mode on fewer than 10,000 contacts runs instead of dividing by 
     expect_true(all(res$points$score >= -100 & res$points$score <= 100))
 })
 
+test_that("too few expected contacts for k_exp give no score instead of an error", {
+    # 1,200 observed and 150 expected contacts (both orientations)
+    db <- make_track(tempfile(), c(chr1 = 5e6), c(chr1 = 600))
+    make_track(db, c(chr1 = 5e6), c(chr1 = 75), "hic_exp")
+    all <- gintervals.2d(1, 0, 5e6, 1, 0, 5e6)
+    expect_null(shaman_score_hic_mat("hic_obs", "hic_exp", all, all, k = 100, k_exp = 200))
+    expect_false(is.null(shaman_score_hic_mat("hic_obs", "hic_exp", all, all, k = 100, k_exp = 150)))
+})
+
 test_that("the score step stops after 3 rounds and names the matrices that got no score", {
     db <- make_track(tempfile(), c(chr1 = 5e6), c(chr1 = 1000))
     make_track(db, c(chr1 = 5e6), c(chr1 = 1000), "hic_exp")

@@ -626,6 +626,10 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
         # computing k_exp by number of points
         k_exp <- round(k * n_exp / n_obs)
     }
+    if (n_exp < k_exp) {
+        message(paste("insufficient data found in intervals: exp=", n_exp, "< k_exp =", k_exp))
+        return(NULL)
+    }
     message(paste0("n_obs = ", n_obs, ", n_exp = ", n_exp, ", k_exp = ", k_exp))
     e_knn <- RANN::nn2(exp[, c("start1", "start2")], points[, c("start1", "start2")], k = k_exp)
     message("write tab 2")
