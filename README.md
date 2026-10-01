@@ -19,35 +19,30 @@ Source code can be found at: <https://github.com/tanaylab/shaman>
 
 ### Requirements
 
--   *remotes* R package (optional, for automatic installation of *bioconductor* dependencies)
--   *System:* multi-core unix / linux based system or SGE (sun grid engine) cluster for distributed computing are required for large HiC datasets.
+- *System:* multi-core unix / linux based system or SGE (sun grid engine) cluster for distributed computing are required for large HiC datasets.
 
 ### Installation
 
-The quickest way to install *shaman* is to use the following command:
+You can install the released version of shaman from CRAN with:
 
 ``` r
-remotes::install_github('tanaylab/shaman')
+install.packages("shaman")
 ```
 
-If remotes fails to install all the bioconductor requirments please install *Gviz* and *GenomeInfoDb* manually from bioconductor:
+And the development version from GitHub with:
 
 ``` r
-source("https://bioconductor.org/biocLite.R")
-biocLite("Gviz")
-biocLite("GenomeInfoDb")
+remotes::install_github("tanaylab/shaman")
 ```
 
-#### When all else fails:
+Both install [misha](https://github.com/tanaylab/misha) automatically.
 
-In order to install from source, please take the following steps:
+`shaman_plot_tracks_and_annotations()` and `shaman_plot_map_score_with_annotations()` also need the Bioconductor package [Gviz](https://bioconductor.org/packages/Gviz/), which is not installed by default:
 
 ``` r
-install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/misha_3.5.6.tar.gz", , repos=NULL) # Download and install misha package) 
-source("https://bioconductor.org/biocLite.R") #installing Gviz
-biocLite("Gviz")
-biocLite("GenomeInfoDb")
-install.packages("http://www.wisdom.weizmann.ac.il/~nettam/shaman/shaman_2.0.tar.gz", , repos=NULL) # Download and install shaman package)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("Gviz")
 ```
 
 ### Using the package
