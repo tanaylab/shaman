@@ -50,40 +50,46 @@ that are still open in the order above, then `git cherry-pick ca5a8b6..cran-read
 git-lfs is not installed here, so `inst/trackdb.tar.gz` is the 134-byte LFS pointer in this
 checkout. Merges and commits ran with `-c filter.lfs.*=` and `core.hooksPath=/dev/null`.
 
-## Open decisions
+## Decisions
 
-1. **Maintainer.** Set to Aviezer Lifshitz <aviezer.lifshitz@weizmann.ac.il>, tentative ("I will
-   be the maintainer, I think"), with roles `aut, cre`. `aut` is my assumption from the 2.1.0
-   work; drop it to `cre` if not wanted. Netta Mendelson Cohen stays `aut`. The maintainer must
-   answer CRAN email, including the automatic notices when a check starts failing.
-2. **Where the full 104 MB example DB goes** (GitHub release, Zenodo, or dropped). Either way the
-   package no longer ships it (`.Rbuildignore`), and examples use a small bundled example (below).
-   Implemented: the recommended option, a download on explicit request only, as
-   `shaman_get_test_track_db(full = TRUE)`. The URL is written once, in
-   `.shaman_get_full_test_track_db()` (`R/params.R`). It still points at the git-lfs file on master
-   (`media.githubusercontent.com`), which keeps working while the file stays in the repository and
-   uses the LFS bandwidth quota. To swap: put the release/Zenodo URL there. To drop: remove the
-   `full` argument and `.shaman_get_full_test_track_db()` (commit aa7e16d), and the `full = TRUE`
-   chunks of the vignette and the README paragraph (commit efaf775).
-3. **Does #9 ship in the CRAN release?** Assumed yes (recommended). That makes the macOS
-   `std::pmr` item a blocker; its fix is commit 3841bd2. If #9 does not ship, rebuild without the #9
-   merge (and #14, which is stacked on it) and drop 3841bd2.
-4. **Gviz to Suggests.** Implemented (recommended) in commit 36f5e53 (plus the `\donttest` in
-   81ba85e); `git revert 36f5e53` keeps Gviz in Imports.
-5. Smaller calls for the authors: the licence stays `GPL` (unversioned, which CRAN accepts); a
-   method reference with a DOI in Description needs the right citation.
+1. **Maintainer:** Aviezer Lifshitz <aviezer.lifshitz@weizmann.ac.il>, `aut, cre` (final). Netta
+   Mendelson Cohen stays `aut`. The maintainer answers CRAN email, including the automatic notices
+   when a check starts failing.
+2. **Full 104 MB example DB:** not in the package (`.Rbuildignore`); examples and tests use the small
+   bundled one. `shaman_get_test_track_db(full = TRUE)` downloads it on request and checks its md5
+   (88552541e7bf346ef50187f1e42fc25b, the same file as `inst/trackdb.tar.gz`). Decided location:
+   the lab's public S3 bucket, `https://misha-genome.s3.eu-west-1.amazonaws.com/shaman/trackdb.tar.gz`.
+   **Not done:** changing the URL in `.shaman_get_full_test_track_db()` (`R/params.R`) and the
+   vignette/README wording to that bucket was refused by this session's permission check (reason
+   given: "traffic redirection"); I reverted my uncommitted edit. The code still
+   downloads from the git-lfs media URL on master. Needs your direct go-ahead (or the edit by you):
+   one line of code plus the wording "downloaded from the lab's public S3 bucket on first use" in
+   `README.Rmd`/`README.md`, `vignettes/shaman-package.Rmd`, the `@details` of
+   `shaman_get_test_track_db()` and NEWS. The bucket object is now public and I checked it (read
+   only): HTTP 200, 108,400,483 bytes, md5 88552541e7bf346ef50187f1e42fc25b, byte-identical to the
+   LFS tarball.
+3. **#9 ships** in the CRAN release, so the macOS `std::pmr` fallback (3841bd2) stays. Not yet
+   verified on macOS (see CI below).
+4. **Gviz stays in Suggests** (36f5e53, `\donttest` in 81ba85e). The README installation section
+   (e381a52) says how to install it from Bioconductor; `.shaman_check_gviz()`'s error gives the same
+   `BiocManager::install("Gviz")` line.
+5. Names approved: `full`, `inst/extdata/hoxd.tsv.xz`, `tempdir()/shaman_test_db`,
+   `.shaman_get_full_test_track_db()`, `.shaman_check_gviz()`, and from #14 `seed` (argument and track
+   attribute), the `seed = N` line, `.shaman_check_seed()`.
+6. Still for the authors: the licence stays `GPL` (unversioned, which CRAN accepts); a method
+   reference with a DOI in Description needs the right citation.
 
 ## Blockers
 
 | # | item | status | commits |
 |---|---|---|---|
-| 1 | 104 MB example DB in the package; examples downloaded it into the user cache | done; location of the full DB: decision 2 | aa7e16d, efaf775 |
+| 1 | 104 MB example DB in the package; examples downloaded it into the user cache | done; S3 URL pending (decision 2) | aa7e16d, efaf775, 04f9458 |
 | 2 | examples failed (misha not attached, DB download, UCSC network, all cores, options not restored) | done | 8b59cbc, 81ba85e |
 | 3 | NAMESPACE imports (utils, grDevices, graphics, stats), Rd `\usage` mismatches, `\value` | done | 26692d4, 7509d36 |
 | 4 | compiled code: `std::cerr`/`std::cout`, terminating `ASSERT` | done | 85287f6 |
 | 4b | compiled code: `-Wreorder` (install WARNING with `-Wall`), `smooth_vector` heap overflow (ASAN) | done in #13 (merged in the base) | - |
 | 5 | macOS build of #9 (`std::pmr` needs macOS 14 at run time; `MADV_HUGEPAGE` was already guarded by #9) | done in code; needs macOS to verify | 3841bd2 |
-| 6 | DESCRIPTION (Title, Description typo, Date, Remotes, URL, OS_type, parallel, maintainer) | done; maintainer: decision 1 | 3c73f0d |
+| 6 | DESCRIPTION (Title, Description typo, Date, Remotes, URL, OS_type, parallel, maintainer) | done | 3c73f0d |
 | 7 | policy: `.GlobalEnv` assign, `options()`/`par()` restored with `on.exit`, `T`/`F`, <= 2 threads | done | a705aa5, 35c082a |
 
 Details:
@@ -113,8 +119,7 @@ Details:
 - **Examples (2).** Each example attaches misha, works in chr2:176.5e06-177e06, uses at most 2 jobs
   (`max_jobs = 2`) and restores the options it sets. The UCSC gene/ideogram versions of the two
   Gviz functions are `\dontrun` (network); runnable versions without them are in `\donttest`
-  because loading Gviz takes 8-10 s here. The `shaman_shuffle_hic_track()` example is `\donttest`:
-  each shuffle job sleeps a random 1-10 s first (see nice-to-haves). Scoring examples use smaller
+  because loading Gviz takes 8-10 s here. Scoring examples use smaller
   focus intervals, and `k = 20` for the score track, to stay under 5 s. `shaman_get_test_track_db()`
   got an example.
 - **Also fixed on the way:** undefined variables in error messages of `shaman_score_hic_track()`
@@ -139,29 +144,56 @@ Details:
   From the headers I expect the rest of the C++17 code (`std::to_chars` for integers,
   `__builtin_prefetch`) to build with Apple clang, but that is inference.
 
+## Done after the decisions (2026-10-01)
+
+- **Random 1-10 s wait** (4abf34d): only SGE shuffle jobs wait (`Sys.sleep(sample(1:10, 1))` in the job
+  command, staggering their start). Direct calls of `shaman_shuffle_hic_mat_for_track()` and
+  multi-core mode no longer wait, and the `shaman_shuffle_hic_track()` example (now with `seed = 1`)
+  runs in about a second outside `\donttest`.
+- **doMC** (e90da78): multi-core mode used `doMC::registerDoMC()` + `plyr::ddply(.parallel = TRUE)`,
+  which left doMC registered as the user's foreach backend. Now `parallel::mclapply()` (what doMC
+  runs underneath, with the same defaults: prescheduled, `mc.set.seed = TRUE`); an error in a job
+  still stops the run, as it did (checked: plyr + doMC stops with "task 2 failed"). doMC left
+  Imports; parallel (base R) is in Imports. Chosen over saving and restoring the foreach backend,
+  which needs foreach internals.
+- **Full DB download** (04f9458): a failed download stops with the URL in the message, and the md5
+  is checked.
+- **README** (e381a52): CRAN and GitHub installation, Gviz from Bioconductor; the `biocLite`, GenomeInfoDb,
+  remotes requirement and old tarball instructions are gone. `README.md` re-knit (`--wrap=none`,
+  no smart quotes, so only the changed section differs).
+- **Tests** (79bd8d8, `tests/testthat/test-example_db.R`, about 4 s, at most 2 processes): the small
+  DB has the expected contacts; a shuffle keeps every contact end (the marginal coverage, exactly),
+  the same seed gives the same file and the misha options are restored; `shaman_score_hic_mat()`
+  gives a score in [-100, 100] for each focus point; the multi-core track functions leave the foreach
+  backend as it was. foreach is in Suggests for that test.
+- **pkgdown** (1788f7e): `url` added, all exported topics and the datasets in the reference index,
+  the two config helpers `@keywords internal`; `pkgdown::check_pkgdown()` passes and the site builds
+  locally (Bootstrap 3 is reported as deprecated).
+- **cran-comments.md** (49483e1, in `.Rbuildignore`).
+- **CI** (503c642): `.github/workflows/R-CMD-check.yaml` (as misha: macOS arm64 with R release,
+  Ubuntu with R devel, release and oldrel-1; r-lib/actions installs misha from CRAN and Gviz from
+  Bioconductor; a macOS step prints `sw_vers` and the number of `std::pmr` symbols in the built
+  library), `sanitizers.yaml` (R CMD check in R-hub's clang-asan container, failing on any ASan or
+  UBSan report), `pkgdown.yaml` (builds the site as an artifact, no Pages deployment). Triggers: push to
+  master and cran-readiness, pull requests to master. misha's `style.yaml` was not copied: it commits
+  restyled code back to the branch by itself. `actionlint` passes on all three. **Not run:**
+  pushing `cran-readiness` to GitHub was refused by this session's permission check (reason given:
+  "out-of-place publication"), so no workflow has run and macOS is still unverified. Needs a push
+  by you, or your direct go-ahead.
+
 ## Nice-to-haves
 
 | item | status |
 |---|---|
-| the random 1-10 s `sleep` at the start of every `shaman_shuffle_hic_mat_for_track()` call (a stagger for SGE jobs); moving it into the SGE command would make direct calls and the example fast, but changes mc mode timing | not done, your call |
 | replace the other `system()` calls (`echo` header, `rm <work_dir><track>*` glob) with R code, quote paths | not done (fine on unix) |
-| `doMC::registerDoMC()` changes the user's foreach backend; `parallel::mclapply` would not | not done |
-| tests on the small example DB (e.g. that a shuffle keeps the marginal coverage); needs a new file `tests/testthat/test-example_db.R` | not done, needs approval for the file |
-| `cran-comments.md` for the submission | not done, needs approval for the file |
 | dead code (`Parser`, `GenomeGridLog`), `-pthread` in `src/Makevars`, `-Wsign-compare` and `-Wpedantic` "extra ;" warnings (not counted by R CMD check) | not done |
+| pkgdown: Bootstrap 5, and deploying the site (there is a `gh-pages` branch) | not done, needs your OK for deployment |
 | installed size: the 5.2 MB NOTE is 3.5 MB of `-g` debug info in `shaman.so` (209 KB stripped) | nothing to do |
-
-## New names (provisional, need your approval)
-
-- `full` argument of `shaman_get_test_track_db()` (exported), default `FALSE`.
-- `inst/extdata/hoxd.tsv.xz` (the small example data) and the DB directory name
-  `tempdir()/shaman_test_db`.
-- Internal, not exported: `.shaman_get_full_test_track_db()` (the old body of
-  `shaman_get_test_track_db()`), `.shaman_check_gviz()`.
 
 ## Check results
 
-Run on cran-readiness 37253f2 (base ca5a8b6, with #13 and #14). R 4.4.1, misha 5.11.23 (CRAN),
+Run on cran-readiness 503c642 (base ca5a8b6, with #13 and #14; the earlier run on 37253f2 gave the
+same results). R 4.4.1, misha 5.11.23 (CRAN),
 `R CMD build` + `R CMD check --as-cran` of a `git archive` of the branch, with
 `_R_CHECK_THINGS_IN_OTHER_DIRS_` and `_R_CHECK_THINGS_IN_TEMP_DIR_` on, a scratch HOME/TMPDIR,
 pinned to 8 cores. TeX (TinyTeX), qpdf and tidy were installed into the scratchpad, so the PDF
@@ -171,8 +203,8 @@ manual, HTML manual and PDF size checks ran. For comparison, the first integrati
 | build | result |
 |---|---|
 | gcc 13.3, R's default flags | 0 ERRORs, 0 WARNINGs, 3 NOTEs (1-3 below) |
-| gcc 13.3, `-Wall -pedantic` (CRAN's Linux warning flags) | 0 ERRORs, 0 WARNINGs, 3 NOTEs (1-3 below); no significant compiler warnings |
-| clang 18 + libstdc++, `-Wall -pedantic` | 0 ERRORs, 0 WARNINGs, 3 NOTEs (1, 3, 4 below) |
+| gcc 13.3, `-Wall -pedantic` (CRAN's Linux warning flags) | 0 ERRORs, 0 WARNINGs, 4 NOTEs (1-4 below); no significant compiler warnings |
+| clang 18 + libstdc++, `-Wall -pedantic` | 0 ERRORs, 0 WARNINGs, 2 NOTEs (1, 3 below) |
 | clang 18 + libc++ (conda), first build | builds; examples OK; tests crash in the first `Rcpp::stop()` - a toolchain problem here, a 3-line Rcpp function that calls `Rcpp::stop()` crashes the same way with this libc++ and works with libstdc++. Not re-run. |
 
 Before #13 was merged (first build), `-Wall` gave 1 WARNING for `-Wreorder`; #13 fixed it.
@@ -191,15 +223,17 @@ The NOTEs:
    runs and not others.
 
 Sanitizers: clang 18, `-fsanitize=address,undefined`, libstdc++, run with the ASAN runtime
-preloaded, on 37253f2: all 16 example files including `\donttest`, the 13 tests, and the
+preloaded, on 503c642: all 16 example files including `\donttest`, the 17 tests, and the
 assessment's synthetic shuffle + score script (one shuffle with seed 7, one time-seeded): no
 AddressSanitizer or UndefinedBehaviorSanitizer report. (The first build, without #13, hit the
 `smooth_vector` heap overflow that #13 fixes.)
 
 ## Results unchanged
 
-Compared: the integration base ca5a8b6 ("base"), this branch at 37253f2 ("new"), and 37253f2
-with the macOS branch forced on Linux by turning `#ifndef __APPLE__` into `#if 0` ("fallback").
+Compared: the integration base ca5a8b6 ("base"), this branch at 503c642 ("new": after the sleep
+move and the switch to `parallel::mclapply`), and 503c642 with the macOS branch forced on Linux by
+turning `#ifndef __APPLE__` into `#if 0` ("fallback"). The same comparison on 37253f2 gave the same
+results.
 All three were installed with R's default flags (g++ 13.3, -g -O2) and run by the same script on
 a hard-linked copy of the same database. `time()` was fixed with an `LD_PRELOAD` shim
 (`FAKE_TIME=1700000000` unless noted), so time-seeded shuffles (`seed = NULL`) seed the same way
@@ -254,7 +288,6 @@ report; it is not re-checked here.
   reviewers ask for a `verbose` switch.
 - `shaman_generate_feature_grid()` writes interval sets into the misha DB (cached
   `giterator.intervals()` results); this is not documented.
-- `shaman_shuffle_hic_mat_for_track()` calls `sample()`, which advances the user's RNG.
 - A reference (DOI) for the method in Description.
 
 ## Remaining effort (estimate)
