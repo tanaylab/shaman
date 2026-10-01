@@ -19,5 +19,5 @@
 * `shaman_get_test_track_db()` returns a small example database (chr2:176.5e06-177e06 of the previous one), built in the session's temporary directory; `shaman_get_test_track_db(full = TRUE)` returns the full one, downloaded on first use. The package no longer includes the 104MB database, and the examples run on the small one.
 * Gviz is suggested instead of required; `shaman_plot_tracks_and_annotations()` and `shaman_plot_map_score_with_annotations()` need it.
 * The shuffle, score and feature grid functions restore the misha options they set (`gmultitasking`, `gmax.data.size`), and `shaman_plot_feature_grid()` restores `par()`.
-* `shaman_shuffle_hic_mat_for_track()` with `sort_uniq = FALSE` no longer fails with "object 'ret' not found" on small matrices or when the shuffled file already exists.
+* `shaman_shuffle_hic_track()`, `shaman_shuffle_hic_mat_for_track()` and `shaman_shuffle_and_score_hic_mat()` take a `seed` argument; `shaman_shuffle_hic_track()` records each chromosome's seed, time-based ones included, in the track attribute `seed`. `shaman_shuffle_hic_mat_for_track()` returns the seed (NA when it did not shuffle) instead of 0 or 1, and no longer fails with "object 'ret' not found" when `sort_uniq = FALSE` and the matrix is not shuffled.
 * The shuffler writes its progress through R's console instead of directly to stderr.

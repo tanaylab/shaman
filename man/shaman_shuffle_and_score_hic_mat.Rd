@@ -82,7 +82,8 @@ mat_score <- shaman_shuffle_and_score_hic_mat(
     expand = 1e05,
     work_dir = tempdir(),
     shuffle = 2, # default is set to 80
-    grid_step_iter = 1 # default is set to 40
+    grid_step_iter = 1, # default is set to 40
+    seed = 1
 )
 shaman_gplot_map_score(mat_score$points)
 }

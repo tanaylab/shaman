@@ -91,10 +91,12 @@ ret <- shaman_shuffle_hic_track(track_db,
     work_dir = tempdir(),
     shuffle = 1, # default is set to 80
     grid_step_iter = 1, # default is set to 40
-    max_jobs = 2
-) # optimally set to number of chromosomes
+    max_jobs = 2, # optimally set to number of chromosomes
+    seed = 1 # the same seed gives the same track
+)
 gdb.reload()
 gtrack.ls("hic_obs_shuffle") # new shuffled track that was created
+gtrack.attr.get("hic_obs_shuffle", "seed") # the seed of each chromosome
 }
 options(old_opts)
 }
