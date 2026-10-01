@@ -67,7 +67,7 @@ if (!gtrack.exists("hic_score_new")) {
     )
 }
 ```
-Note: the example database is a cut-out of the K562 data: the hoxd window, and elsewhere only the long-range contacts (200kb-2Mb) around convergent CTCF pairs. An expected made by shuffling this database alone is therefore not representative. The database's `hic_exp` track comes from the full dataset, and the figures below use it; the shuffle and score steps above are shown for the workflow.
+Note: the example database is a cut-out of the K562 data: the hoxd window, and elsewhere only the long-range contacts (200kb-2Mb) around convergent CTCF pairs. An expected made by shuffling this database alone is therefore not representative. The database's `hic_exp` track was not made from this cut-out (it was presumably shuffled from the full dataset and cut to the same regions), and the figures below use it; the shuffle and score steps above are shown for the workflow.
 
 - Visualize region, with its scores against `hic_exp` from `shaman_score_hic_mat()` (with a representative expected, take them from the score track: `gextract("hic_score_new", region, colnames = "score")`). `ctcf_forward` and `ctcf_reverse` are datasets of the package. `misha_tracks` adds 1D misha tracks, such as ChIP-seq or RNA-seq signal, which the example database does not have. `add_genes` and `add_ideogram` (TRUE by default) download RefSeq genes and the chromosome ideogram from UCSC; they are off here so that the article does not depend on the network.
 
