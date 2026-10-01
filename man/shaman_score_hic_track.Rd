@@ -58,7 +58,11 @@ Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf
 Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters),
 depending on the number of cores available.
 \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
-threads (default 1); in multi-core mode each of the max_jobs processes uses N threads.
+threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
+each job does, so shaman.sge_flags should ask for N slots.
+Each extraction of a 2D track can keep about the whole chromosome's track file in memory;
+misha's \code{options(gtrack.num.chunks = 1000)} bounds that (2-3x lower peak memory on dense
+matrices in our runs) without changing the scores.
 
 Each step creates temporary files of the matrix scores which are then joined to a track.
 Temporary files are deleted upon track creation.
