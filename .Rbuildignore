@@ -8,3 +8,5 @@
 ^cran-comments\.md$
 ^docs$
 ^pkgdown$
+^vignettes/shaman-package\.Rmd\.orig$
+^vignettes/precompute\.R$
