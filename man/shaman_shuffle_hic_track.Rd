@@ -47,7 +47,9 @@ If NA, value is determined based on observed data (recommended).}
 \item{seed}{Seed for the shuffler: NULL (default) seeds each chromosome from the time (in seconds) its
 shuffle starts. With a whole number, chromosome i of \code{gintervals.all()} is shuffled with seed + i - 1
 (modulo 2^31), so the same seed gives the same track. The seed each chromosome was shuffled with is
-stored in the track attribute \code{seed} (NA for chromosomes this call did not shuffle).}
+stored in the track attribute \code{seed} (NA for chromosomes this call did not shuffle).
+A chromosome's seed depends on its position in \code{gintervals.all()}, so the same seed reproduces a
+track only in a database with the same chromosomes; the \code{seed} attribute reproduces each chromosome.}
 }
 \description{
 \code{shaman_shuffle_hic_track}

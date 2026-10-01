@@ -58,11 +58,12 @@ If NA, value is determined based on observed data (recommended).}
 whole number between 0 and 2^31 - 1. The shuffler prints the seed it uses.}
 }
 \value{
-NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
+NULL if insufficient observed data, otherwise resturns a list containing:
 1) points - start1, start2 and score for all observed points.
 2) obs - the observed points.
 3) exp - the expected points.
 4) exp_fn - the name of the expected (shuffled) data file
+5) seed - the seed the shuffler used
 }
 \description{
 \code{shaman_shuffle_and_score_hic_mat}

@@ -28,6 +28,8 @@
 #' shuffle starts. With a whole number, chromosome i of \code{gintervals.all()} is shuffled with seed + i - 1
 #' (modulo 2^31), so the same seed gives the same track. The seed each chromosome was shuffled with is
 #' stored in the track attribute \code{seed} (NA for chromosomes this call did not shuffle).
+#' A chromosome's seed depends on its position in \code{gintervals.all()}, so the same seed reproduces a
+#' track only in a database with the same chromosomes; the \code{seed} attribute reproduces each chromosome.
 #'
 #' @examples
 #'
@@ -94,7 +96,8 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
             ", raw_ext=\"full_chrom_raw\", shuffled_ext=\"full_chrom_shuffled\", sort_uniq=TRUE)}"
         )
         res <- .gcluster.run2(command.list = commands, opt.flags = sge_flags, max.jobs = max_jobs)
-        used_seeds <- sapply(res, function(r) as.numeric(r$retv)[1])
+        # a failed job's retv is the error message
+        used_seeds <- sapply(res, function(r) if (is.numeric(r$retv)) r$retv[1] else NA)
     } else {
         doMC::registerDoMC(cores = max_jobs)
         res <- plyr::ddply(intervals, plyr::.(chrom, start), function(x) {
@@ -685,11 +688,12 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
 #' @param seed Seed for the shuffler: NULL (default) seeds it from the current time (in seconds), or a
 #' whole number between 0 and 2^31 - 1. The shuffler prints the seed it uses.
 
-#' @return NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
+#' @return NULL if insufficient observed data, otherwise resturns a list containing:
 #' 1) points - start1, start2 and score for all observed points.
 #' 2) obs - the observed points.
 #' 3) exp - the expected points.
 #' 4) exp_fn - the name of the expected (shuffled) data file
+#' 5) seed - the seed the shuffler used
 #'
 #' @examples
 #'
@@ -753,7 +757,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
         decay_smooth <- min(floor(dist_resolution / 10), 20)
     }
     samples_per_proposal_correction <- floor(nrow(obs) / 20)
-    shaman_hic_matrix_shuffler_cpp(
+    used_seed <- shaman_hic_matrix_shuffler_cpp(
         t(obs[, c("start1", "start2")]), shuf_fn, shuffle, 1, 0.5, dist_resolution, decay_smooth, 5, 0.25,
         max(obs$start2 - obs$start1), 1024, 1, grid_small, grid_high, grid_increase, grid_step_iter, 1, 1, seed
     )
@@ -763,6 +767,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 
     ret <- shaman_kk_norm(obs, exp, points, k = k, k_exp = 2 * k)
     ret$exp_fn <- shuf_fn
+    ret$seed <- used_seed
     return(ret)
 }
 
