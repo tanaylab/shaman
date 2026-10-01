@@ -47,7 +47,7 @@ shaman_gplot_map <- function(points, interval_range = NA, rotate = TRUE, point_s
             ggplot2::aes(x = start1, y = start2)
         ) +
             ggplot2::scale_x_continuous(position = "top") +
-            ggplot2::theme(axis.line.y = ggplot2::element_line(size = 0.2))
+            ggplot2::theme(axis.line.y = ggplot2::element_line(linewidth = 0.2))
     }
     map_gplot <- map_gplot +
         ggplot2::geom_point(size = point_size, alpha = 0.1) +
@@ -58,7 +58,7 @@ shaman_gplot_map <- function(points, interval_range = NA, rotate = TRUE, point_s
             panel.border = ggplot2::element_blank(),
             axis.title.x = ggplot2::element_blank(),
             axis.title.y = ggplot2::element_blank(),
-            axis.line.x = ggplot2::element_line(size = 0.2)
+            axis.line.x = ggplot2::element_line(linewidth = 0.2)
         )
     if (add_axis == FALSE) {
         map_gplot <- map_gplot + ggplot2::theme(
@@ -127,7 +127,7 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
             ggplot2::aes(x = start1, y = start2, color = factor(floor(score)))
         ) +
             ggplot2::scale_x_continuous(position = "top") +
-            ggplot2::theme(axis.line.y = ggplot2::element_line(size = 0.2))
+            ggplot2::theme(axis.line.y = ggplot2::element_line(linewidth = 0.2))
     }
     map_gplot <- map_gplot +
         ggplot2::geom_point(size = point_size) +
@@ -139,7 +139,7 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
             panel.border = ggplot2::element_blank(),
             axis.title.x = ggplot2::element_blank(),
             axis.title.y = ggplot2::element_blank(),
-            axis.line.x = ggplot2::element_line(size = 0.2)
+            axis.line.x = ggplot2::element_line(linewidth = 0.2)
         )
     if (add_axis == FALSE) {
         map_gplot <- map_gplot + ggplot2::theme(
