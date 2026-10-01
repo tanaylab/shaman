@@ -55,10 +55,12 @@
 #'     work_dir = tempdir(),
 #'     shuffle = 1, # default is set to 80
 #'     grid_step_iter = 1, # default is set to 40
-#'     max_jobs = 2
-#' ) # optimally set to number of chromosomes
+#'     max_jobs = 2, # optimally set to number of chromosomes
+#'     seed = 1 # the same seed gives the same track
+#' )
 #' gdb.reload()
 #' gtrack.ls("hic_obs_shuffle") # new shuffled track that was created
+#' gtrack.attr.get("hic_obs_shuffle", "seed") # the seed of each chromosome
 #' }
 #' options(old_opts)
 #' @export
@@ -807,7 +809,8 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
 #'     expand = 1e05,
 #'     work_dir = tempdir(),
 #'     shuffle = 2, # default is set to 80
-#'     grid_step_iter = 1 # default is set to 40
+#'     grid_step_iter = 1, # default is set to 40
+#'     seed = 1
 #' )
 #' shaman_gplot_map_score(mat_score$points)
 #' @export
