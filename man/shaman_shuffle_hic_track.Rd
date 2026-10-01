@@ -83,7 +83,6 @@ if (gtrack.exists("hic_obs_shuffle")) {
     gtrack.rm("hic_obs_shuffle", force = TRUE)
     gdb.reload()
 }
-\donttest{
 ret <- shaman_shuffle_hic_track(track_db,
     obs_track_nm = "hic_obs",
     # work_dir can be tempdir() only in multi-core mode.
@@ -97,6 +96,5 @@ ret <- shaman_shuffle_hic_track(track_db,
 gdb.reload()
 gtrack.ls("hic_obs_shuffle") # new shuffled track that was created
 gtrack.attr.get("hic_obs_shuffle", "seed") # the seed of each chromosome
-}
 options(old_opts)
 }

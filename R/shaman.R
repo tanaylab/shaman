@@ -47,7 +47,6 @@
 #'     gtrack.rm("hic_obs_shuffle", force = TRUE)
 #'     gdb.reload()
 #' }
-#' \donttest{
 #' ret <- shaman_shuffle_hic_track(track_db,
 #'     obs_track_nm = "hic_obs",
 #'     # work_dir can be tempdir() only in multi-core mode.
@@ -61,7 +60,6 @@
 #' gdb.reload()
 #' gtrack.ls("hic_obs_shuffle") # new shuffled track that was created
 #' gtrack.attr.get("hic_obs_shuffle", "seed") # the seed of each chromosome
-#' }
 #' options(old_opts)
 #' @export
 ##########################################################################################################
@@ -99,8 +97,9 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
     seeds <- if (!is.null(seed)) (seed + seq_len(nrow(intervals)) - 1) %% 2^31
 
     if (sge_support) {
+        # each job first waits a random 1-10s (staggered start)
         commands <- paste0(
-            "{library(shaman); shaman_shuffle_hic_mat_for_track(\"", track_db, "\",\"", obs_track_nm, "\",\"",
+            "{library(shaman); Sys.sleep(sample(1:10, 1)); shaman_shuffle_hic_mat_for_track(\"", track_db, "\",\"", obs_track_nm, "\",\"",
             work_dir, "\", \"", intervals$chrom, "\", ", intervals$start, ", ",
             intervals$end, ", ", intervals$start, ", ", intervals$end,
             ", min_dist=1024, dist_resolution=", dist_resolution, ", decay_smooth=",
@@ -215,8 +214,6 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
     shuf_fn <- paste0(work_dir, "/", track, "_", chrom, "_", start1, "_", start2, ".", shuffled_ext)
     ret <- NA
     if (!file.exists(shuf_fn)) {
-        x <- sample(1:10, 1)
-        system(paste("sleep", x))
         old_opts <- options(gmultitasking = FALSE, gmax.data.size = 1e+09)
         on.exit(options(old_opts), add = TRUE)
         gsetroot(track_db)
