@@ -22,3 +22,4 @@
 * `shaman_shuffle_hic_track()`, `shaman_shuffle_hic_mat_for_track()` and `shaman_shuffle_and_score_hic_mat()` take a `seed` argument; `shaman_shuffle_hic_track()` records each chromosome's seed, time-based ones included, in the track attribute `seed`. `shaman_shuffle_hic_mat_for_track()` returns the seed (NA when it did not shuffle) instead of 0 or 1, and no longer fails with "object 'ret' not found" when `sort_uniq = FALSE` and the matrix is not shuffled.
 * The shuffler writes its progress through R's console instead of directly to stderr.
 * The usage article runs on the full example database, and its figures are made by the code it shows (precomputed, so the vignette builds without it).
+* The map plots use `linewidth` instead of `size` for their axis lines, so ggplot2 no longer warns that `size` is deprecated; shaman now requires ggplot2 >= 3.4.0.

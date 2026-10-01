@@ -30,7 +30,7 @@ Imports:
     Rcpp (>= 0.12.11),
     RANN,
     data.table,
-    ggplot2 (>= 2.2.0),
+    ggplot2 (>= 3.4.0),
     reshape2,
     grid,
     plyr,
