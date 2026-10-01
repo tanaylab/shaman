@@ -13,23 +13,23 @@ vignette: >
 
 
 
-Shaman package impelements functions for resampling Hi-C matrices in order to generate expected contact distributions given constraints on marginal coverage and contact-distance probability distributions. The package also provides support for visualizing normalized matrices and statistical analysis of contact distributions around selected landmarks. It is an R package embedding algorithms implemened in C++, which is built over support from the Tanay's lab *Misha* genomic database system that is provided with the package.
+Shaman package implements functions for resampling Hi-C matrices in order to generate expected contact distributions given constraints on marginal coverage and contact-distance probability distributions. The package also provides support for visualizing normalized matrices and statistical analysis of contact distributions around selected landmarks. It is an R package embedding algorithms implemented in C++, which is built over the Tanay lab's *misha* genomic database system (the misha package).
 
 
 The normalization workflow consists of the following steps:
 
 1. [Import](https://tanaylab.github.io/shaman/articles/import.html) observed HiC data to misha db. In order to utilize full functionality of the shaman package, you need to construct a Misha database for your genome of interest, and import your Hi-C data to Misha binary Quad-tree format.
-2. Shuffle observed data to generate expected data. Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine with one core per chromosome. Note that shaman can also run distributed using Sun Grid Engine.
-3. Compute the normalized score of each observed data point. This computation can be conducted inline for a specific genomic region, or pre-processed on the entire dataset using distributed computation. Score computation on 1 billion reads on a distributed system may take 4-10 hours, depending on the number of cores available.
+2. Shuffle observed data to generate expected data. Note that shaman can also run distributed using Sun Grid Engine.
+3. Compute the normalized score of each observed data point. This computation can be conducted inline for a specific genomic region, or pre-processed on the entire dataset using distributed computation.
 4. Visualize normalized contact maps. Precomputed normalized scores allow for flexible analysis of contact distributions.
-5. Quantify contact enrichment acoording to genomic features.
+5. Quantify contact enrichment according to genomic features.
 
-The package includes a small example misha database (`shaman_get_test_track_db()`) with the observed, expected and score tracks of chr2:176.5e06-177e06, around the hoxd locus, from the ELA K562 dataset. The full example database (`shaman_get_test_track_db(full = TRUE)`, downloaded from the lab's public S3 bucket on first use, about 100MB) is a low-footprint matrix to examplify the shaman workflow: 4.6 million contacts from the ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions. Processing the complete matrix from this study requires downloading the full contact list and regenerating the reshuffled matrix.
+The package includes a small example misha database (`shaman_get_test_track_db()`) with the observed, expected and score tracks of chr2:176.5e06-177e06, around the hoxd locus, from the ELA K562 dataset. The full example database (`shaman_get_test_track_db(full = TRUE)`, downloaded from the lab's public S3 bucket on first use, about 100MB) is a low-footprint matrix to exemplify the shaman workflow: 4.6 million contacts from the ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions. Processing the complete matrix from this study requires downloading the full contact list and regenerating the reshuffled matrix.
 
 The code below runs on the full example database, in multi-core mode with 4 processes (`max_jobs = 4`). It takes about 10 minutes and 3GB of memory.
 
 ## Workflow
-Once an observed HiC dataset is available in the misha db (refere to  [Import](https://tanaylab.github.io/shaman/articles/import.html)) for additional information), there are two possible modes to continue analysis:
+Once an observed HiC dataset is available in the misha db (refer to  [Import](https://tanaylab.github.io/shaman/articles/import.html)) for additional information), there are two possible modes to continue analysis:
 1. Distributed computation - relying on sun grid engine (sge), or using a single machine with multi-cores.
 2. Local computation - for computing normalized matrices in small genomic regions
 
@@ -100,12 +100,12 @@ summary(local_score$points$score)
 ```
 
 ## Analysis
-### Spatial contact enrichment - used to measure contact enrichemnt between two sets of genomic features.
-Relies on an existance of an expected (shuffled) 2d track.
+### Spatial contact enrichment - used to measure contact enrichment between two sets of genomic features.
+Relies on an existence of an expected (shuffled) 2d track.
 Builds a grid comprising of all combinations of intervals from feature 1 and feature 2 that fall within a band
-defined by min_dist and max_dist. For each point on the grid, look at th surrounding window, defined by range parameter.
-Discard all windows that do not contain a point with a score (defined in scotre_track_nm) above the score_filter parameter.
-This allows for focusing on potentially enriched pairs. Discect the window into small bins, size in base pairs defined by
+defined by min_dist and max_dist. For each point on the grid, look at the surrounding window, defined by range parameter.
+Discard all windows that do not contain a point with a score (defined in score_track_nm) above the score_filter parameter.
+This allows for focusing on potentially enriched pairs. Dissect the window into small bins, size in base pairs defined by
 the resolution parameter, and count the number of observed contacts, and the number of expected contacts in each bin.
 All windows are then summed together, generating a single matrix of observed and expected contacts, which is returned by function.
 Note that grid contains only points in which feature 1 position is smaller than feature 2 position.
@@ -136,9 +136,9 @@ The following options are available for this package:
 
 * shaman.mc_support = 0 - Set to 1 if multi-core is available for distributed computing.
 * shaman.sge_support = 0 - Set to 1 if Sun Grid Engine is available for distributed computing.
-* shaman.sge_flags = ""  - SGE paramters to be passed to qsub (e.g. threads, queue, etc').
+* shaman.sge_flags = ""  - SGE parameters to be passed to qsub (e.g. threads, queue, etc').
 * shaman.score.threads = 1 - Threads for the kNN distances and scores of each score matrix. In multi-core mode each of the max_jobs processes uses this many threads; in SGE mode each job does, so shaman.sge_flags should ask for as many slots.
-Note that for some shaman package methods either muli-core or sge support is required.
+Note that for some shaman package methods either multi-core or sge support is required.
 
 #### Visualization parameters
 

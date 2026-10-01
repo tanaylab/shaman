@@ -6,8 +6,6 @@
 #' Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
 #' Note that this function requires sge (qsub) or multicore to be enabled.
 #' Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
-#' Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine
-#' with one core per chromosome.
 #'
 #' Each step creates temporary files of the shuffled matrices which are then joined to a track.
 #' Temporary files are deleted upon track creation.
@@ -321,8 +319,6 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' High scores represent contact enrichment while low scores depict insulation.
 #' Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
 #' Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
-#' Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters),
-#' depending on the number of cores available.
 #' \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
 #' threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
 #' each job does, so shaman.sge_flags should ask for N slots.
