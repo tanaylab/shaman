@@ -60,26 +60,41 @@ check(r_exp >= 0.999, sprintf("scores against hic_exp vs hic_score: r = %.4f (>=
 message(sprintf("hic_score_new vs hic_score: r = %.4f (reported, no threshold)",
     cor_with_hic_score(gextract("hic_score_new", reg, colnames = "score"))))
 
-# 2. The shuffle is reproducible with a seed: chr2 shuffled again, with the seed recorded in hic_obs_shuffle and the
-#    defaults of shaman_shuffle_hic_track() (which the article uses), gives the same contacts and counts.
+# 2. The shuffle is reproducible with a seed: chr2 shuffled twice more, with the seed recorded in hic_obs_shuffle and
+#    the defaults of shaman_shuffle_hic_track() (which the article uses), gives the same contacts and counts both
+#    times; and the same as hic_obs_shuffle itself, unless that track came from the CI cache
+#    (SHAMAN_TRACKS_CACHED=true), which may have been computed on another runner image (compiler, libm).
 seeds <- do.call(rbind, strsplit(strsplit(gtrack.attr.get("hic_obs_shuffle", "seed"), " ")[[1]], ":"))
 seeds <- stats::setNames(suppressWarnings(as.integer(seeds[, 2])), seeds[, 1])
 chroms <- gintervals.all()
 chr2_end <- chroms$end[chroms$chrom == "chr2"]
-work_dir <- tempfile("shaman_rerun_")
-dir.create(work_dir)
-seed <- shaman_shuffle_hic_mat_for_track(track_db, "hic_obs", work_dir, "chr2", 0, chr2_end, 0, chr2_end,
-    seed = seeds[["chr2"]], sort_uniq = TRUE
-)
-rerun <- as.data.frame(data.table::fread(file.path(work_dir, "hic_obs_chr2_0_0.shuffled.uniq")))
-unlink(work_dir, recursive = TRUE)
-shuffled <- gextract("hic_obs_shuffle", gintervals.2d(2, 0, chr2_end, 2, 0, chr2_end), colnames = "obs")
-rerun <- rerun[order(rerun$start1, rerun$start2), ]
-shuffled <- shuffled[order(shuffled$start1, shuffled$start2), ]
-check(isTRUE(as.integer(seed) == seeds[["chr2"]]) && nrow(rerun) == nrow(shuffled) &&
-    all(rerun$start1 == shuffled$start1) && all(rerun$start2 == shuffled$start2) && all(rerun$obs == shuffled$obs),
-    sprintf("chr2 shuffled again with seed %d: the same %d contacts as hic_obs_shuffle", seeds[["chr2"]], nrow(shuffled)))
-rm(rerun, shuffled)
+shuffle_chr2 <- function() {
+    work_dir <- tempfile("shaman_rerun_")
+    dir.create(work_dir)
+    on.exit(unlink(work_dir, recursive = TRUE))
+    seed <- shaman_shuffle_hic_mat_for_track(track_db, "hic_obs", work_dir, "chr2", 0, chr2_end, 0, chr2_end,
+        seed = seeds[["chr2"]], sort_uniq = TRUE
+    )
+    stopifnot(isTRUE(as.integer(seed) == seeds[["chr2"]]))
+    x <- as.data.frame(data.table::fread(file.path(work_dir, "hic_obs_chr2_0_0.shuffled.uniq")))
+    x[order(x$start1, x$start2), c("start1", "start2", "obs")]
+}
+same_contacts <- function(x, y) {
+    nrow(x) == nrow(y) && all(x$start1 == y$start1) && all(x$start2 == y$start2) && all(x$obs == y$obs)
+}
+rerun1 <- shuffle_chr2()
+rerun2 <- shuffle_chr2()
+check(same_contacts(rerun1, rerun2),
+    sprintf("chr2 shuffled twice with seed %d: the same %d contacts both times", seeds[["chr2"]], nrow(rerun1)))
+if (Sys.getenv("SHAMAN_TRACKS_CACHED") != "true") {
+    shuffled <- gextract("hic_obs_shuffle", gintervals.2d(2, 0, chr2_end, 2, 0, chr2_end), colnames = "obs")
+    shuffled <- shuffled[order(shuffled$start1, shuffled$start2), c("start1", "start2", "obs")]
+    check(same_contacts(rerun1, shuffled),
+        sprintf("chr2 shuffled again with seed %d: the same %d contacts as hic_obs_shuffle", seeds[["chr2"]], nrow(shuffled)))
+} else {
+    message("hic_obs_shuffle came from the CI cache: not compared with the reruns")
+}
+rm(rerun1, rerun2)
 
 # 3. The shuffle keeps the marginal coverage: on every chromosome, the contacts of hic_obs_shuffle at each position
 #    are twice the contact ends of the observed contacts it shuffled (each end kept, each contact stored in both
