@@ -20,7 +20,8 @@ SystemRequirements: C++17
 Suggests: knitr,
     testthat,
     rmarkdown,
-    Gviz
+    Gviz,
+    foreach
 VignetteBuilder: rmarkdown,
     knitr
 Depends: R (>= 4.0.0)
