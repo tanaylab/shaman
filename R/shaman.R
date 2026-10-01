@@ -565,43 +565,29 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #' @export
 ##########################################################################################################
 shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist = 1024, k = 100, k_exp = 2 * k) {
-    knn_pl <- sprintf("%s/%s", system.file("perl", package = "shaman"), getOption("shaman.ks_pl"))
-    o_knn.tmp <- tempfile("knn_o_")
-    e_knn.tmp <- gsub("knn_o_", "knn_e_", o_knn.tmp)
-    ks_knn.tmp <- gsub("knn_o_", "knn_ks_", o_knn.tmp)
     message(paste("obs = ", paste(obs_track_nms, collapse = ",")))
     obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
     if (is.null(obs) | nrow(points) == 0) {
         message(paste("0 data found in intervals, focus interval=", nrow(points)))
         return(NULL)
     }
-    obs <- plyr::ddply(obs, c("contacts"), function(x) {
-        return(x[rep(seq_len(nrow(x)), each = x$contact[1]), ])
-    })
+    # repeat each point by its number of contacts, in the row order plyr::ddply(obs, "contacts", ...) gave
+    o <- order(obs$contacts)
+    obs <- as.data.frame(lapply(obs, `[`, rep(o, obs$contacts[o])))
     if (nrow(obs) < k) {
         message(paste("insufficient data found in intervals: obs=", nrow(obs)))
         return(NULL)
     }
     n_obs <- nrow(obs)
-    o_knn <- RANN::nn2(obs[, c("start1", "start2")], points[, c("start1", "start2")], k = k)
-    message("write tab 1")
-    data.table::fwrite(as.data.frame(round(o_knn$nn.dist)), o_knn.tmp, sep = "\t", col.names = F, quote = F, row.names = F)
-    if (!file.exists(o_knn.tmp)) {
-        message(paste0("problem writing ", o_knn.tmp))
-        return(0)
-    }
-    rm(o_knn)
-    rm(obs)
-    gc()
 
     exp <- .shaman_combine_points_multi_tracks(exp_track_nms, regional_interval, min_dist)
     if (is.null(exp)) {
         message(paste("0 data found in intervals: exp"))
         return(NULL)
     }
-    exp <- plyr::ddply(exp, c("contacts"), function(x) {
-        return(x[rep(seq_len(nrow(x)), each = x$contact[1]), ])
-    })
+    # repeat each point by its number of contacts, in the row order plyr::ddply(exp, "contacts", ...) gave
+    o <- order(exp$contacts)
+    exp <- as.data.frame(lapply(exp, `[`, rep(o, exp$contacts[o])))
     if (nrow(exp) < k) {
         message(paste("insufficient data found in intervals: exp=", nrow(exp)))
         return(NULL)
@@ -612,21 +598,18 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
         k_exp <- round(k * n_exp / n_obs)
     }
     message(paste0("n_obs = ", n_obs, ", n_exp = ", n_exp, ", k_exp = ", k_exp))
-    e_knn <- RANN::nn2(exp[, c("start1", "start2")], points[, c("start1", "start2")], k = k_exp)
-    message("write tab 2")
-    data.table::fwrite(as.data.frame(round(e_knn$nn.dist)), e_knn.tmp, sep = "\t", col.names = F, quote = F, row.names = F)
-    if (!file.exists(e_knn.tmp)) {
-        message(paste0("problem writing ", e_knn.tmp))
-        return(0)
-    }
-    rm(e_knn)
+    # expected first: its kNN search has the highest peak memory, so run it while only the observed
+    # points, not their kNN distances, are held
+    e_knn <- round(RANN::nn2(exp[, c("start1", "start2")], points[, c("start1", "start2")], k = k_exp)$nn.dist)
     rm(exp)
     gc()
-    system(sprintf("perl %s %s %s >%s", knn_pl, o_knn.tmp, e_knn.tmp, ks_knn.tmp))
-    s_ks <- as.data.frame(data.table::fread(ks_knn.tmp))
+    o_knn <- round(RANN::nn2(obs[, c("start1", "start2")], points[, c("start1", "start2")], k = k)$nn.dist)
+    rm(obs)
+    gc()
+    s_ks <- shaman_merge_ks_cpp(o_knn, e_knn)
+    rm(o_knn, e_knn)
 
     points$score <- 100 * ifelse(-s_ks$V1 < s_ks$V2, s_ks$V2, s_ks$V1)
-    try(system(sprintf("rm %s %s %s", o_knn.tmp, e_knn.tmp, ks_knn.tmp)))
 
     return(list(points = points))
 }
@@ -769,35 +752,14 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 #' @export
 ##########################################################################################################
 shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
-    .shaman_check_config("shaman.ks_pl")
-    knn_pl <- sprintf("%s/%s", system.file("perl", package = "shaman"), getOption("shaman.ks_pl"))
     message(paste0("going into knn witn ", nrow(obs), " observed and ", nrow(exp), " expected"))
     o_knn <- RANN::nn2(obs[, c("start1", "start2")], points[, c("start1", "start2")], k = k)
     message("going into shuffled knn")
     e_knn <- RANN::nn2(exp[, c("start1", "start2")], points[, c("start1", "start2")], k = k_exp)
 
-    o_knn.tmp <- tempfile("knn_o_")
-    e_knn.tmp <- gsub("knn_o_", "knn_e_", o_knn.tmp)
-    ks_knn.tmp <- gsub("knn_o_", "knn_ks_", o_knn.tmp)
-    message("write tab 1")
-    data.table::fwrite(as.data.frame(round(o_knn$nn.dist)), o_knn.tmp, sep = "\t", col.names = F, quote = F, row.names = F)
-    if (!file.exists(o_knn.tmp)) {
-        message(paste0("problem writing ", o_knn.tmp))
-        return(0)
-    }
-    message("write tab 2")
-    data.table::fwrite(as.data.frame(round(e_knn$nn.dist)), e_knn.tmp, sep = "\t", col.names = F, quote = F, row.names = F)
-    if (!file.exists(e_knn.tmp)) {
-        message(paste0("problem writing ", e_knn.tmp))
-        return(0)
-    }
-
-    system(sprintf("perl %s %s %s >%s", knn_pl, o_knn.tmp, e_knn.tmp, ks_knn.tmp))
-
-    s_ks <- as.data.frame(data.table::fread(ks_knn.tmp))
+    s_ks <- shaman_merge_ks_cpp(round(o_knn$nn.dist), round(e_knn$nn.dist))
 
     points$score <- 100 * ifelse(-s_ks$V1 < s_ks$V2, s_ks$V2, s_ks$V1)
-    try(system(sprintf("rm %s %s %s", o_knn.tmp, e_knn.tmp, ks_knn.tmp)))
 
     return(list(points = points, obs = obs, exp = exp))
 }

@@ -38,9 +38,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// shaman_merge_ks_cpp
+Rcpp::List shaman_merge_ks_cpp(Rcpp::NumericMatrix o_dist, Rcpp::NumericMatrix e_dist);
+RcppExport SEXP _shaman_shaman_merge_ks_cpp(SEXP o_distSEXP, SEXP e_distSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type o_dist(o_distSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type e_dist(e_distSEXP);
+    rcpp_result_gen = Rcpp::wrap(shaman_merge_ks_cpp(o_dist, e_dist));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_shaman_shaman_hic_matrix_shuffler_cpp", (DL_FUNC) &_shaman_shaman_hic_matrix_shuffler_cpp, 18},
+    {"_shaman_shaman_merge_ks_cpp", (DL_FUNC) &_shaman_shaman_merge_ks_cpp, 2},
     {NULL, NULL, 0}
 };
 
