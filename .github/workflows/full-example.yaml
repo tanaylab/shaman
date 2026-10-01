@@ -6,9 +6,9 @@
 # About 13 minutes of computing on 4 cores (measured on a cluster node), 3GB of memory, 2.5GB of disk.
 #
 # Cached: the downloaded database (key: its md5), and the expected and score tracks the article computes
-# (key: the runner image and R version, src/, R/, the article and precompute.R, and the database md5), so they
-# are recomputed only when one of those changes. The image and R version are in the key because the seeded rerun
-# is compared with the cached shuffle, and another compiler or libm could change the shuffle.
+# (key: the R and misha versions, src/, R/, the article and precompute.R, and the database md5), so they are
+# recomputed only when one of those changes. The runner image is not in the key: with cached tracks the seeded
+# rerun check compares two fresh reruns with each other, not with the cached shuffle (SHAMAN_TRACKS_CACHED).
 on:
   workflow_call:
   workflow_dispatch:
@@ -63,9 +63,9 @@ jobs:
           path: /home/runner/.cache/R/shaman/trackdb
           key: shaman-full-db-${{ env.DB_MD5 }}
 
-      - name: Runner image and R version, for the cache key of the computed tracks
+      - name: R and misha versions, for the cache key of the computed tracks
         id: toolchain
-        run: echo "key=${ImageOS:-unknown}-${ImageVersion:-unknown}-R$(Rscript -e 'cat(format(getRversion()))')" >> "$GITHUB_OUTPUT"
+        run: echo "key=R$(Rscript -e 'cat(format(getRversion()))')-misha$(Rscript -e 'cat(format(packageVersion("misha")))')" >> "$GITHUB_OUTPUT"
 
       - name: Restore the computed tracks
         id: tracks-cache
@@ -78,6 +78,8 @@ jobs:
 
       - name: Run the article on the full example database
         run: Rscript vignettes/precompute.R
+        env:
+          SHAMAN_TRACKS_CACHED: ${{ steps.tracks-cache.outputs.cache-hit }}
 
       - name: Save the computed tracks
         if: steps.tracks-cache.outputs.cache-hit != 'true'
