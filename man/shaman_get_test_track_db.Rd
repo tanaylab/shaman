@@ -8,7 +8,11 @@ shaman_get_test_track_db()
 }
 \description{
 \code{shaman_get_test_track_db}
-Sets the current misha DB to the example database provided with shaman.
+Returns the path of the example misha database provided with shaman.
+On first use the database is extracted into the user cache directory
+(\code{tools::R_user_dir("shaman", "cache")}); later calls reuse it. If the installed
+package holds only a git-lfs pointer instead of the tarball, the tarball is downloaded
+from the lab's public S3 bucket first (about 100MB) and its md5 checked.
 In the example misha database provided in this package we have created a low-footprint
 matrix to examplify the shaman workflow. We included 4.6 million contacts from
 ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions.
