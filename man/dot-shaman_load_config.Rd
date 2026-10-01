@@ -22,3 +22,4 @@ files as those that were exported with \code{shaman_dump_config}.}
 Loads the configuration files which were filled by the user. Accepts either directory path
 from \code{config_dir}, or individual files supplied by the other parameters.
 }
+\keyword{internal}

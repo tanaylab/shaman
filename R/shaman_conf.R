@@ -3,7 +3,7 @@
 #' Dump templates of config files required by the package.
 #'
 #' @param config_dir Directory to dump to files to.
-#'
+#' @keywords internal
 #'
 
 .shaman_dump_config <- function(config_dir) {
@@ -26,6 +26,7 @@
 #' files as those that were exported with \code{shaman_dump_config}.
 #' @param shaman_config Parameter file
 #' @param reset Whether to overwrite options that are already set.
+#' @keywords internal
 #'
 #'
 .shaman_load_config <- function(config_dir, shaman_config = file.path(config_dir, "shaman.conf"), reset = FALSE) {
