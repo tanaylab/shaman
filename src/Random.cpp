@@ -3,6 +3,7 @@
 #include <time.h>
 int Random::bits_num = 0;
 uint Random::bits_data = 0;
+uint64_t Random::state48 = 0;
 #if !HAS_RAND48
 static const int IM1 = 2147483563;
 static const int IM2 = 2147483399;
@@ -34,6 +35,7 @@ void Random::reset(int seed) {
         seeds[2] = seeds[0] ^ seeds[1];
 
         seed48(seeds);
+        state48 = ((uint64_t)seeds[2] << 32) | ((uint64_t)seeds[1] << 16) | seeds[0];
 }
 #else // HAS_RAND48
 void Random::reset(int seed) {
