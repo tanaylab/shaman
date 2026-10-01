@@ -1,8 +1,9 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 # Builds the site on every push and PR; deploys it to GitHub Pages (gh-pages branch) only from master.
-# Before deploying, full-example.yaml runs the usage article on the full example database and the site is built
-# with the regenerated article; if that run fails, nothing is deployed. Other builds use the committed article.
+# On pushes to master and cran-readiness, full-example.yaml first runs the usage article on the full example
+# database and the site is built with the regenerated article; if that run fails, the site is not built (so
+# nothing is deployed). Other builds use the committed article.
 on:
   push:
     branches: [main, master, cran-readiness]
@@ -14,7 +15,8 @@ name: pkgdown
 
 jobs:
   full-example:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    # cran-readiness: to test the full example on GitHub before merging (no deployment from there)
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/cran-readiness')
     uses: ./.github/workflows/full-example.yaml
 
   pkgdown:
