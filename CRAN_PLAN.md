@@ -180,15 +180,16 @@ Details:
 The usage article now runs on the full example database. Its code is in
 `vignettes/shaman-package.Rmd.orig`; `vignettes/precompute.R` knits it into
 `vignettes/shaman-package.Rmd` (code, output, and the figures `vignettes/shaman-package-*.png`)
-and then checks the scores (below). The shipped `.Rmd` has no code to run, so R CMD check and
+and then runs the checks (below). The shipped `.Rmd` has no code to run, so R CMD check and
 pkgdown only render it. Both the `.orig` and the script are in `.Rbuildignore`. To regenerate by
 hand: `Rscript vignettes/precompute.R` from the package root, with the branch installed (it
 downloads the database into a new temporary directory unless `R_USER_CACHE_DIR` is set). Commit
-the `.Rmd` and figures again when they change. New names, all provisional: `vignettes/precompute.R`,
-`.github/workflows/full-example.yaml`, the artifact `full-example`, the cache keys
-`shaman-full-db-<md5>` and `shaman-full-example-tracks-<hash>-<md5>`, the figure files (knitr's
-`shaman-package-<chunk label>-1.png`, labels `score-map`, `local-map`, `ctcf-grid`). The track
-names `hic_obs_shuffle` and `hic_score_new` come from the old article.
+the `.Rmd` and figures again when they change. Names (approved): `vignettes/precompute.R`,
+`vignettes/shaman-package.Rmd.orig`, `.github/workflows/full-example.yaml`, the artifact
+`full-example`, the cache keys `shaman-full-db-<md5>` and
+`shaman-full-example-tracks-<image>-<R version>-<hash>-<md5>`, the figure files (knitr's
+`shaman-package-<chunk label>-1.png`: `score-map`, `ctcf-grid`). The track names `hic_obs_shuffle`
+and `hic_score_new` come from the old article.
 
 **Measured** on n111 (all8.q, AMD EPYC 9384X), `taskset -c 0-3`, 16G requested, misha's options set
 to what it picks on a 4-core 16GB machine (`gmax.processes = 2` etc.). Memory: peak of the summed PSS
@@ -204,31 +205,41 @@ only the largest single process. Disk: peak of the database, work dir and temp d
 | feature grid and its figure | 22 s | 1.5 GB |
 | comparison with `hic_score` | 7 s | 0.4 GB |
 | local mode, chr2:176.5e06-177e06 (not timed with the monitor) | 41 s | - |
-| `precompute.R`, all of the above plus the `hic_exp` check, fresh download | 10 min 33 s | 3.1 GB, 2.2 GB disk |
+| `precompute.R`, all of the above plus the `hic_exp` check, fresh download (first version) | 10 min 33 s | 3.1 GB, 2.2 GB disk |
+| `precompute.R`, final version (adds the chr2 rerun and the coverage check), fresh download | 12 min 21 s | 3.0 GB, 2.2 GB disk |
 
 **CI, not local**: well under the ~45 min / 12 GB budget of a 4-vCPU, 16 GB runner. A runner is
 slower per core than this node; by how much is a guess (up to 2x), which still leaves a wide margin.
 `full-example.yaml` runs `precompute.R` weekly (Monday 04:00 UTC), by hand, and from `pkgdown.yaml`
-before every deployment (push to master). It caches the downloaded database (key: md5) and the two
-computed tracks (key: `src/`, `R/`, the `.orig`, `precompute.R`, md5; the article holds the shuffle
-and score parameters, so it is in the key too), saved with `actions/cache/save` right after the
+on pushes to master (before every deployment) and to cran-readiness (to test it on GitHub before
+merging; no deployment from there). It caches the downloaded database (key: md5) and the two
+computed tracks (key: runner image and R version, `src/`, `R/`, the `.orig`, `precompute.R`, md5;
+the article holds the shuffle and score parameters; the image and R version because the seeded
+rerun is compared with the cached shuffle, and another compiler or libm could change it), saved with `actions/cache/save` right after the
 download, before the article adds tracks. Restored tracks are picked up by `gsetroot(rescan = TRUE)`
 (misha's `.db.cache` otherwise hides them), and the article skips the shuffle and score when their
-tracks exist. It uploads the regenerated `.Rmd` and figures; `pkgdown.yaml` builds the deployed site
-from them, and deploys nothing if the run fails. Other pkgdown builds (PRs, cran-readiness) use the
-committed article. `actionlint` passes. **Not run on GitHub** (not pushed).
+tracks exist. It uploads the regenerated `.Rmd` and figures; `pkgdown.yaml` builds the site from them on master
+and cran-readiness (deploying from master only), and builds nothing if the run fails. PR builds use
+the committed article. `actionlint` passes. **Not run on GitHub** (not pushed).
 
-**Figure changes.** Score map: from the new `hic_score_new` (the old article plotted the bundled
-`hic_score`); no gene track and ideogram (UCSC; `Gviz::UcscTrack()` fails here: rtracklayer's UCSC
+**Figure changes.** Both figures use the database's `hic_exp` (decided after the cut-out finding
+below): the score map draws scores of `hic_obs` against `hic_exp` from `shaman_score_hic_mat()`
+(r = 0.9996 with the bundled `hic_score` the old article plotted, so it is the 2017 map), and the
+feature grid uses `exp_track_nm = "hic_exp"`. The article's shuffle and score still run, as the
+pipeline test; the figures do not depend on them. Score map: no gene track and ideogram (UCSC; `Gviz::UcscTrack()` fails here: rtracklayer's UCSC
 table browser query gets an empty response, "missing value where TRUE/FALSE needed" in `htmlParse`;
 `IdeogramTrack()` works but needs the network); no `K562.k27ac`/`rna-seq` tracks (not in the
 database); the CTCF annotations are the package datasets `ctcf_forward`/`ctcf_reverse` (data/*.rda;
 the old code passed their names as strings, which are not interval sets of the database). Feature
 grid: now on the example database (where the old one came from is not recorded; its file name is
 `hic.K562.ela_k562.ctcf_neg.ctcf_pos.1k.png`), with the two panels its caption always described (log10 obs, log2 obs/exp; the old one had only the
-second). The old call passed `grid` instead of `list(grid)`. Local mode now runs too, a third figure.
+second). The old call passed `grid` instead of `list(grid)`. Local mode now runs too (it prints a summary
+of its scores; its map was dropped, since its expected is a shuffle of the cut-out). The article had
+`warning = FALSE` on every chunk; now only the shuffle chunk has it: `shaman_shuffle_hic_track()` warns
+"1 full chrom files were not shuffled" for chrY, which has no contacts in the database (and a run with
+cached tracks skips the shuffle, so the article would differ between fresh and cached runs).
 
-**Score check.** On the 464,708 points of chr2:175e06-178e06 in `hic_score` (2017):
+**Scores.** On the 464,708 points of chr2:175e06-178e06 in `hic_score` (2017):
 
 | score | Pearson r with `hic_score` |
 |---|---|
@@ -248,22 +259,22 @@ beyond). On chr2 (contacts with start1 < start2), `hic_exp` has 2.0x the observe
 but 0.9x outside it, while the new shuffle, which keeps every contact end, has 2.0x and 2.1x: so
 `hic_exp` is not a shuffle of this `hic_obs` (my guess: it was cut, like `hic_obs`, from a shuffle of
 the complete data). Feature grid, log2 obs/exp at the center: 0.21 with the
-new expected, 0.56 with `hic_exp`. The article says this under the score map. Thresholds in
-`precompute.R`: `hic_score_new` >= 0.35 (allows a drift ~30x the seed 1 vs seed 2 difference in r),
-and scoring against `hic_exp` >= 0.999. Seeded runs are reproducible: two runs (different jobs, same
-node) gave byte-identical figures.
+new expected, 0.56 with `hic_exp`. The article has a short note on this.
 
-**Check** (`R CMD check --as-cran` of 8d0ebbe, as in Check results below): 0 ERRORs, 0 WARNINGs, the same 3
-NOTEs; the shipped vignette renders in 1.4 s. The tarball is 2.36 MB (was 1.77 MB) and the installed
-`doc/` 1.1 MB (the html embeds the figures; the local mode one is 351 KB), now listed in the installed
-size NOTE next to `libs`.
+**Checks in `precompute.R`** (all must pass): (1) scoring `hic_obs` against `hic_exp` gives r >= 0.999
+with `hic_score` (0.9996); (2) chr2 shuffled again with the seed recorded in `hic_obs_shuffle` gives
+the same contacts and counts (2,706,104 contacts, seed 12); (3) the shuffle keeps the marginal
+coverage on every chromosome: per position, the shuffled contacts are exactly twice the contact ends
+it shuffled (once on unshuffled chromosomes); checked to fail with `hic_exp` in place of the shuffle.
+`hic_score_new` vs `hic_score` (0.378) is reported without a threshold.
 
-**Open, for you:** the committed figures are the ones the article's shuffle gives, with the
-diagonal band that the cut-out causes. Scoring against `hic_exp` instead (`exp_track_nms = "hic_exp"`
-in the score chunk, `exp_track_nm = "hic_exp"` in the grid) gives the 2017 map exactly and a strong
-CTCF enrichment, but then the article's shuffle feeds nothing. Also noticed, not fixed:
-`shaman_plot_map.R` passes `size` to `element_line()`, deprecated since ggplot2 3.4.0 (a warning per
-plot; the article hides warnings as before); fixing it needs `ggplot2 (>= 3.4.0)`.
+**Check** (`R CMD check --as-cran` of 7c6bd32, as in Check results below): 0 ERRORs, 0 WARNINGs, the
+same 3 NOTEs, no ggplot2 deprecation in the log. The tarball is 1.64 MB (1.77 MB before this work) and
+the installed size 5.1 MB, with only `libs` over 1 MB. The shipped vignette rendered in 1.4 s (b8fa34a).
+
+**ggplot2**: `shaman_plot_map.R` passed `size` to `element_line()`, deprecated since ggplot2 3.4.0
+(a warning in every session's first map plot); now `linewidth`, with `ggplot2 (>= 3.4.0)` in
+DESCRIPTION (a90038c). The 9 test PNGs of the map functions are byte-identical before and after.
 
 ## Nice-to-haves
 
