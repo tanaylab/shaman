@@ -48,3 +48,12 @@ BiocManager::install("Gviz")
 ### Using the package
 
 Please refer to <https://tanaylab.github.io/shaman/articles/shaman-package.html> for usage and workflow.
+
+
+### Citation
+
+If you use shaman, please cite:
+
+Mendelson Cohen N, Olivares-Chauvet P, Lubling Y, Baran Y, Lifshitz A, Hoichman M, Tanay A (2017). SHAMAN: bin-free randomization, normalization and screening of Hi-C matrices. *bioRxiv*. [doi:10.1101/187203](https://doi.org/10.1101/187203)
+
+`citation("shaman")` gives the same reference, including a BibTeX entry.
