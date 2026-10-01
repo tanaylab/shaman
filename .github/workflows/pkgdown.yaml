@@ -1,6 +1,8 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 # Builds the site on every push and PR; deploys it to GitHub Pages (gh-pages branch) only from master.
+# Before deploying, full-example.yaml runs the usage article on the full example database and the site is built
+# with the regenerated article; if that run fails, nothing is deployed. Other builds use the committed article.
 on:
   push:
     branches: [main, master, cran-readiness]
@@ -11,7 +13,14 @@ on:
 name: pkgdown
 
 jobs:
+  full-example:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/full-example.yaml
+
   pkgdown:
+    needs: full-example
+    # also when full-example was skipped (not master), not when it failed
+    if: ${{ !cancelled() && (needs.full-example.result == 'success' || needs.full-example.result == 'skipped') }}
     runs-on: ubuntu-latest
     # Only restrict concurrency for non-PR jobs
     concurrency:
@@ -22,6 +31,13 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+
+      - name: Use the article regenerated on the full example database
+        if: needs.full-example.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: full-example
+          path: vignettes
 
       - uses: r-lib/actions/setup-pandoc@v2
 

@@ -1,0 +1,95 @@
+# Runs the usage article (vignettes/shaman-package.Rmd.orig) on the full example database with
+# vignettes/precompute.R: shuffle, score, the figures, and the check of the scores against the database's
+# hic_score track. Fails if any of it fails. Uploads the regenerated article and figures as the artifact
+# "full-example", which pkgdown.yaml builds the site from when it deploys (push to master).
+# About 10 minutes of computing on 4 cores (measured on a cluster node), 2.5GB of memory, 2.5GB of disk.
+#
+# Cached: the downloaded database (key: its md5), and the expected and score tracks the article computes
+# (key: src/, R/, the article and precompute.R, and the database md5), so they are recomputed only when one
+# of those changes.
+on:
+  workflow_call:
+  workflow_dispatch:
+  schedule:
+    # weekly, so that changes in misha, Gviz and the other dependencies show up (and the caches stay warm)
+    - cron: "0 4 * * 1"
+
+name: full-example
+
+env:
+  DB_MD5: 88552541e7bf346ef50187f1e42fc25b
+
+jobs:
+  full-example:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # shaman_get_test_track_db(full = TRUE) keeps the database in tools::R_user_dir("shaman", "cache")
+      R_USER_CACHE_DIR: /home/runner/.cache
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # misha from CRAN, Gviz (Suggests) from Bioconductor
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: local::.
+
+      - name: Restore the full example database
+        id: db-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: /home/runner/.cache/R/shaman/trackdb
+          key: shaman-full-db-${{ env.DB_MD5 }}
+
+      - name: Download the full example database
+        if: steps.db-cache.outputs.cache-hit != 'true'
+        run: shaman::shaman_get_test_track_db(full = TRUE)
+        shell: Rscript {0}
+
+      # saved before the article adds its tracks to the database
+      - name: Save the full example database
+        if: steps.db-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /home/runner/.cache/R/shaman/trackdb
+          key: shaman-full-db-${{ env.DB_MD5 }}
+
+      - name: Restore the computed tracks
+        id: tracks-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /home/runner/.cache/R/shaman/trackdb/test/tracks/hic_obs_shuffle.track
+            /home/runner/.cache/R/shaman/trackdb/test/tracks/hic_score_new.track
+          key: shaman-full-example-tracks-${{ hashFiles('src/**', 'R/**', 'vignettes/shaman-package.Rmd.orig', 'vignettes/precompute.R') }}-${{ env.DB_MD5 }}
+
+      - name: Run the article on the full example database
+        run: Rscript vignettes/precompute.R
+
+      - name: Save the computed tracks
+        if: steps.tracks-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /home/runner/.cache/R/shaman/trackdb/test/tracks/hic_obs_shuffle.track
+            /home/runner/.cache/R/shaman/trackdb/test/tracks/hic_score_new.track
+          key: ${{ steps.tracks-cache.outputs.cache-primary-key }}
+
+      - name: Show the changes to the committed article
+        run: git status --short vignettes && git diff --stat vignettes
+
+      - name: Upload the regenerated article
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-example
+          path: |
+            vignettes/shaman-package.Rmd
+            vignettes/shaman-package-*.png
+          if-no-files-found: error
