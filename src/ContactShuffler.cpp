@@ -16,6 +16,9 @@
 #include <climits>
 #include <fstream>
 #include <cstdio>
+#include <cstring>
+#include <cerrno>
+#include <stdexcept>
 #include <charconv>
 
 #ifdef SHAMAN_PMR
@@ -97,16 +100,28 @@ long ContactShuffler::load_contacts(const int* x, const int* y, int stride, long
 	return(m_contact_count);
 }
 
-// Writes the same text as streaming the coordinates to an ofstream.
+// Writes the same text as streaming the coordinates to an ofstream. A file that cannot be written
+// completely (e.g. a full disk) is an error, and the partial file is removed: a rerun would
+// otherwise take it as done.
 int ContactShuffler::save_contacts(const char* fn, bool symetric, bool with_header) {
 	FILE* output = fopen(fn, "w");
 	if (output == NULL) {
-		cerr << "could not open output file " << fn << endl;
-		return(0);
+		throw std::runtime_error(string("could not open output file ") + fn + ": " + strerror(errno));
 	}
+	auto fail = [&]() {
+		string msg = string("could not write ") + fn + ": " + strerror(errno);
+		if (output != NULL)
+			fclose(output);
+		remove(fn);
+		throw std::runtime_error(msg);
+	};
+	auto put = [&](const char* data, size_t n) {
+		if (fwrite(data, 1, n, output) != n)
+			fail();
+	};
 	contacts_from_grid();
-	if (with_header)
-		fputs("start1\tstart2\n", output);
+	if (with_header && fputs("start1\tstart2\n", output) == EOF)
+		fail();
 	vector<char> buf(1 << 20);
 	char* p = buf.data();
 	char* buf_end = buf.data() + buf.size() - 64;
@@ -124,12 +139,15 @@ int ContactShuffler::save_contacts(const char* fn, bool symetric, bool with_head
 			p = to_chars(p, buf_end + 64, a).ptr; *p++ = '\n';
 		}
 		if (p >= buf_end) {
-			fwrite(buf.data(), 1, p - buf.data(), output);
+			put(buf.data(), p - buf.data());
 			p = buf.data();
 		}
 	}
-	fwrite(buf.data(), 1, p - buf.data(), output);
-	fclose(output);
+	put(buf.data(), p - buf.data());
+	int closed = fclose(output);
+	output = NULL;
+	if (closed != 0)
+		fail();
 	vector<int>().swap(m_x);
 	vector<int>().swap(m_y);
 	vector<int>().swap(m_contacts_dist_bins);
