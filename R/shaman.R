@@ -11,6 +11,8 @@
 #'
 #' Each step creates temporary files of the shuffled matrices which are then joined to a track.
 #' Temporary files are deleted upon track creation.
+#' If the shuffle of a chromosome fails (an error, or its process or job is killed), no track is imported
+#' and work_dir keeps the shuffled chromosomes, so a rerun with the same work_dir shuffles only the others.
 #' @param track_db Directory of the misha database.
 #' @param obs_track_nm Name of observed 2D genomic track for the hic data.
 #' @param work_dir Centralized directory to store temporary files.
@@ -108,9 +110,14 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
             ", raw_ext=\"full_chrom_raw\", shuffled_ext=\"full_chrom_shuffled\", sort_uniq=TRUE)}"
         )
         res <- .gcluster.run2(command.list = commands, opt.flags = sge_flags, max.jobs = max_jobs)
+        # a job that was killed has no result; a job that failed in R returns the error
+        failed <- vapply(res, function(r) !identical(r$exit.status, "success") || inherits(r$retv, "try-error"), TRUE)
+        errors <- lapply(res, `[[`, "retv")
         # a failed job's retv is the error message
         used_seeds <- sapply(res, function(r) if (is.numeric(r$retv)) r$retv[1] else NA)
     } else {
+        # one process per chromosome (no prescheduling), so a process that dies (e.g. killed for
+        # memory) loses only its own chromosome
         res <- parallel::mclapply(seq_len(nrow(intervals)), function(i) {
             shaman_shuffle_hic_mat_for_track(track_db, obs_track_nm, work_dir, intervals$chrom[i],
                 intervals$start[i], intervals$end[i], intervals$start[i], intervals$end[i],
@@ -120,14 +127,21 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
                 raw_ext = "full_chrom_raw", shuffled_ext = "full_chrom_shuffled", sort_uniq = TRUE,
                 seed = seeds[i]
             )
-        }, mc.cores = max_jobs)
-        # an error in a job stops the run, as it did with plyr and doMC
-        failed <- vapply(res, inherits, TRUE, "try-error")
-        if (any(failed)) {
-            stop(attr(res[[which(failed)[1]]], "condition"))
-        }
-        # NA for a job that returned nothing (e.g. killed)
+        }, mc.cores = max_jobs, mc.preschedule = FALSE)
+        # NULL for a process that died, the error for one that failed
+        failed <- vapply(res, function(r) is.null(r) || inherits(r, "try-error"), TRUE)
+        errors <- res
         used_seeds <- vapply(res, function(r) if (length(r) == 1) as.integer(r) else NA_integer_, 1L)
+    }
+    # stop before the import and the cleanup, so that a rerun shuffles only the failed chromosomes
+    if (any(failed)) {
+        err <- Filter(function(e) inherits(e, "try-error"), errors[failed])
+        stop(sprintf(
+            "the shuffle of %s failed%s. No track was imported; the shuffled chromosomes are kept in %s, and a rerun with the same work_dir shuffles only the others.",
+            paste(intervals$chrom[failed], collapse = ", "),
+            if (length(err) > 0) paste0(" (first error: ", conditionMessage(attr(err[[1]], "condition")), ")") else " (no result: the process died, e.g. killed for memory)",
+            work_dir
+        ), call. = FALSE)
     }
     exp_shuf_files <- paste0(obs_track_nm, "_", intervals$chrom, "_0_0.full_chrom_shuffled.uniq")
     obs_shuf_files <- list.files(work_dir, pattern = paste0(obs_track_nm, ".*full_chrom_shuffled.uniq"))
@@ -456,9 +470,10 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
                     track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
                     x$chrom1, x$start1, x$end1, x$start2, x$end2, expand, k
                 )
-            }, mc.cores = max_jobs)
-            # an error in a job stops the run, as it did with plyr and doMC; a job that returned
-            # nothing leaves its score file missing, which the loop retries
+            }, mc.cores = max_jobs, mc.preschedule = FALSE)
+            # one process per matrix (no prescheduling), so a process that dies (e.g. killed for memory)
+            # leaves only its own score file missing, which the loop retries; an error in a job stops
+            # the run, as it did with plyr and doMC
             failed <- vapply(res, inherits, TRUE, "try-error")
             if (any(failed)) {
                 stop(attr(res[[which(failed)[1]]], "condition"))
