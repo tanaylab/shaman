@@ -68,6 +68,8 @@ with one core per chromosome.
 
 Each step creates temporary files of the shuffled matrices which are then joined to a track.
 Temporary files are deleted upon track creation.
+If the shuffle of a chromosome fails (an error, or its process or job is killed), no track is imported
+and work_dir keeps the shuffled chromosomes, so a rerun with the same work_dir shuffles only the others.
 }
 \examples{
 
