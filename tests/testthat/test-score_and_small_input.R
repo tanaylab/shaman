@@ -35,3 +35,29 @@ test_that("local mode on fewer than 10,000 contacts runs instead of dividing by 
     expect_equal(nrow(res$points), 3000)
     expect_true(all(res$points$score >= -100 & res$points$score <= 100))
 })
+
+test_that("the score step stops after 3 rounds and names the matrices that got no score", {
+    db <- make_track(tempfile(), c(chr1 = 5e6), c(chr1 = 1000))
+    make_track(db, c(chr1 = 5e6), c(chr1 = 1000), "hic_exp")
+    calls <- tempfile()
+    on.exit(unlink(calls))
+    # every matrix fails without writing its score file, as when knn does not complete
+    local_mocked_bindings(shaman_score_hic_mat_for_track = function(track_db, work_dir, obs_track_nms, exp_track_nms,
+                                                                    points_track_nms, chrom, start1, end1, start2, end2, ...) {
+        cat(chrom, start1, start2, "\n", file = calls, append = TRUE)
+        # without a cap the rounds never end
+        if (length(readLines(calls)) > 100) stop("still retrying")
+        -1
+    })
+    old_opts <- options(shaman.mc_support = 1, shaman.sge_support = 0)
+    on.exit(options(old_opts), add = TRUE)
+    work_dir <- tempfile()
+    dir.create(work_dir)
+    on.exit(unlink(work_dir, recursive = TRUE), add = TRUE)
+    expect_error(
+        shaman_score_hic_track(db, work_dir, "hic_score_test", "hic_obs", "hic_exp", near_cis = 2e6, max_jobs = 2),
+        "6 matrices have no score after 3 rounds: chr1:0-2000000 x 0-2000000, "
+    )
+    expect_equal(as.vector(table(readLines(calls))), rep(3, 6))
+    expect_false(gtrack.exists("hic_score_test"))
+})

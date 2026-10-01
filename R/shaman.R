@@ -252,6 +252,8 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #'
 #' Each step creates temporary files of the matrix scores which are then joined to a track.
 #' Temporary files are deleted upon track creation.
+#' Matrices that still have no score after 3 rounds of jobs stop the run with an error that names them.
+#' The finished score files stay in work_dir, so a rerun with the same work_dir computes only the missing ones.
 #' @param track_db Directory of the misha database.
 #' @param work_dir Centralized directory to store temporary files.
 #' @param score_track_nm Score track that will be created.
@@ -346,7 +348,21 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
         work_dir, "/", paste0(obs_track_nms, collapse = "."), ".",
         near_cis_2d_upper_mat$chrom1, ".", near_cis_2d_upper_mat$start1, ".", near_cis_2d_upper_mat$start2, ".score"
     )
+    # ponytail: a fixed number of rounds, not an option; a matrix that failed this often (e.g. a job
+    # that is always killed for memory) would fail again
+    max_rounds <- 3
+    rounds <- 0
     while (nrow(near_cis_2d_upper_mat) > 0) {
+        if (rounds == max_rounds) {
+            m <- near_cis_2d_upper_mat
+            failed <- sprintf("%s:%.0f-%.0f x %.0f-%.0f", m$chrom1, m$start1, m$end1, m$start2, m$end2)
+            stop(sprintf(
+                "%d matrices have no score after %d rounds: %s%s. The scores of the other matrices are kept in %s; a rerun with the same work_dir computes only the missing ones.",
+                length(failed), max_rounds, paste(failed[seq_len(min(length(failed), 20))], collapse = ", "),
+                if (length(failed) > 20) ", ..." else "", work_dir
+            ))
+        }
+        rounds <- rounds + 1
         # compute scores for each of the small matrices
         if (sge_support) {
             commands <- paste0(
