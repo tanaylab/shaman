@@ -52,10 +52,20 @@ lower resolution maps, decrease k.}
 
 \item{min_dist}{The minimum distance between points.}
 }
+\value{
+0, 1 or -1 per matrix.
+}
 \description{
 \code{shaman_score_hic_mat_for_track}
 }
 \details{
 This function extracts observed data and expected data in an expanded matrix and computes
 The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
+
+chrom, start1, end1, start2 and end2 can be vectors, to score several matrices in one call.
+Matrices with the same chrom, start1 and end1 then share one extraction of each track over the union
+of their expanded intervals, instead of one extraction per matrix (each extraction of a 2D track reads
+the whole chromosome pair). The output files are the same as scoring the matrices one by one.
+
+\code{options(shaman.score.threads = N)} computes the kNN distances and scores on N threads (default 1).
 }

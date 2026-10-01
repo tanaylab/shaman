@@ -84,6 +84,7 @@ The following options are available for this package:
 * shaman.mc_support = 0 - Set to 1 if multi-core is available for distributed computing.
 * shaman.sge_support = 0 - Set to 1 if Sun Grid Engine is available for distributed computing.
 * shaman.sge_flags = ""  - SGE paramters to be passed to qsub (e.g. threads, queue, etc').
+* shaman.score.threads = 1 - Threads for the kNN distances and scores of each score matrix. In multi-core mode each of the max_jobs processes uses this many threads; in SGE mode each job does, so shaman.sge_flags should ask for as many slots.
 Note that for some shaman package methods either muli-core or sge support is required.
 
 #### Visualization parameters
