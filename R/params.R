@@ -51,7 +51,7 @@ get_param_list <- function(nm, params) {
 #' On first use the database is extracted into the user cache directory
 #' (\code{tools::R_user_dir("shaman", "cache")}); later calls reuse it. If the installed
 #' package holds only a git-lfs pointer instead of the tarball, the tarball is downloaded
-#' from GitHub first (about 100MB).
+#' from the lab's public S3 bucket first (about 100MB) and its md5 checked.
 #' In the example misha database provided in this package we have created a low-footprint
 #' matrix to examplify the shaman workflow. We included 4.6 million contacts from
 #' ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions.
@@ -73,10 +73,13 @@ shaman_get_test_track_db <- function() {
             old_opts <- options(timeout = max(600, getOption("timeout")))
             on.exit(options(old_opts), add = TRUE)
             message("downloading the shaman example database (about 100MB)")
-            utils::download.file("https://media.githubusercontent.com/media/tanaylab/shaman/master/inst/trackdb.tar.gz",
-                tarball,
-                mode = "wb"
-            )
+            url <- "https://misha-genome.s3.eu-west-1.amazonaws.com/shaman/trackdb.tar.gz"
+            tryCatch(utils::download.file(url, tarball, mode = "wb"), error = function(e) {
+                stop("could not download the shaman example database from ", url, ": ", conditionMessage(e), call. = FALSE)
+            })
+            if (unname(tools::md5sum(tarball)) != "88552541e7bf346ef50187f1e42fc25b") {
+                stop("the shaman example database downloaded from ", url, " is not the expected file (md5 mismatch)")
+            }
         }
         message("extracting the shaman example database to ", cache_dir)
         # extract next to the cache and move into place, so an interrupted run leaves no partial db
