@@ -17,6 +17,7 @@ RoxygenNote: 7.1.2
 LinkingTo: Rcpp
 SystemRequirements: C++11
 Suggests: knitr,
+    testthat,
     rmarkdown
 VignetteBuilder: rmarkdown,
     knitr
