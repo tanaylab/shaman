@@ -28,11 +28,16 @@ int shaman_hic_matrix_shuffler_cpp(Rcpp::IntegerMatrix raw_contacts,
 		int grid_x_increase,
 		int grid_x_increase_iter,
 		int input_symmetric_mat,
-		int output_symmetric_mat)
+		int output_symmetric_mat,
+		int seed)
 {
 	Rcpp::Rcerr << "running new shuffler" << endl;
 
-	Random::reset(-1);
+	if (seed < 0) {	// seed from the current time (seconds)
+		seed = Random::time_seed();
+	}
+	Random::reset(seed);
+	Rcpp::Rcerr << "seed = " << seed << endl;
 	clock_t begin = clock();
 	//Rcpp::Rcout << "raw contacts file = " << raw_contacts << endl;
 
@@ -88,6 +93,6 @@ int shaman_hic_matrix_shuffler_cpp(Rcpp::IntegerMatrix raw_contacts,
 		cerr << "run time = " << elapsed_secs/60/60 << " hours" << endl;
 	}
 	shuffler.save_contacts(shuf_contacts.c_str(), output_symmetric_mat, output_header);
-	return(0);
+	return(seed);
 }
 
