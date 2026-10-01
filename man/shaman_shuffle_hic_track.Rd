@@ -63,8 +63,6 @@ This function generates an expected 2D hic track based on observed hic data.
 Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
 Note that this function requires sge (qsub) or multicore to be enabled.
 Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
-Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine
-with one core per chromosome.
 
 Each step creates temporary files of the shuffled matrices which are then joined to a track.
 Temporary files are deleted upon track creation.

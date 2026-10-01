@@ -1,6 +1,6 @@
 ---
 title: "Import"
-author: "Netta Medndelson Cohen"
+author: "Netta Mendelson Cohen"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >

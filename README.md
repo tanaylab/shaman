@@ -1,17 +1,17 @@
 
 # The shaman package - sampling HiC contact matrices for a-parametric normalization
 
-Shaman package impelements functions for resampling Hi-C matrices in order to generate expected contact distributions given constraints on marginal coverage and contact-distance probability distributions. The package also provides support for visualizing normalized matrices and statistical analysis of contact distributions around selected landmarks. It is an R package embedding algorithms implemened in C++, which is built over support from the Tanay's lab *Misha* genomic database system that is provided with the package.
+Shaman package implements functions for resampling Hi-C matrices in order to generate expected contact distributions given constraints on marginal coverage and contact-distance probability distributions. The package also provides support for visualizing normalized matrices and statistical analysis of contact distributions around selected landmarks. It is an R package embedding algorithms implemented in C++, which is built over the Tanay lab's *misha* genomic database system (the misha package).
 
 The normalization workflow consists of the following steps:
 
 1.  [Import](https://tanaylab.github.io/shaman/articles/import.html) observed HiC data to misha db. In order to utilize full functionality of the shaman package, you need to construct a Misha database for your genome of interest, and import your Hi-C data to Misha binary Quad-tree format.
-2.  Shuffle observed data to generate expected data. Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine with one core per chromosome. Note that shaman can also run distributed using Sun Grid Engine.
-3.  Compute the normalized score of each observed data point. This computation can be conducted inline for a specific genomic region, or pre-processed on the entire dataset using distributed computation. Score computation on 1 billion reads on a distributed system may take 4-10 hours, depending on the number of cores available.
+2.  Shuffle observed data to generate expected data. Note that shaman can also run distributed using Sun Grid Engine.
+3.  Compute the normalized score of each observed data point. This computation can be conducted inline for a specific genomic region, or pre-processed on the entire dataset using distributed computation.
 4.  Visualize normalized contact maps. Precomputed normalized scores allow for flexible analysis of contact distributions.
-5.  Quantify contact enrichment acoording to genomic features.
+5.  Quantify contact enrichment according to genomic features.
 
-The package includes a small example misha database (`shaman_get_test_track_db()`) with the observed, expected and score tracks of chr2:176.5e06-177e06, around the hoxd locus, from the ELA K562 dataset. The full example database (`shaman_get_test_track_db(full = TRUE)`, downloaded from the lab's public S3 bucket on first use, about 100MB) is a low-footprint matrix to examplify the shaman workflow: 4.6 million contacts from the ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions. Processing the complete matrix from this study requires downloading the full contact list and regenerating the reshuffled matrix.
+The package includes a small example misha database (`shaman_get_test_track_db()`) with the observed, expected and score tracks of chr2:176.5e06-177e06, around the hoxd locus, from the ELA K562 dataset. The full example database (`shaman_get_test_track_db(full = TRUE)`, downloaded from the lab's public S3 bucket on first use, about 100MB) is a low-footprint matrix to exemplify the shaman workflow: 4.6 million contacts from the ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions. Processing the complete matrix from this study requires downloading the full contact list and regenerating the reshuffled matrix.
 
 ### Code
 
