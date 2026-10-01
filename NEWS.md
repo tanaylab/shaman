@@ -1,7 +1,7 @@
 # shaman 2.1.0
 
 * `shaman_shuffle_hic_track()` is 6-8x faster; results are unchanged for the same seed.
-* `shaman_shuffle_hic_mat_for_track(sort_uniq = TRUE)` counts the shuffled contacts in memory instead of with `sort | uniq -c` (chr1 of a Hi-C dataset: 44 to 3.5 min); `.uniq` lines are now ordered by start1, start2.
+* The `sort_uniq` step of the shuffle (used by `shaman_shuffle_hic_track()`) counts contacts in memory instead of with `sort | uniq -c`: 44 to 3.5 min on chr1 of a Hi-C dataset. `.uniq` lines are now ordered by start1, start2.
 * Scoring no longer needs perl or temporary files and is about 2x faster on dense regions; scores are unchanged.
 * Scoring needs much less memory (17-25GB instead of 42-74GB for a dense 5Mb matrix) and can use several threads with `options(shaman.score.threads = N)`; scores are unchanged.
 * `shaman_score_hic_mat_for_track()` accepts vectors of matrices; matrices in the same row share one read of each track.
