@@ -12,7 +12,13 @@
 #include <unordered_map>
 #include <iostream>
 #include <memory>
+// The grid cells use std::pmr (huge pages) where <memory_resource> is available (not in GCC 8's
+// libstdc++) and not on macOS (with Apple's libc++ std::pmr needs macOS 14 at run time). Otherwise
+// they are plain vectors: same contents and order, only allocated differently.
+#if !defined(__APPLE__) && __has_include(<memory_resource>)
+#define SHAMAN_PMR
 #include <memory_resource>
+#endif
 using namespace std;
 
 class GenomeGridLog;
@@ -27,6 +33,7 @@ struct GridContact {
 	int dist_bin;
 };
 
+#ifdef SHAMAN_PMR
 // Memory mapped with MADV_HUGEPAGE: the grid is read at random, and with 4k
 // pages nearly every access would also need a page-table walk.
 class HugePageResource : public std::pmr::memory_resource {
@@ -35,6 +42,7 @@ protected:
 	void do_deallocate(void* p, size_t bytes, size_t alignment) override;
 	bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override { return this == &other; }
 };
+#endif
 
 class ContactShuffler final {
 public:
@@ -95,11 +103,16 @@ protected:
 	int						m_grid_x_binsize;
 	int						m_grid_switch_bin_dist;
 	int						m_grid_size;
+#ifdef SHAMAN_PMR
 	HugePageResource		m_huge_pages;
 	unique_ptr<std::pmr::monotonic_buffer_resource> m_grid_pool;	// storage of the grid cells
 	// m_grid_size x m_grid_size cells, cell (bin1, bin2) at bin1 * m_grid_size + bin2
 	vector< std::pmr::vector<GridContact> > m_contact_grid;
 	std::pmr::vector<int>	m_contact_cell;		// grid cell of each contact
+#else
+	vector< vector<GridContact> > m_contact_grid;
+	vector<int>				m_contact_cell;
+#endif
 	vector<int>				m_pool_cumsum;		// scratch for select_switch_partners
 	vector<int>				m_pool_cell;
 
