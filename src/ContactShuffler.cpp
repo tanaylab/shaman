@@ -527,6 +527,9 @@ int ContactShuffler::shuffle_contacts(int shuffle_factor, float transition_corre
 
 	int transitions_per_correction = floor(m_contact_count*0.0001);
 	int percentile = floor((m_contact_count)/10);
+	// below 10,000 (10) contacts these are 0, and the % below would divide by zero
+	if (transitions_per_correction < 1) transitions_per_correction = 1;
+	if (percentile < 1) percentile = 1;
 	if (debug) {
 	  cout << m_grid_x_binsize << "\t0\t0";
 	  print_proposal(cout);

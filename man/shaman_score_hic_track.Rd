@@ -66,6 +66,8 @@ matrices in our runs) without changing the scores.
 
 Each step creates temporary files of the matrix scores which are then joined to a track.
 Temporary files are deleted upon track creation.
+Matrices that still have no score after 3 rounds of jobs stop the run with an error that names them.
+The finished score files stay in work_dir, so a rerun with the same work_dir computes only the missing ones.
 }
 \examples{
 
