@@ -11,7 +11,7 @@ Status keys: **done** (committed on this branch), **decision** (blocked on an op
 ## Base
 
 `cran-readiness` starts at `origin/master` and merges the open PRs in the recommended order
-(`git merge --no-ff`, no conflicts):
+(`git merge --no-ff`):
 
 | PR | branch | head merged |
 |---|---|---|
@@ -23,21 +23,29 @@ Status keys: **done** (committed on this branch), **decision** (blocked on an op
 | #10 | perf-score-fast | 810556a07267a2ab0d68940d150fe198292f7d7a |
 | #11 | release-2.1.0 | f171f43df1dfb05412064a3fa8af9da27279cf4a |
 | #12 | perf-shuffle-uniq | 53e9f481a335e24f596d4220da75b22dfde89171 |
+| #13 | fix-smooth-vector-overflow | c8a331805b73314e31d6ce86d7be33a32787be7f |
+| #14 | feat-shuffle-seed | 949ff41b00f5b906f4a718f07cab8d422db83fa3 |
 
-Integration base (the last merge): `e48958d1d6c329825b20ee99bad13e4af74e263c`. Everything after it
-(`git log e48958d..cran-readiness`) is the CRAN work, as small independent commits.
+Integration base (the #14 merge): `ca5a8b64991d44f8b49dcf98e119d589420e3812`. Everything after it
+(`git log ca5a8b6..cran-readiness`) is the CRAN work, as small independent commits.
 
-Not merged, because they were not on origin when the branch was made (2026-09-30): the
-`smooth_vector` heap overflow + `-Wreorder` fix (local branch `fix-smooth-vector-overflow`,
-c8a3318) and the shuffler `seed` argument (local branch `feat-shuffle-seed`, stacked on #9). Other
-agents are writing both; this branch does not re-implement them. The checks below were also run
-on a scratch copy with c8a3318 applied, to show the state once it merges.
+Merge conflicts, both in #14 and both as its PR describes: in `R/shaman.R`
+(`shaman_shuffle_hic_mat_for_track()`), #12's in-memory `sort_uniq` block is kept without the
+`ret <- 1` line that #14 removes; in `src/RcppExports.cpp`, the registration table, regenerated
+with `Rcpp::compileAttributes()` (Rcpp 1.0.13; the only change from the pre-#14 file is the `seed`
+argument). #6-#12 merge to the same tree as the first build (e48958d); #13 merges cleanly.
 
-Rebuilding after the PRs merge: branch from the new `origin/master`, merge the PRs that are still
-open in the order above plus the two above, then `git cherry-pick e48958d..cran-readiness`.
-Expected conflicts: c8a3318 applies to this branch with reduced context (`git apply -C1`: the
-constructor initializer list now has `#ifndef __APPLE__` lines next to it); `feat-shuffle-seed`
-touches the same examples and Rd files in `R/shaman.R` as the example commit 5314deb.
+History: the first build of this branch (base e48958d, without #13 and #14) is kept as the local
+tag `pre-rebuild/cran-readiness` (6e9f54b). Its CRAN commits were replayed with
+`git cherry-pick`. Conflicts: the docs commit (now 7509d36) next to #14's `@param seed` lines,
+resolved by keeping #14's `@return` for `shaman_shuffle_hic_mat_for_track()` (the seed, or NA)
+and adding the `@return` for `shaman_shuffle_hic_track()`, then regenerating the Rd files. The old
+2975f17 ("returns 0 instead of failing when sort_uniq is FALSE") was dropped: #14 initializes
+`ret <- NA`, which fixes the same failure. Everything else applied as is, including the macOS
+commit next to #13's reordered initializer list.
+
+Rebuilding again after the PRs merge on origin: branch from the new `origin/master`, merge the PRs
+that are still open in the order above, then `git cherry-pick ca5a8b6..cran-readiness`.
 
 git-lfs is not installed here, so `inst/trackdb.tar.gz` is the 134-byte LFS pointer in this
 checkout. Merges and commits ran with `-c filter.lfs.*=` and `core.hooksPath=/dev/null`.
@@ -55,13 +63,13 @@ checkout. Merges and commits ran with `-c filter.lfs.*=` and `core.hooksPath=/de
    `.shaman_get_full_test_track_db()` (`R/params.R`). It still points at the git-lfs file on master
    (`media.githubusercontent.com`), which keeps working while the file stays in the repository and
    uses the LFS bandwidth quota. To swap: put the release/Zenodo URL there. To drop: remove the
-   `full` argument and `.shaman_get_full_test_track_db()` (commit 3d07814), and the `full = TRUE`
-   chunks of the vignette and the README paragraph (commit 9735aba).
+   `full` argument and `.shaman_get_full_test_track_db()` (commit aa7e16d), and the `full = TRUE`
+   chunks of the vignette and the README paragraph (commit efaf775).
 3. **Does #9 ship in the CRAN release?** Assumed yes (recommended). That makes the macOS
-   `std::pmr` item a blocker; its fix is commit 260b71f. If #9 does not ship, rebuild without the #9
-   merge and drop 260b71f.
-4. **Gviz to Suggests.** Implemented (recommended) in commit de51648 (plus the `\donttest` in
-   1ef32f6); `git revert de51648` keeps Gviz in Imports.
+   `std::pmr` item a blocker; its fix is commit 3841bd2. If #9 does not ship, rebuild without the #9
+   merge (and #14, which is stacked on it) and drop 3841bd2.
+4. **Gviz to Suggests.** Implemented (recommended) in commit 36f5e53 (plus the `\donttest` in
+   81ba85e); `git revert 36f5e53` keeps Gviz in Imports.
 5. Smaller calls for the authors: the licence stays `GPL` (unversioned, which CRAN accepts); a
    method reference with a DOI in Description needs the right citation.
 
@@ -69,14 +77,14 @@ checkout. Merges and commits ran with `-c filter.lfs.*=` and `core.hooksPath=/de
 
 | # | item | status | commits |
 |---|---|---|---|
-| 1 | 104 MB example DB in the package; examples downloaded it into the user cache | done; location of the full DB: decision 2 | 3d07814, 9735aba |
-| 2 | examples failed (misha not attached, DB download, UCSC network, all cores, options not restored) | done | 5314deb, 1ef32f6 |
-| 3 | NAMESPACE imports (utils, grDevices, graphics, stats), Rd `\usage` mismatches, `\value` | done | d8a5ac6, 0909022 |
-| 4 | compiled code: `std::cerr`/`std::cout`, terminating `ASSERT` | done | 23cd23c |
-| 4b | compiled code: `-Wreorder` (install WARNING with `-Wall`), `smooth_vector` heap overflow (ASAN) | upstream: fix-smooth-vector-overflow | - |
-| 5 | macOS build of #9 (`std::pmr` needs macOS 14 at run time; `MADV_HUGEPAGE` was already guarded by #9) | done in code; needs macOS to verify | 260b71f |
-| 6 | DESCRIPTION (Title, Description typo, Date, Remotes, URL, OS_type, parallel, maintainer) | done; maintainer: decision 1 | 83a7f4b |
-| 7 | policy: `.GlobalEnv` assign, `options()`/`par()` restored with `on.exit`, `T`/`F`, <= 2 threads | done | 597b5e1, ab5fe4d |
+| 1 | 104 MB example DB in the package; examples downloaded it into the user cache | done; location of the full DB: decision 2 | aa7e16d, efaf775 |
+| 2 | examples failed (misha not attached, DB download, UCSC network, all cores, options not restored) | done | 8b59cbc, 81ba85e |
+| 3 | NAMESPACE imports (utils, grDevices, graphics, stats), Rd `\usage` mismatches, `\value` | done | 26692d4, 7509d36 |
+| 4 | compiled code: `std::cerr`/`std::cout`, terminating `ASSERT` | done | 85287f6 |
+| 4b | compiled code: `-Wreorder` (install WARNING with `-Wall`), `smooth_vector` heap overflow (ASAN) | done in #13 (merged in the base) | - |
+| 5 | macOS build of #9 (`std::pmr` needs macOS 14 at run time; `MADV_HUGEPAGE` was already guarded by #9) | done in code; needs macOS to verify | 3841bd2 |
+| 6 | DESCRIPTION (Title, Description typo, Date, Remotes, URL, OS_type, parallel, maintainer) | done; maintainer: decision 1 | 3c73f0d |
+| 7 | policy: `.GlobalEnv` assign, `options()`/`par()` restored with `on.exit`, `T`/`F`, <= 2 threads | done | a705aa5, 35c082a |
 
 Details:
 
@@ -110,11 +118,18 @@ Details:
   focus intervals, and `k = 20` for the score track, to stay under 5 s. `shaman_get_test_track_db()`
   got an example.
 - **Also fixed on the way:** undefined variables in error messages of `shaman_score_hic_track()`
-  and `init_params()` (d8a5ac6); `shaman_shuffle_hic_mat_for_track(sort_uniq = FALSE)` failing
-  with "object 'ret' not found" (2975f17); the vignette placeholder title (9735aba); stale
-  `inst/doc` and `vignettes/shaman-package.html` removed (9735aba); the unused 1.5 MB
-  `inst/extdata/example_data.txt` removed (512813e); `@docType package` replaced by `"_PACKAGE"`
-  (roxygen2 7.3.2 regenerated all Rd files; defaults now print as `2e+06` etc.); NEWS (983773b).
+  and `init_params()` (26692d4); the vignette placeholder title (efaf775); stale
+  `inst/doc` and `vignettes/shaman-package.html` removed (efaf775); the unused 1.5 MB
+  `inst/extdata/example_data.txt` removed (21a2e02); `@docType package` replaced by `"_PACKAGE"`
+  (roxygen2 7.3.2 regenerated all Rd files; defaults now print as `2e+06` etc.); NEWS (b105cc0).
+- **#14 (`seed`).** Covered by 37253f2: the two shuffle examples pass `seed = 1`, the track example
+  prints the `seed` attribute, `shaman_shuffle_hic_track()`'s `\value` mentions it, and NEWS has
+  #14's line plus the new return value of `shaman_shuffle_hic_mat_for_track()` (the seed or NA,
+  was 0 or 1). No new threads. The `seed = N` line goes through `Rcpp::Rcerr`, that is `REprintf`,
+  R's console error stream, which is what Writing R Extensions asks compiled code to use; the
+  compiled-code check flags only `std::cout`/`std::cerr`, `printf` and the like. I left it there
+  rather than making it a `message()`: the seed of a time-seeded run is chosen inside the C++
+  code, next to the other progress lines it prints the same way, and it is also returned.
 - **macOS (5).** On `__APPLE__` the grid cells are plain `std::vector`s (no pool, no huge pages);
   elsewhere the code is unchanged. Verified here: the Linux objects are identical before and after
   the commit (`objdump -d` and `.rodata`/`.data` of all 7 objects, g++ 13.3 -O2); the fallback
@@ -128,7 +143,6 @@ Details:
 
 | item | status |
 |---|---|
-| seed the C++ RNG from R (`seed` argument) | upstream (feat-shuffle-seed) |
 | the random 1-10 s `sleep` at the start of every `shaman_shuffle_hic_mat_for_track()` call (a stagger for SGE jobs); moving it into the SGE command would make direct calls and the example fast, but changes mc mode timing | not done, your call |
 | replace the other `system()` calls (`echo` header, `rm <work_dir><track>*` glob) with R code, quote paths | not done (fine on unix) |
 | `doMC::registerDoMC()` changes the user's foreach backend; `parallel::mclapply` would not | not done |
@@ -147,51 +161,50 @@ Details:
 
 ## Check results
 
-R 4.4.1, misha 5.11.23 (CRAN), `R CMD build` + `R CMD check --as-cran` of a `git archive` of the
-branch, with `_R_CHECK_THINGS_IN_OTHER_DIRS_` and `_R_CHECK_THINGS_IN_TEMP_DIR_` on, a scratch
-HOME/TMPDIR, pinned to 8 cores. TeX (TinyTeX), qpdf and tidy were installed into the scratchpad,
-so the PDF manual, HTML manual and PDF size checks ran. Integration base, for comparison
+Run on cran-readiness 37253f2 (base ca5a8b6, with #13 and #14). R 4.4.1, misha 5.11.23 (CRAN),
+`R CMD build` + `R CMD check --as-cran` of a `git archive` of the branch, with
+`_R_CHECK_THINGS_IN_OTHER_DIRS_` and `_R_CHECK_THINGS_IN_TEMP_DIR_` on, a scratch HOME/TMPDIR,
+pinned to 8 cores. TeX (TinyTeX), qpdf and tidy were installed into the scratchpad, so the PDF
+manual, HTML manual and PDF size checks ran. For comparison, the first integration base e48958d
 (`--no-examples`, no manual, no qpdf yet): 4 WARNINGs (one of them the missing qpdf), 9 NOTEs.
 
 | build | result |
 |---|---|
-| gcc 13.3, R's default flags, branch HEAD | 0 ERRORs, 0 WARNINGs, 4 NOTEs |
-| gcc 13.3, `-Wall -pedantic`, HEAD + c8a3318 | 0 ERRORs, 0 WARNINGs, 4 NOTEs |
-| gcc 13.3, `-Wall -pedantic`, HEAD alone (`--no-manual`) | 0 ERRORs, 1 WARNING (significant compiler warning `-Wreorder`, fixed by c8a3318), 3 NOTEs |
-| clang 18 + libstdc++, `-Wall -pedantic`, HEAD | 0 ERRORs, 0 WARNINGs, 2 NOTEs (1 and 3 below); clang's `-Wreorder-ctor` is printed but not counted |
-| clang 18 + libc++ (conda), HEAD | builds; examples OK; tests crash in the first `Rcpp::stop()` - a toolchain problem here, a 3-line Rcpp function that calls `Rcpp::stop()` crashes the same way with this libc++ and works with libstdc++ |
+| gcc 13.3, R's default flags | 0 ERRORs, 0 WARNINGs, 3 NOTEs (1-3 below) |
+| gcc 13.3, `-Wall -pedantic` (CRAN's Linux warning flags) | 0 ERRORs, 0 WARNINGs, 3 NOTEs (1-3 below); no significant compiler warnings |
+| clang 18 + libstdc++, `-Wall -pedantic` | 0 ERRORs, 0 WARNINGs, 3 NOTEs (1, 3, 4 below) |
+| clang 18 + libc++ (conda), first build | builds; examples OK; tests crash in the first `Rcpp::stop()` - a toolchain problem here, a 3-line Rcpp function that calls `Rcpp::stop()` crashes the same way with this libc++ and works with libstdc++. Not re-run. |
 
-The 4 NOTEs:
+Before #13 was merged (first build), `-Wall` gave 1 WARNING for `-Wreorder`; #13 fixed it.
+
+The NOTEs:
 
 1. New submission, maintainer. Expected.
 2. Installed size 5.2 MB, of which `libs` 3.5 MB: `-g` debug info (the stripped `.so` is 209 KB).
    CRAN's Linux builds use `-g` too, so this NOTE is likely there as well; it is common for
-   compiled packages.
+   compiled packages. (clang's debug info is smaller and stays under 5 MB.)
 3. "unable to verify current time": this machine cannot reach the time server. Environment.
 4. "new files in some other directories": `/tmp/tmp*wandb-media`, `/tmp/tmp*wandb-artifacts`.
    Directories owned by you that some other process on the node creates and removes (they came
    and went between my looks; I did not pin down which process). wandb is a Python library,
-   shaman has no Python, and the check ran with its own TMPDIR. Environment; the clang run did
-   not get it.
+   shaman has no Python, and the check ran with its own TMPDIR. Environment; it shows up in some
+   runs and not others.
 
-Sanitizers (clang 18, `-fsanitize=address,undefined`, libstdc++, run with the ASAN runtime
-preloaded; all examples including `\donttest`, the tests, and the assessment's synthetic
-shuffle + score script):
-
-- HEAD + c8a3318: no AddressSanitizer or UndefinedBehaviorSanitizer report.
-- HEAD alone: heap-buffer-overflow in `VectorUtils::smooth_vector` (`reverse_copy`, called from
-  `ContactShuffler::init_exp_decay_from_obs`), the bug c8a3318 fixes. The run stops at the
-  first report.
+Sanitizers: clang 18, `-fsanitize=address,undefined`, libstdc++, run with the ASAN runtime
+preloaded, on 37253f2: all 16 example files including `\donttest`, the 13 tests, and the
+assessment's synthetic shuffle + score script (one shuffle with seed 7, one time-seeded): no
+AddressSanitizer or UndefinedBehaviorSanitizer report. (The first build, without #13, hit the
+`smooth_vector` heap overflow that #13 fixes.)
 
 ## Results unchanged
 
-Compared: the integration base e48958d ("base"), this branch at 260b71f ("new"; later commits
-change only NEWS and roxygen comments), and 260b71f with the macOS branch forced on Linux
-("fallback"). base and new were installed with R's default flags (g++ 13.3, -g -O2), fallback
-with `-Wall -pedantic` added; each was run by the same script on a hard-linked copy of the same
-database. `time()` was fixed with an `LD_PRELOAD` shim
-(`FAKE_TIME=1700000000`), so `Random::reset(-1)` seeds the shuffler the same way in every run.
-Every output file was compared with `cmp`.
+Compared: the integration base ca5a8b6 ("base"), this branch at 37253f2 ("new"), and 37253f2
+with the macOS branch forced on Linux by turning `#ifndef __APPLE__` into `#if 0` ("fallback").
+All three were installed with R's default flags (g++ 13.3, -g -O2) and run by the same script on
+a hard-linked copy of the same database. `time()` was fixed with an `LD_PRELOAD` shim
+(`FAKE_TIME=1700000000` unless noted), so time-seeded shuffles (`seed = NULL`) seed the same way
+in every run. Every output file was compared with `cmp`; md5 manifests of all outputs are kept in
+the scratchpad (`ident/manifests`).
 
 Outputs of the script, on each database:
 
@@ -204,16 +217,27 @@ Outputs of the script, on each database:
 - `shaman_shuffle_and_score_hic_mat()` (shuffle = 20, grid_step_iter = 10): the shuffled file and
   the scores.
 - `shaman_shuffle_hic_track()` in multi-core mode (2 jobs, shuffle = 2, grid_step_iter = 1): every
-  chromosome's `.full_chrom_shuffled` and `.uniq` files, the imported track's files, and its
-  `gextract()`.
+  chromosome's `.full_chrom_shuffled` and `.uniq` files, the imported track's files, its
+  `gextract()` and its `seed` attribute.
 - `shaman_generate_feature_grid()` and `shaman_plot_feature_grid()` (matrices), `shaman_score_pal()`,
   and PNGs of `shaman_gplot_map()`, `shaman_gplot_map_score()` (plus its layer data),
   `shaman_plot_feature_grid()` and `shaman_plot_tracks_and_annotations()` without the UCSC tracks.
 
-| database | files | base vs new | base vs fallback |
-|---|---|---|---|
-| full example DB (hg19, 4.6M contacts, sha256 a2aba695... = the LFS oid) | 113 | all identical | all identical |
-| small example DB (built by the new `shaman_get_test_track_db()`; the same copy for all three) | 24 | all identical | all identical |
+| comparison | full example DB (114 files) | small example DB (25 files) |
+|---|---|---|
+| base vs new, `seed = NULL` | all identical | all identical |
+| base vs fallback, `seed = NULL` | all identical | all identical |
+| base vs new, `seed = 7` | all identical | all identical |
+| new `seed = 7` twice, `FAKE_TIME` 1700000000 and 1800000000 | all identical | all identical |
+| new, `seed = NULL` vs `seed = 7` (the seed takes effect) | 73 differ (the shuffle outputs) | 7 differ |
+
+The full example DB is hg19 with 4.6M contacts (tarball sha256 a2aba695..., the LFS oid); the
+small one was built by the new `shaman_get_test_track_db()`, and the same copy was used for all
+runs. The `seed` attributes were `chr1:7 chr10:8 ...` for seed 7 and `chr1:1700000000 ...` under
+the shim.
+
+The macOS commit (3841bd2) also leaves the Linux object code unchanged: `objdump -d` and
+`.rodata`/`.data` of all 7 objects are identical between 36f5e53 and 3841bd2 (g++ 13.3 -O2).
 
 The small DB itself: `gextract()` of its three tracks over chr2:176.5e06-177e06 equals
 `gextract()` of the full DB over the same region (every row and value, including the float
@@ -236,8 +260,8 @@ report; it is not re-checked here.
 ## Remaining effort (estimate)
 
 - Your decisions 1-4: minutes each; dropping the full DB or keeping Gviz in Imports is one commit.
-- Merge fix-smooth-vector-overflow and feat-shuffle-seed, rebuild this branch, re-run the check
-  and the identity script: 2-3 h.
+- When the PRs merge on origin, rebuild this branch on the new master (cherry-pick
+  ca5a8b6..cran-readiness), re-run the check and the identity script: 1-2 h.
 - macOS: one mac-builder or R-hub run (needs your OK), plus fixes if it fails: 0.5 day.
 - `cran-comments.md`, final check, submission, and a round of CRAN reviewer comments: 0.5-1 day
   spread over the review wait.
