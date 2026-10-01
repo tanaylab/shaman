@@ -1,12 +1,14 @@
 # Runs the usage article (vignettes/shaman-package.Rmd.orig) on the full example database with
-# vignettes/precompute.R: shuffle, score, the figures, and the check of the scores against the database's
-# hic_score track. Fails if any of it fails. Uploads the regenerated article and figures as the artifact
-# "full-example", which pkgdown.yaml builds the site from when it deploys (push to master).
-# About 10 minutes of computing on 4 cores (measured on a cluster node), 2.5GB of memory, 2.5GB of disk.
+# vignettes/precompute.R: shuffle, score, the figures, and the checks (scoring against hic_exp reproduces the
+# database's hic_score, a seeded rerun of the shuffle gives the same contacts, the shuffle keeps the marginal
+# coverage). Fails if any of it fails. Uploads the regenerated article and figures as the artifact
+# "full-example", which pkgdown.yaml builds the site from (pushes to master and cran-readiness).
+# About 13 minutes of computing on 4 cores (measured on a cluster node), 3GB of memory, 2.5GB of disk.
 #
 # Cached: the downloaded database (key: its md5), and the expected and score tracks the article computes
-# (key: src/, R/, the article and precompute.R, and the database md5), so they are recomputed only when one
-# of those changes.
+# (key: the runner image and R version, src/, R/, the article and precompute.R, and the database md5), so they
+# are recomputed only when one of those changes. The image and R version are in the key because the seeded rerun
+# is compared with the cached shuffle, and another compiler or libm could change the shuffle.
 on:
   workflow_call:
   workflow_dispatch:
@@ -61,6 +63,10 @@ jobs:
           path: /home/runner/.cache/R/shaman/trackdb
           key: shaman-full-db-${{ env.DB_MD5 }}
 
+      - name: Runner image and R version, for the cache key of the computed tracks
+        id: toolchain
+        run: echo "key=${ImageOS:-unknown}-${ImageVersion:-unknown}-R$(Rscript -e 'cat(format(getRversion()))')" >> "$GITHUB_OUTPUT"
+
       - name: Restore the computed tracks
         id: tracks-cache
         uses: actions/cache/restore@v4
@@ -68,7 +74,7 @@ jobs:
           path: |
             /home/runner/.cache/R/shaman/trackdb/test/tracks/hic_obs_shuffle.track
             /home/runner/.cache/R/shaman/trackdb/test/tracks/hic_score_new.track
-          key: shaman-full-example-tracks-${{ hashFiles('src/**', 'R/**', 'vignettes/shaman-package.Rmd.orig', 'vignettes/precompute.R') }}-${{ env.DB_MD5 }}
+          key: shaman-full-example-tracks-${{ steps.toolchain.outputs.key }}-${{ hashFiles('src/**', 'R/**', 'vignettes/shaman-package.Rmd.orig', 'vignettes/precompute.R') }}-${{ env.DB_MD5 }}
 
       - name: Run the article on the full example database
         run: Rscript vignettes/precompute.R
