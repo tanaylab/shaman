@@ -7,6 +7,12 @@ quiet <- function(expr) {
     utils::capture.output(res <- suppressMessages(expr), type = "message")
     res
 }
+digest_of <- function(d) {
+    fn <- tempfile()
+    on.exit(unlink(fn))
+    data.table::fwrite(d, fn, sep = "\t")
+    unname(tools::md5sum(fn))
+}
 
 test_that("the example database has the hoxd contacts", {
     gsetroot(db)
@@ -45,6 +51,30 @@ test_that("a shuffle keeps the marginal coverage, is reproducible with a seed an
     # but the contacts moved
     expect_lt(mean(paste(s1$start1, s1$start2) %in% paste(c(x, y), c(y, x))), 0.9)
     expect_identical(shuffled(5), s1)
+    # another seed, another shuffle (a seed that set only the return value would pass the line above)
+    expect_false(identical(shuffled(6), s1))
+    # the exact shuffle (made with g++ 13 on glibc 2.28): a change in the shuffler's output
+    # shows here; another libm or architecture could change it too, so not on CRAN
+    skip_on_cran()
+    skip_if_not(Sys.info()[["sysname"]] == "Linux" && R.version$arch == "x86_64")
+    expect_identical(digest_of(s1), "cd79437a5026d823dc76287418dddaa8")
+})
+
+test_that("the shuffler stops with an error when it cannot write its output", {
+    skip_if_not(file.exists("/dev/full"))
+    out <- file.path(tempfile(), "x.shuffled")
+    dir.create(dirname(out))
+    on.exit(unlink(dirname(out), recursive = TRUE))
+    # a full disk: writes to /dev/full fail with ENOSPC
+    file.symlink("/dev/full", out)
+    x <- 1e6L + seq_len(5000) * 100L
+    shuffle <- function(fn) {
+        quiet(shaman_hic_matrix_shuffler_cpp(rbind(x, x + 5000L), fn, 0, 1, 0.5, 2, 1, 5, 0.25, 2e7, 1024, 1, 5e5, 1e6, 5e5, 1, 0, 1, 1))
+    }
+    expect_error(shuffle(out), "could not write .*x.shuffled: No space left on device")
+    # the partial file (here the link) is removed, so a rerun does not take it as done
+    expect_false(basename(out) %in% list.files(dirname(out)))
+    expect_error(shuffle(file.path(dirname(out), "no_dir", "y.shuffled")), "could not open output file .*y.shuffled")
 })
 
 test_that("scoring gives a score in [-100, 100] for each point in the focus interval", {
