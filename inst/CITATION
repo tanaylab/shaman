@@ -1,0 +1,13 @@
+bibentry(
+    bibtype = "Article",
+    title = "{SHAMAN}: bin-free randomization, normalization and screening of {Hi-C} matrices",
+    author = c(
+        person("Netta", "Mendelson Cohen"), person("Pedro", "Olivares-Chauvet"),
+        person("Yaniv", "Lubling"), person("Yael", "Baran"), person("Aviezer", "Lifshitz"),
+        person("Michael", "Hoichman"), person("Amos", "Tanay")
+    ),
+    journal = "bioRxiv",
+    year = "2017",
+    doi = "10.1101/187203",
+    url = "https://www.biorxiv.org/content/10.1101/187203v1"
+)

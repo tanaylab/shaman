@@ -10,7 +10,8 @@ Authors@R: c(person("Amos", "Tanay", role=c("aut")),
 Description: Generate expected HiC data maintaining marginal coverage,
   and the decay in contact probability with increasing genomic distance. Expected
   HiC data is used for normalization and graphical presentation of statistical
-  significance of observed HiC contact enrichments.
+  significance of observed HiC contact enrichments. The method is described in
+  Mendelson Cohen et al. (2017) <doi:10.1101/187203>.
 License: GPL
 Encoding: UTF-8
 LazyData: true
