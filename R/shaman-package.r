@@ -9,4 +9,4 @@
 "_PACKAGE"
 
 # column names used in ggplot2::aes() and plyr calls
-utils::globalVariables(c("chrom1", "score", "start", "start1", "start2", "value"))
+utils::globalVariables(c("score", "start1", "start2", "value"))

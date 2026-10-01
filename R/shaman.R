@@ -111,18 +111,23 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
         # a failed job's retv is the error message
         used_seeds <- sapply(res, function(r) if (is.numeric(r$retv)) r$retv[1] else NA)
     } else {
-        doMC::registerDoMC(cores = max_jobs)
-        res <- plyr::ddply(intervals, plyr::.(chrom, start), function(x) {
-            shaman_shuffle_hic_mat_for_track(track_db, obs_track_nm, work_dir, x$chrom[1],
-                x$start[1], x$end[1], x$start[1], x$end[1],
+        res <- parallel::mclapply(seq_len(nrow(intervals)), function(i) {
+            shaman_shuffle_hic_mat_for_track(track_db, obs_track_nm, work_dir, intervals$chrom[i],
+                intervals$start[i], intervals$end[i], intervals$start[i], intervals$end[i],
                 min_dist = 1024,
                 dist_resolution = dist_resolution, decay_smooth = smooth, shuffle = shuffle,
                 grid_small = grid_small, grid_high = grid_high, grid_step_iter = grid_step_iter,
                 raw_ext = "full_chrom_raw", shuffled_ext = "full_chrom_shuffled", sort_uniq = TRUE,
-                seed = seeds[match(x$chrom[1], intervals$chrom)]
+                seed = seeds[i]
             )
-        }, .parallel = TRUE)
-        used_seeds <- res$V1[match(intervals$chrom, res$chrom)]
+        }, mc.cores = max_jobs)
+        # an error in a job stops the run, as it did with plyr and doMC
+        failed <- vapply(res, inherits, TRUE, "try-error")
+        if (any(failed)) {
+            stop(attr(res[[which(failed)[1]]], "condition"))
+        }
+        # NA for a job that returned nothing (e.g. killed)
+        used_seeds <- vapply(res, function(r) if (length(r) == 1) as.integer(r) else NA_integer_, 1L)
     }
     exp_shuf_files <- paste0(obs_track_nm, "_", intervals$chrom, "_0_0.full_chrom_shuffled.uniq")
     obs_shuf_files <- list.files(work_dir, pattern = paste0(obs_track_nm, ".*full_chrom_shuffled.uniq"))
@@ -445,15 +450,19 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 
             res <- .gcluster.run2(command.list = commands, opt.flags = sge_flags, max.jobs = max_jobs)
         } else {
-            doMC::registerDoMC(cores = max_jobs)
-            res <- plyr::ddply(near_cis_2d_upper_mat, plyr::.(chrom1, start1, start2), function(x) {
+            res <- parallel::mclapply(seq_len(nrow(near_cis_2d_upper_mat)), function(i) {
+                x <- near_cis_2d_upper_mat[i, ]
                 shaman_score_hic_mat_for_track(
                     track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
-                    x$chrom1[1], x$start1[1], x$end1[1], x$start2[1], x$end2[1], expand, k
+                    x$chrom1, x$start1, x$end1, x$start2, x$end2, expand, k
                 )
-            },
-            .parallel = TRUE
-            )
+            }, mc.cores = max_jobs)
+            # an error in a job stops the run, as it did with plyr and doMC; a job that returned
+            # nothing leaves its score file missing, which the loop retries
+            failed <- vapply(res, inherits, TRUE, "try-error")
+            if (any(failed)) {
+                stop(attr(res[[which(failed)[1]]], "condition"))
+            }
         }
         # res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
         # check to see if there are any missing files
