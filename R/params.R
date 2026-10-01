@@ -64,7 +64,7 @@ get_param_list <- function(nm, params) {
 #'
 #' With \code{full = TRUE} it returns the full example database of earlier shaman versions: 4.6 million
 #' contacts from the ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF
-#' regions, with scores for chr2:175e06-178e06. It is downloaded (about 100MB) and extracted into the
+#' regions, with scores for chr2:175e06-178e06. It is downloaded (about 100MB, from the lab's public S3 bucket) and extracted into the
 #' user cache directory (\code{tools::R_user_dir("shaman", "cache")}, about 480MB) on first use; later
 #' calls reuse it.
 #' Processing the complete matrix from this study requires downloading the full contact list

@@ -59,15 +59,9 @@ checkout. Merges and commits ran with `-c filter.lfs.*=` and `core.hooksPath=/de
    bundled one. `shaman_get_test_track_db(full = TRUE)` downloads it on request and checks its md5
    (88552541e7bf346ef50187f1e42fc25b, the same file as `inst/trackdb.tar.gz`). Decided location:
    the lab's public S3 bucket, `https://misha-genome.s3.eu-west-1.amazonaws.com/shaman/trackdb.tar.gz`.
-   **Not done:** changing the URL in `.shaman_get_full_test_track_db()` (`R/params.R`) and the
-   vignette/README wording to that bucket was refused by this session's permission check (reason
-   given: "traffic redirection"); I reverted my uncommitted edit. The code still
-   downloads from the git-lfs media URL on master. Needs your direct go-ahead (or the edit by you):
-   one line of code plus the wording "downloaded from the lab's public S3 bucket on first use" in
-   `README.Rmd`/`README.md`, `vignettes/shaman-package.Rmd`, the `@details` of
-   `shaman_get_test_track_db()` and NEWS. The bucket object is now public and I checked it (read
-   only): HTTP 200, 108,400,483 bytes, md5 88552541e7bf346ef50187f1e42fc25b, byte-identical to the
-   LFS tarball.
+   Done: the URL in `.shaman_get_full_test_track_db()` (`R/params.R`) and the wording in `README.Rmd`/`README.md`,
+   the vignette, the Rd details and NEWS point to that bucket. The object is public (HTTP 200, 108,400,483 bytes,
+   md5 88552541e7bf346ef50187f1e42fc25b, byte-identical to the LFS tarball).
 3. **#9 ships** in the CRAN release, so the macOS `std::pmr` fallback (3841bd2) stays. Not yet
    verified on macOS (see CI below).
 4. **Gviz stays in Suggests** (36f5e53, `\donttest` in 81ba85e). The README installation section
