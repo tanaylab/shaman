@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // shaman_hic_matrix_shuffler_cpp
-int shaman_hic_matrix_shuffler_cpp(Rcpp::IntegerMatrix raw_contacts, std::string shuf_contacts, int shuffle_factor, int proposal_from_contacts, double proposal_iterations_d, int dist_resolution, int decay_smooth, int decay_regularization, double proposal_correction_factor_d, int max_dist, int min_dist, int grid_switch_bin_dist, int grid_x_min_bin, int grid_x_max_bin, int grid_x_increase, int grid_x_increase_iter, int input_symmetric_mat, int output_symmetric_mat);
-RcppExport SEXP _shaman_shaman_hic_matrix_shuffler_cpp(SEXP raw_contactsSEXP, SEXP shuf_contactsSEXP, SEXP shuffle_factorSEXP, SEXP proposal_from_contactsSEXP, SEXP proposal_iterations_dSEXP, SEXP dist_resolutionSEXP, SEXP decay_smoothSEXP, SEXP decay_regularizationSEXP, SEXP proposal_correction_factor_dSEXP, SEXP max_distSEXP, SEXP min_distSEXP, SEXP grid_switch_bin_distSEXP, SEXP grid_x_min_binSEXP, SEXP grid_x_max_binSEXP, SEXP grid_x_increaseSEXP, SEXP grid_x_increase_iterSEXP, SEXP input_symmetric_matSEXP, SEXP output_symmetric_matSEXP) {
+int shaman_hic_matrix_shuffler_cpp(Rcpp::IntegerMatrix raw_contacts, std::string shuf_contacts, int shuffle_factor, int proposal_from_contacts, double proposal_iterations_d, int dist_resolution, int decay_smooth, int decay_regularization, double proposal_correction_factor_d, int max_dist, int min_dist, int grid_switch_bin_dist, int grid_x_min_bin, int grid_x_max_bin, int grid_x_increase, int grid_x_increase_iter, int input_symmetric_mat, int output_symmetric_mat, int seed);
+RcppExport SEXP _shaman_shaman_hic_matrix_shuffler_cpp(SEXP raw_contactsSEXP, SEXP shuf_contactsSEXP, SEXP shuffle_factorSEXP, SEXP proposal_from_contactsSEXP, SEXP proposal_iterations_dSEXP, SEXP dist_resolutionSEXP, SEXP decay_smoothSEXP, SEXP decay_regularizationSEXP, SEXP proposal_correction_factor_dSEXP, SEXP max_distSEXP, SEXP min_distSEXP, SEXP grid_switch_bin_distSEXP, SEXP grid_x_min_binSEXP, SEXP grid_x_max_binSEXP, SEXP grid_x_increaseSEXP, SEXP grid_x_increase_iterSEXP, SEXP input_symmetric_matSEXP, SEXP output_symmetric_matSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,7 +34,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type grid_x_increase_iter(grid_x_increase_iterSEXP);
     Rcpp::traits::input_parameter< int >::type input_symmetric_mat(input_symmetric_matSEXP);
     Rcpp::traits::input_parameter< int >::type output_symmetric_mat(output_symmetric_matSEXP);
-    rcpp_result_gen = Rcpp::wrap(shaman_hic_matrix_shuffler_cpp(raw_contacts, shuf_contacts, shuffle_factor, proposal_from_contacts, proposal_iterations_d, dist_resolution, decay_smooth, decay_regularization, proposal_correction_factor_d, max_dist, min_dist, grid_switch_bin_dist, grid_x_min_bin, grid_x_max_bin, grid_x_increase, grid_x_increase_iter, input_symmetric_mat, output_symmetric_mat));
+    Rcpp::traits::input_parameter< int >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(shaman_hic_matrix_shuffler_cpp(raw_contacts, shuf_contacts, shuffle_factor, proposal_from_contacts, proposal_iterations_d, dist_resolution, decay_smooth, decay_regularization, proposal_correction_factor_d, max_dist, min_dist, grid_switch_bin_dist, grid_x_min_bin, grid_x_max_bin, grid_x_increase, grid_x_increase_iter, input_symmetric_mat, output_symmetric_mat, seed));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -87,10 +88,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_shaman_shaman_hic_matrix_shuffler_cpp", (DL_FUNC) &_shaman_shaman_hic_matrix_shuffler_cpp, 18},
-    {"_shaman_shaman_merge_ks_cpp", (DL_FUNC) &_shaman_shaman_merge_ks_cpp, 2},
-    {"_shaman_shaman_knn_ks_cpp", (DL_FUNC) &_shaman_shaman_knn_ks_cpp, 9},
-    {"_shaman_shaman_knn_dist_cpp", (DL_FUNC) &_shaman_shaman_knn_dist_cpp, 6},
+    {"_shaman_shaman_hic_matrix_shuffler_cpp", (DL_FUNC) &_shaman_shaman_hic_matrix_shuffler_cpp, 19},
     {NULL, NULL, 0}
 };
 
