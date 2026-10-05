@@ -244,7 +244,6 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
         }
     }
     if (sort_uniq) {
-        ret <- 1
         # count identical contacts in memory (the lines sort | uniq -c gave, ordered by start1, start2),
         # in one thread like the shuffle itself (more threads gain little here)
         threads <- data.table::setDTthreads(1)

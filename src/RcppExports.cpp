@@ -89,6 +89,9 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_shaman_shaman_hic_matrix_shuffler_cpp", (DL_FUNC) &_shaman_shaman_hic_matrix_shuffler_cpp, 19},
+    {"_shaman_shaman_merge_ks_cpp", (DL_FUNC) &_shaman_shaman_merge_ks_cpp, 2},
+    {"_shaman_shaman_knn_ks_cpp", (DL_FUNC) &_shaman_shaman_knn_ks_cpp, 9},
+    {"_shaman_shaman_knn_dist_cpp", (DL_FUNC) &_shaman_shaman_knn_dist_cpp, 6},
     {NULL, NULL, 0}
 };
 
