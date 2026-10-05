@@ -16,7 +16,12 @@
 #include <climits>
 #include <fstream>
 #include <cstdio>
+#include <cstring>
+#include <cerrno>
+#include <stdexcept>
 #include <charconv>
+
+#ifdef SHAMAN_PMR
 #include <sys/mman.h>
 
 // mmap returns page-aligned memory, which covers any alignment asked for
@@ -34,6 +39,7 @@ void* HugePageResource::do_allocate(size_t bytes, size_t /* alignment */) {
 void HugePageResource::do_deallocate(void* p, size_t bytes, size_t /* alignment */) {
 	munmap(p, bytes);
 }
+#endif
 
 ContactShuffler::ContactShuffler(int dist_log_scale, int dist_resolution,
 		int grid_x_resolution,
@@ -49,11 +55,13 @@ ContactShuffler::ContactShuffler(int dist_log_scale, int dist_resolution,
    m_grid_x_binsize(grid_x_resolution),
    //m_grid_dist_resolution(grid_dist_resolution),
    m_grid_switch_bin_dist(grid_switch_bin_dist),
+#ifdef SHAMAN_PMR
    m_contact_cell(&m_huge_pages),
+#endif
    //m_grid_switch_x_dist(grid_switch_x_dist),
    m_correction_factor(log(correction_factor)),
-   m_decay_smooth(decay_smooth),
-   m_regularization(regularization)
+   m_regularization(regularization),
+   m_decay_smooth(decay_smooth)
 {
 	m_min_dist = (m_dist_resolution * log(min_dist)/m_log_log_scale);
 	if (m_min_dist < 0) m_min_dist=0;
@@ -92,16 +100,28 @@ long ContactShuffler::load_contacts(const int* x, const int* y, int stride, long
 	return(m_contact_count);
 }
 
-// Writes the same text as streaming the coordinates to an ofstream.
+// Writes the same text as streaming the coordinates to an ofstream. A file that cannot be written
+// completely (e.g. a full disk) is an error, and the partial file is removed: a rerun would
+// otherwise take it as done.
 int ContactShuffler::save_contacts(const char* fn, bool symetric, bool with_header) {
 	FILE* output = fopen(fn, "w");
 	if (output == NULL) {
-		cerr << "could not open output file " << fn << endl;
-		return(0);
+		throw std::runtime_error(string("could not open output file ") + fn + ": " + strerror(errno));
 	}
+	auto fail = [&]() {
+		string msg = string("could not write ") + fn + ": " + strerror(errno);
+		if (output != NULL)
+			fclose(output);
+		remove(fn);
+		throw std::runtime_error(msg);
+	};
+	auto put = [&](const char* data, size_t n) {
+		if (fwrite(data, 1, n, output) != n)
+			fail();
+	};
 	contacts_from_grid();
-	if (with_header)
-		fputs("start1\tstart2\n", output);
+	if (with_header && fputs("start1\tstart2\n", output) == EOF)
+		fail();
 	vector<char> buf(1 << 20);
 	char* p = buf.data();
 	char* buf_end = buf.data() + buf.size() - 64;
@@ -119,12 +139,15 @@ int ContactShuffler::save_contacts(const char* fn, bool symetric, bool with_head
 			p = to_chars(p, buf_end + 64, a).ptr; *p++ = '\n';
 		}
 		if (p >= buf_end) {
-			fwrite(buf.data(), 1, p - buf.data(), output);
+			put(buf.data(), p - buf.data());
 			p = buf.data();
 		}
 	}
-	fwrite(buf.data(), 1, p - buf.data(), output);
-	fclose(output);
+	put(buf.data(), p - buf.data());
+	int closed = fclose(output);
+	output = NULL;
+	if (closed != 0)
+		fail();
 	vector<int>().swap(m_x);
 	vector<int>().swap(m_y);
 	vector<int>().swap(m_contacts_dist_bins);
@@ -165,11 +188,19 @@ void ContactShuffler::build_grid() {
 		capacity += cell_count[c];
 	}
 	// the cells must go before the pool that holds them
-	vector< std::pmr::vector<GridContact> >().swap(m_contact_grid);
+	decltype(m_contact_grid)().swap(m_contact_grid);
+#ifdef SHAMAN_PMR
 	m_grid_pool.reset(new std::pmr::monotonic_buffer_resource(capacity * sizeof(GridContact), &m_huge_pages));
+#else
+	(void)capacity;
+#endif
 	m_contact_grid.reserve(cells);
 	for (size_t c=0; c<cells; c++) {
+#ifdef SHAMAN_PMR
 		m_contact_grid.emplace_back(m_grid_pool.get());
+#else
+		m_contact_grid.emplace_back();
+#endif
 		m_contact_grid[c].reserve(cell_count[c]);
 	}
 	for (long i=0; i<m_contact_count; i++) {
@@ -609,14 +640,14 @@ void ContactShuffler::grid_move(int cell_i, int grid_index_i, int cell_j, int gr
 	int bin_j_0 = cell_j / m_grid_size;
 	int bin_j_1 = cell_j % m_grid_size;
 	if (bin_i_1 != bin_j_1) {
-		std::pmr::vector<GridContact>& grid_i = m_contact_grid[cell_i];
+		auto& grid_i = m_contact_grid[cell_i];
 		grid_i[grid_index_i] = grid_i.back();
 		grid_i.pop_back();
 		int to_i = bin_i_0 * m_grid_size + bin_j_1;
 		m_contact_grid[to_i].push_back(new_i);
 		m_contact_cell[new_i.idx] = to_i;
 
-		std::pmr::vector<GridContact>& grid_j = m_contact_grid[cell_j];
+		auto& grid_j = m_contact_grid[cell_j];
 		grid_j[grid_index_j] = grid_j.back();
 		grid_j.pop_back();
 		int to_j = bin_j_0 * m_grid_size + bin_i_1;

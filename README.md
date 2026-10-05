@@ -19,7 +19,6 @@ Source code can be found at: <https://github.com/tanaylab/shaman>
 
 ### Requirements
 
--   *Perl*
 -   *remotes* R package (optional, for automatic installation of *bioconductor* dependencies)
 -   *System:* multi-core unix / linux based system or SGE (sun grid engine) cluster for distributed computing are required for large HiC datasets.
 

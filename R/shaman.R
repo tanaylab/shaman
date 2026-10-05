@@ -244,11 +244,25 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
         }
     }
     if (sort_uniq) {
-        system(sprintf("echo 'chrom1\tstart1\tend1\tchrom2\tstart2\tend2\tobs' > %s.uniq", shuf_fn))
-        system(sprintf(
-            "cat %s | grep -v start | sort -T %s | uniq -c | awk '{ print \"%s\" \"\t\" $2 \"\t\" ($2+1) \"\t\" \"%s\" \"\t\" $3 \"\t\" ($3+1) \"\t\" $1}' >> %s.uniq",
-            shuf_fn, work_dir, chrom, chrom, shuf_fn
-        ))
+        ret <- 1
+        # count identical contacts in memory (the lines sort | uniq -c gave, ordered by start1, start2),
+        # in one thread like the shuffle itself (more threads gain little here)
+        threads <- data.table::setDTthreads(1)
+        on.exit(data.table::setDTthreads(threads), add = TRUE)
+        a <- data.table::fread(shuf_fn, sep = "\t", header = TRUE, colClasses = "integer")
+        data.table::setorderv(a)
+        id <- data.table::rleidv(a)
+        obs <- tabulate(id, max(0L, id)) # max(0L, ...): no contacts give no bins, not one empty bin
+        rm(id)
+        first <- cumsum(obs) - obs + 1L
+        start1 <- a$start1[first]
+        start2 <- a$start2[first]
+        rm(a)
+        chroms <- rep(chrom, length(obs))
+        data.table::fwrite(list(
+            chrom1 = chroms, start1 = start1, end1 = start1 + 1L,
+            chrom2 = chroms, start2 = start2, end2 = start2 + 1L, obs = obs
+        ), paste0(shuf_fn, ".uniq"), sep = "\t")
     }
     return(ret)
 }
@@ -281,6 +295,12 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
 #' Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters),
 #' depending on the number of cores available.
+#' \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
+#' threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
+#' each job does, so shaman.sge_flags should ask for N slots.
+#' Each extraction of a 2D track can keep about the whole chromosome's track file in memory;
+#' misha's \code{options(gtrack.num.chunks = 1000)} bounds that (2-3x lower peak memory on dense
+#' matrices in our runs) without changing the scores.
 #'
 #' Each step creates temporary files of the matrix scores which are then joined to a track.
 #' Temporary files are deleted upon track creation.
@@ -381,8 +401,9 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
     while (nrow(near_cis_2d_upper_mat) > 0) {
         # compute scores for each of the small matrices
         if (sge_support) {
+            # gcluster.run jobs do not inherit the misha root, so each job sets it
             commands <- paste0(
-                "{library(shaman); shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms, \"",
+                "{library(shaman); gsetroot(track_db); shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms, \"",
                 near_cis_2d_upper_mat$chrom1, "\", ", near_cis_2d_upper_mat$start1, ", ",
                 near_cis_2d_upper_mat$end1, ",", near_cis_2d_upper_mat$start2, ", ",
                 near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")}"
@@ -456,10 +477,42 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 #' lower resolution maps, decrease k.
 #' @param min_dist The minimum distance between points.
 #'
+#' @details chrom, start1, end1, start2 and end2 can be vectors, to score several matrices in one call.
+#' Matrices with the same chrom, start1 and end1 then share one extraction of each track over the union
+#' of their expanded intervals, instead of one extraction per matrix (each extraction of a 2D track reads
+#' the whole chromosome pair). The output files are the same as scoring the matrices one by one.
+#'
+#' \code{options(shaman.score.threads = N)} computes the kNN distances and scores on N threads (default 1).
+#'
+#' @return 0, 1 or -1 per matrix.
 #' @export
 ##########################################################################################################
 shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
                                            chrom, start1, end1, start2, end2, expand = 2e06, k = 100, min_dist = 1024) {
+    if (max(length(chrom), length(start1), length(end1), length(start2), length(end2)) > 1) {
+        rects <- data.frame(chrom = as.character(chrom), start1 = start1, end1 = end1, start2 = start2, end2 = end2, stringsAsFactors = FALSE)
+        fns <- paste0(work_dir, "/", paste0(obs_track_nms, collapse = "."), ".", rects$chrom, ".", rects$start1, ".", rects$start2, ".score")
+        row <- paste(rects$chrom, rects$start1, rects$end1)
+        todo <- !file.exists(fns)
+        ret <- rep(0, nrow(rects))
+        on.exit(rm(list = ls(.shaman_extract_cache), envir = .shaman_extract_cache))
+        for (r in unique(row[todo])) {
+            i <- which(row == r & todo)
+            if (length(i) > 1) {
+                options(gmax.data.size = 1e09)
+                .shaman_cache_extractions(unique(c(obs_track_nms, exp_track_nms, points_track_nms)), gintervals.force_range(data.frame(
+                    chrom1 = rects$chrom[i[1]], start1 = rects$start1[i[1]] - expand, end1 = rects$end1[i[1]] + expand,
+                    chrom2 = rects$chrom[i[1]], start2 = min(rects$start2[i]) - expand, end2 = max(rects$end2[i]) + expand
+                )))
+            }
+            for (j in i) {
+                ret[j] <- shaman_score_hic_mat_for_track(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
+                    rects$chrom[j], rects$start1[j], rects$end1[j], rects$start2[j], rects$end2[j], expand = expand, k = k, min_dist = min_dist)
+            }
+            rm(list = ls(.shaman_extract_cache), envir = .shaman_extract_cache)
+        }
+        return(ret)
+    }
     fn <- paste0(work_dir, "/", paste0(obs_track_nms, collapse = "."), ".", chrom, ".", start1, ".", start2, ".score")
     if (file.exists(fn)) {
         return(0)
@@ -541,7 +594,22 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 ##########################################################################################################
 shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, regional_interval,
                                  points_track_nms = obs_track_nms, min_dist = 1024, k = 100, k_exp = 2 * k) {
-    points <- .shaman_combine_points_multi_tracks(points_track_nms, focus_interval, min_dist)
+    if (identical(points_track_nms, obs_track_nms) && .shaman_interval_within(focus_interval, regional_interval) &&
+        all(vapply(obs_track_nms, function(x) gtrack.info(x)$type == "points", TRUE))) {
+        # The points are then the observed contacts inside the focus interval: take them from the
+        # observed contacts of the regional interval (see .shaman_points_in) instead of another pass
+        # over the track.
+        obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
+        if (NROW(obs) < 1000) {
+            # then so are the points in the focus interval
+            message("number of points in focus interval < 1000")
+            return(NULL)
+        }
+        points <- .shaman_points_in(obs, focus_interval)
+    } else {
+        obs <- NULL
+        points <- .shaman_combine_points_multi_tracks(points_track_nms, focus_interval, min_dist)
+    }
     if (is.null(points)) {
         message("number of points in focus interval = 0")
         return(NULL)
@@ -553,7 +621,7 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 
     points <- unique(points[, c("chrom1", "start1", "end1", "chrom2", "start2", "end2")])
     message(paste0("kk norm on ", nrow(points), " points"))
-    return(shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k = k, k_exp = k_exp))
+    return(.shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k = k, k_exp = k_exp, obs = obs))
 }
 
 ##########################################################################################################
@@ -596,43 +664,37 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #' @export
 ##########################################################################################################
 shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist = 1024, k = 100, k_exp = 2 * k) {
-    knn_pl <- sprintf("%s/%s", system.file("perl", package = "shaman"), getOption("shaman.ks_pl"))
-    o_knn.tmp <- tempfile("knn_o_")
-    e_knn.tmp <- gsub("knn_o_", "knn_e_", o_knn.tmp)
-    ks_knn.tmp <- gsub("knn_o_", "knn_ks_", o_knn.tmp)
+    .shaman_score_hic_points(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k = k, k_exp = k_exp)
+}
+
+# obs: the observed contacts in regional_interval as .shaman_combine_points_multi_tracks() returns
+# them, if already extracted
+.shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, regional_interval, min_dist, k, k_exp, obs = NULL) {
     message(paste("obs = ", paste(obs_track_nms, collapse = ",")))
-    obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
+    if (is.null(obs)) {
+        obs <- .shaman_combine_points_multi_tracks(obs_track_nms, regional_interval, min_dist)
+    }
     if (is.null(obs) | nrow(points) == 0) {
         message(paste("0 data found in intervals, focus interval=", nrow(points)))
         return(NULL)
     }
-    obs <- plyr::ddply(obs, c("contacts"), function(x) {
-        return(x[rep(seq_len(nrow(x)), each = x$contact[1]), ])
-    })
+    # repeat each point by its number of contacts, in the row order plyr::ddply(obs, "contacts", ...) gave
+    o <- order(obs$contacts)
+    obs <- as.data.frame(lapply(obs, `[`, rep(o, obs$contacts[o])))
     if (nrow(obs) < k) {
         message(paste("insufficient data found in intervals: obs=", nrow(obs)))
         return(NULL)
     }
     n_obs <- nrow(obs)
-    o_knn <- RANN::nn2(obs[, c("start1", "start2")], points[, c("start1", "start2")], k = k)
-    message("write tab 1")
-    data.table::fwrite(as.data.frame(round(o_knn$nn.dist)), o_knn.tmp, sep = "\t", col.names = F, quote = F, row.names = F)
-    if (!file.exists(o_knn.tmp)) {
-        message(paste0("problem writing ", o_knn.tmp))
-        return(0)
-    }
-    rm(o_knn)
-    rm(obs)
-    gc()
 
     exp <- .shaman_combine_points_multi_tracks(exp_track_nms, regional_interval, min_dist)
     if (is.null(exp)) {
         message(paste("0 data found in intervals: exp"))
         return(NULL)
     }
-    exp <- plyr::ddply(exp, c("contacts"), function(x) {
-        return(x[rep(seq_len(nrow(x)), each = x$contact[1]), ])
-    })
+    # repeat each point by its number of contacts, in the row order plyr::ddply(exp, "contacts", ...) gave
+    o <- order(exp$contacts)
+    exp <- as.data.frame(lapply(exp, `[`, rep(o, exp$contacts[o])))
     if (nrow(exp) < k) {
         message(paste("insufficient data found in intervals: exp=", nrow(exp)))
         return(NULL)
@@ -643,21 +705,15 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
         k_exp <- round(k * n_exp / n_obs)
     }
     message(paste0("n_obs = ", n_obs, ", n_exp = ", n_exp, ", k_exp = ", k_exp))
-    e_knn <- RANN::nn2(exp[, c("start1", "start2")], points[, c("start1", "start2")], k = k_exp)
-    message("write tab 2")
-    data.table::fwrite(as.data.frame(round(e_knn$nn.dist)), e_knn.tmp, sep = "\t", col.names = F, quote = F, row.names = F)
-    if (!file.exists(e_knn.tmp)) {
-        message(paste0("problem writing ", e_knn.tmp))
-        return(0)
-    }
-    rm(e_knn)
-    rm(exp)
-    gc()
-    system(sprintf("perl %s %s %s >%s", knn_pl, o_knn.tmp, e_knn.tmp, ks_knn.tmp))
-    s_ks <- as.data.frame(data.table::fread(ks_knn.tmp))
+    # same values as shaman_merge_ks_cpp(round(RANN::nn2(obs, points, k)$nn.dist),
+    # round(RANN::nn2(exp, points, k_exp)$nn.dist)), without the n x k matrices
+    s_ks <- shaman_knn_ks_cpp(
+        obs$start1, obs$start2, exp$start1, exp$start2, points$start1, points$start2,
+        k, k_exp, getOption("shaman.score.threads", 1)
+    )
+    rm(obs, exp)
 
     points$score <- 100 * ifelse(-s_ks$V1 < s_ks$V2, s_ks$V2, s_ks$V1)
-    try(system(sprintf("rm %s %s %s", o_knn.tmp, e_knn.tmp, ks_knn.tmp)))
 
     return(list(points = points))
 }
@@ -805,35 +861,14 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 #' @export
 ##########################################################################################################
 shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
-    .shaman_check_config("shaman.ks_pl")
-    knn_pl <- sprintf("%s/%s", system.file("perl", package = "shaman"), getOption("shaman.ks_pl"))
     message(paste0("going into knn witn ", nrow(obs), " observed and ", nrow(exp), " expected"))
     o_knn <- RANN::nn2(obs[, c("start1", "start2")], points[, c("start1", "start2")], k = k)
     message("going into shuffled knn")
     e_knn <- RANN::nn2(exp[, c("start1", "start2")], points[, c("start1", "start2")], k = k_exp)
 
-    o_knn.tmp <- tempfile("knn_o_")
-    e_knn.tmp <- gsub("knn_o_", "knn_e_", o_knn.tmp)
-    ks_knn.tmp <- gsub("knn_o_", "knn_ks_", o_knn.tmp)
-    message("write tab 1")
-    data.table::fwrite(as.data.frame(round(o_knn$nn.dist)), o_knn.tmp, sep = "\t", col.names = F, quote = F, row.names = F)
-    if (!file.exists(o_knn.tmp)) {
-        message(paste0("problem writing ", o_knn.tmp))
-        return(0)
-    }
-    message("write tab 2")
-    data.table::fwrite(as.data.frame(round(e_knn$nn.dist)), e_knn.tmp, sep = "\t", col.names = F, quote = F, row.names = F)
-    if (!file.exists(e_knn.tmp)) {
-        message(paste0("problem writing ", e_knn.tmp))
-        return(0)
-    }
-
-    system(sprintf("perl %s %s %s >%s", knn_pl, o_knn.tmp, e_knn.tmp, ks_knn.tmp))
-
-    s_ks <- as.data.frame(data.table::fread(ks_knn.tmp))
+    s_ks <- shaman_merge_ks_cpp(round(o_knn$nn.dist), round(e_knn$nn.dist))
 
     points$score <- 100 * ifelse(-s_ks$V1 < s_ks$V2, s_ks$V2, s_ks$V1)
-    try(system(sprintf("rm %s %s %s", o_knn.tmp, e_knn.tmp, ks_knn.tmp)))
 
     return(list(points = points, obs = obs, exp = exp))
 }
@@ -844,10 +879,66 @@ shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
 ##########################################################################################################
 .shaman_combine_points_multi_tracks <- function(tracks, interval, min_dist) {
     points <- plyr::adply(tracks, 1, function(x) {
-        p <- gextract(x, interval, colnames = c("contacts"))
+        p <- .shaman_cached_gextract(x, interval)
+        if (isFALSE(p)) {
+            p <- gextract(x, interval, colnames = c("contacts"))
+        }
         return(p[abs(p$start1 - p$start2) > min_dist, ])
     })
     return(points[, -1])
+}
+
+# Extractions of whole rows of matrices, kept while shaman_score_hic_mat_for_track() scores the row
+.shaman_extract_cache <- new.env(parent = emptyenv())
+
+# TRUE when interval and outer are single 2D intervals and interval has integer coordinates and lies
+# inside outer
+.shaman_interval_within <- function(interval, outer) {
+    if (NROW(interval) != 1 || NROW(outer) != 1) {
+        return(FALSE)
+    }
+    co <- c(interval$start1, interval$end1, interval$start2, interval$end2)
+    all(co == round(co)) && as.character(interval$chrom1) == as.character(outer$chrom1) &&
+        as.character(interval$chrom2) == as.character(outer$chrom2) &&
+        interval$start1 >= outer$start1 && interval$end1 <= outer$end1 &&
+        interval$start2 >= outer$start2 && interval$end2 <= outer$end2
+}
+
+# The contacts of a points track in interval, from its contacts in a larger interval (p, rows as
+# gextract() returns them: [x, x + 1) x [y, y + 1)). gextract() of a 2D track visits every object of
+# the chromosome pair in a fixed order and returns those inside a single scope interval, so these are
+# the same rows, in the same order, as gextract() of interval gives.
+.shaman_points_in <- function(p, interval) {
+    p <- p[p$start1 >= interval$start1 & p$start1 < interval$end1 & p$start2 >= interval$start2 & p$start2 < interval$end2, ]
+    rownames(p) <- NULL
+    p
+}
+
+.shaman_cache_extractions <- function(tracks, interval) {
+    for (x in tracks) {
+        if (gtrack.info(x)$type == "points") {
+            p <- gextract(x, interval, colnames = c("contacts"))
+            if (is.null(p)) {
+                p <- data.frame(start1 = numeric(0), end1 = numeric(0), start2 = numeric(0), end2 = numeric(0))
+            }
+            assign(x, list(interval = interval, points = p), envir = .shaman_extract_cache)
+        }
+    }
+}
+
+# gextract(track, interval, colnames = "contacts") taken from a cached extraction of a larger
+# interval (see .shaman_points_in), or FALSE if there is none
+.shaman_cached_gextract <- function(track, interval) {
+    ce <- .shaman_extract_cache[[track]]
+    if (is.null(ce) || !.shaman_interval_within(interval, ce$interval)) {
+        return(FALSE)
+    }
+    p <- .shaman_points_in(ce$points, interval)
+    # gextract() returns NULL, not an empty frame, when there are no rows
+    if (nrow(p) == 0) {
+        return(NULL)
+    }
+    p
 }
 
 .shaman_compute_marginal_multi_tracks <- function(tracks, interval, min_dist) {
@@ -862,207 +953,17 @@ shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
 
 
 
+# Runs commands on SGE via misha::gcluster.run. Commands are given either as expressions in '...'
+# or as strings in 'command.list'. The call is evaluated in the caller's frame, so the jobs get
+# the caller's variables (e.g. track_db, work_dir), as with a direct gcluster.run call.
 .gcluster.run2 <- function(..., command.list = NULL, opt.flags = "", max.jobs = 400, debug = FALSE, R = "R") {
     if (!is.null(command.list)) {
-        commands <- plyr::llply(command.list, function(x) parse(text = x))
+        commands <- lapply(command.list, str2lang)
     } else {
         commands <- as.list(substitute(list(...))[-1L])
     }
-
-    if (length(commands) < 1) {
-          stop("Usage: gculster.run(..., command.list=NULL, opt.flags = \"\" max.jobs = 400, debug = FALSE)",
-              call. = F
-          )
-      }
-    if (!length(system("which qsub", ignore.stderr = T, intern = T))) {
-          stop("gcluster.run must run on a host that supports Sun Grid Engine (qsub)",
-              call. = F
-          )
-      }
-    .gcheckroot()
-    tmp.dirname <- ""
-    submitted.jobs <- c()
-    tryCatch(
-        {
-            tmp.dirname <- tempfile(pattern = "", tmpdir = paste(get("GROOT"),
-                "/tmp",
-                sep = ""
-            ))
-            if (!dir.create(tmp.dirname, recursive = T, mode = "0777")) {
-                  stop(sprintf("Failed to create a directory %s", tmp.dirname),
-                      call. = F
-                  )
-              }
-            cat("Preparing for distribution...\n")
-            save(.GLIBDIR, file = paste(tmp.dirname, "libdir", sep = "/"))
-            vars <- ls(all.names = TRUE, envir = parent.frame())
-            envir <- parent.frame()
-            while (!identical(envir, .GlobalEnv)) {
-                envir <- parent.env(envir)
-                vars <- union(vars, ls(all.names = TRUE, envir = envir))
-            }
-            save(list = vars, file = paste(tmp.dirname, "envir",
-                sep = "/"
-            ), envir = parent.frame())
-            .GSGECMD <- commands
-            save(.GSGECMD, file = paste(tmp.dirname, "commands",
-                sep = "/"
-            ))
-            opts <- options()
-            save(opts, file = paste(tmp.dirname, "opts", sep = "/"))
-            cat("Running the commands...\n")
-            completed.jobs <- c()
-            progress <- -1
-            repeat {
-                num.running.jobs <- length(submitted.jobs) - length(completed.jobs)
-                if (length(submitted.jobs) < length(commands) &&
-                    num.running.jobs < max.jobs) {
-                    istart <- length(submitted.jobs) + 1
-                    iend <- min(length(commands), istart + (max.jobs -
-                        num.running.jobs) - 1)
-                    for (i in istart:iend) {
-                        out.file <- sprintf(
-                            "%s/%d.out", tmp.dirname,
-                            i
-                        )
-                        err.file <- sprintf(
-                            "%s/%d.err", tmp.dirname,
-                            i
-                        )
-                        script <- paste(get(".GLIBDIR"), "exec", "sgjob.sh",
-                            sep = "/"
-                        )
-                        command <- sprintf(
-                            "unset module; qsub -terse -S /bin/bash -o %s -e %s -V %s %s %d '%s' '%s'",
-                            out.file, err.file, opt.flags, script, i,
-                            tmp.dirname, R
-                        )
-                        jobid <- system(command, intern = TRUE)
-                        if (length(jobid) != 1) {
-                              stop("Failed to run qsub", call. = FALSE)
-                          }
-                        if (debug) {
-                              cat(sprintf(
-                                  "\tSubmitted job %d (id: %s)\n",
-                                  i, jobid
-                              ))
-                          }
-                        submitted.jobs <- c(submitted.jobs, jobid)
-                    }
-                }
-                Sys.sleep(3)
-                running.jobs <- .gcluster.running.jobs(submitted.jobs)
-                old.completed.jobs <- completed.jobs
-                completed.jobs <- setdiff(submitted.jobs, running.jobs)
-                if (debug) {
-                    delta.jobs <- setdiff(completed.jobs, old.completed.jobs)
-                    if (length(delta.jobs) > 0) {
-                        for (jobid in delta.jobs) {
-                            cat(sprintf(
-                                "\tJob %d (id: %s) completed\n",
-                                match(jobid, submitted.jobs), jobid
-                            ))
-                        }
-                    }
-                    if (!length(running.jobs) && length(submitted.jobs) ==
-                        length(commands)) {
-                          break
-                      }
-                    new.progress <- length(completed.jobs)
-                    if (new.progress != progress) {
-                        progress <- new.progress
-                        cat(sprintf(
-                            "\t%d job(s) still in progress\n",
-                            length(commands) - progress
-                        ))
-                    }
-                } else {
-                    if (!length(running.jobs) && length(submitted.jobs) ==
-                        length(commands)) {
-                          break
-                      }
-                    new.progress <- as.integer(100 * length(completed.jobs) / length(commands))
-                    if (new.progress != progress) {
-                        progress <- new.progress
-                        cat(sprintf("%d%%...", progress))
-                    } else {
-                        cat(".")
-                    }
-                }
-            }
-            if (!debug && progress != -1 && progress != 100) {
-                  cat("100%\n")
-              }
-        },
-        interrupt = function(interrupt) {
-            cat("\n")
-            stop("Command interrupted!", call. = FALSE)
-        },
-        finally = {
-            cleanup.finished <- FALSE
-            while (!cleanup.finished) {
-                tryCatch(
-                    {
-                        if (length(submitted.jobs) > 0) {
-                            running.jobs <- .gcluster.running.jobs(submitted.jobs)
-                            answer <- c()
-                            for (i in 1:length(commands)) {
-                                res <- list()
-                                res$exit.status <- NA
-                                res$retv <- NA
-                                res$stdout <- NA
-                                res$stderr <- NA
-                                if (submitted.jobs[i] %in% running.jobs) {
-                                      res$exit.status <- "interrupted"
-                                  } else {
-                                    fname <- sprintf(
-                                        "%s/%d.retv", tmp.dirname,
-                                        i
-                                    )
-                                    if (file.exists(fname)) {
-                                        load(fname)
-                                        res$exit.status <- "success"
-                                        res$retv <- retv
-                                    } else {
-                                        res$exit.status <- "failure"
-                                    }
-                                }
-                                out.file <- sprintf(
-                                    "%s/%d.out", tmp.dirname,
-                                    i
-                                )
-                                if (file.exists(out.file)) {
-                                    f <- file(out.file, "rc")
-                                    res$stdout <- readChar(f, 1000000)
-                                    close(f)
-                                }
-                                err.file <- sprintf(
-                                    "%s/%d.err", tmp.dirname,
-                                    i
-                                )
-                                if (file.exists(err.file)) {
-                                    f <- file(err.file, "rc")
-                                    res$stderr <- readChar(f, 1000000)
-                                    close(f)
-                                }
-                                answer[[i]] <- res
-                            }
-                            for (job in running.jobs) {
-                                system(sprintf(
-                                    "qdel %s",
-                                    job
-                                ), ignore.stderr = T, intern = T)
-                            }
-                            unlink(tmp.dirname, recursive = TRUE)
-                            return(answer)
-                        }
-                        unlink(tmp.dirname, recursive = TRUE)
-                        cleanup.finished <- TRUE
-                    },
-                    interrupt = function(interrupt) {
-                    }
-                )
-            }
-        }
+    do.call(misha::gcluster.run,
+        c(commands, list(opt.flags = opt.flags, max.jobs = max.jobs, debug = debug, R = R)),
+        envir = parent.frame()
     )
 }

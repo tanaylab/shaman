@@ -39,6 +39,53 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// shaman_merge_ks_cpp
+Rcpp::List shaman_merge_ks_cpp(Rcpp::NumericMatrix o_dist, Rcpp::NumericMatrix e_dist);
+RcppExport SEXP _shaman_shaman_merge_ks_cpp(SEXP o_distSEXP, SEXP e_distSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type o_dist(o_distSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type e_dist(e_distSEXP);
+    rcpp_result_gen = Rcpp::wrap(shaman_merge_ks_cpp(o_dist, e_dist));
+    return rcpp_result_gen;
+END_RCPP
+}
+// shaman_knn_ks_cpp
+Rcpp::List shaman_knn_ks_cpp(Rcpp::NumericVector obs_x, Rcpp::NumericVector obs_y, Rcpp::NumericVector exp_x, Rcpp::NumericVector exp_y, Rcpp::NumericVector pts_x, Rcpp::NumericVector pts_y, int k, int k_exp, int threads);
+RcppExport SEXP _shaman_shaman_knn_ks_cpp(SEXP obs_xSEXP, SEXP obs_ySEXP, SEXP exp_xSEXP, SEXP exp_ySEXP, SEXP pts_xSEXP, SEXP pts_ySEXP, SEXP kSEXP, SEXP k_expSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type obs_x(obs_xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type obs_y(obs_ySEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type exp_x(exp_xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type exp_y(exp_ySEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type pts_x(pts_xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type pts_y(pts_ySEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type k_exp(k_expSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(shaman_knn_ks_cpp(obs_x, obs_y, exp_x, exp_y, pts_x, pts_y, k, k_exp, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// shaman_knn_dist_cpp
+Rcpp::NumericMatrix shaman_knn_dist_cpp(Rcpp::NumericVector data_x, Rcpp::NumericVector data_y, Rcpp::NumericVector query_x, Rcpp::NumericVector query_y, int k, int threads);
+RcppExport SEXP _shaman_shaman_knn_dist_cpp(SEXP data_xSEXP, SEXP data_ySEXP, SEXP query_xSEXP, SEXP query_ySEXP, SEXP kSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type data_x(data_xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type data_y(data_ySEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type query_x(query_xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type query_y(query_ySEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(shaman_knn_dist_cpp(data_x, data_y, query_x, query_y, k, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_shaman_shaman_hic_matrix_shuffler_cpp", (DL_FUNC) &_shaman_shaman_hic_matrix_shuffler_cpp, 19},
