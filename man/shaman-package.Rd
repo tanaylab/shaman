@@ -4,9 +4,9 @@
 \name{shaman-package}
 \alias{shaman}
 \alias{shaman-package}
-\title{shaman: Sampling HiC Contact Matrices for Aparametric Normalization}
+\title{shaman: Sampling Hi-C Contact Matrices for Aparametric Normalization}
 \description{
-Generate expected HiC data maintaining marginal coverage, and the decay in contact probability with increasing genomic distance. Expected HiC data is used for normalization and graphical presentation of statistical significance of observed HiC contact enrichments. The method is described in Mendelson Cohen et al. (2017) \doi{10.1101/187203}.
+Generate expected Hi-C (genome-wide chromosome conformation capture) data maintaining marginal coverage, and the decay in contact probability with increasing genomic distance. Expected Hi-C data is used for normalization and graphical presentation of statistical significance of observed Hi-C contact enrichments. The method is described in Mendelson Cohen et al. (2017) \doi{10.1101/187203}.
 }
 \seealso{
 Useful links:
@@ -24,6 +24,11 @@ Authors:
 \itemize{
   \item Amos Tanay
   \item Netta Mendelson Cohen \email{netta.mendelsoncohen@weizmann.ac.il}
+}
+
+Other contributors:
+\itemize{
+  \item Weizmann Institute of Science [copyright holder]
 }
 
 }
