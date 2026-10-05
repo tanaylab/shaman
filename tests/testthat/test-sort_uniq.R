@@ -27,3 +27,13 @@ test_that("sort_uniq gives the lines of sort | uniq -c, ordered by start1, start
     u <- data.table::fread(paste0(shuf_fn, ".uniq"))
     expect_identical(order(u$start1, u$start2), seq_len(nrow(u)))
 })
+
+test_that("a shuffle with sort_uniq = TRUE returns the seed it used", {
+    db <- make_track(tempfile(), c(chr1 = 5e6), c(chr1 = 12000))
+    work_dir <- tempfile()
+    dir.create(work_dir)
+    on.exit(unlink(c(work_dir, db), recursive = TRUE))
+    ret <- shaman_shuffle_hic_mat_for_track(db, "hic_obs", work_dir, "chr1", 0, 5e6, 0, 5e6, seed = 7, sort_uniq = TRUE)
+    expect_identical(as.integer(ret), 7L)
+    expect_true(file.exists(file.path(work_dir, "hic_obs_chr1_0_0.shuffled.uniq")))
+})
