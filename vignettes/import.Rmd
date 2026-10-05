@@ -30,14 +30,14 @@ gdb.init('hg19')
 In order to create a misha database for _hg38_ genome, run the following _misha_ commands (assuming *"hg38"* is your new data base path):
 ```{r, eval = FALSE}
 url <- "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/"
-gdb.create("hg19",
+gdb.create("hg38",
            paste0(url, 'chromosomes/chr', c(1:22, 'X', 'Y', 'M'), '.fa.gz'),
            paste0(url, "database/knownGene.txt.gz"),
            paste0(url, "database/kgXref.txt.gz"),
            c("kgID", "mRNA", "spID", "spDisplayID", "geneSymbol",
              "refseq", "protAcc", "description", "rfamAcc",
              "tRnaName"))
-gdb.init('hg19')
+gdb.init('hg38')
 
 ```
 
