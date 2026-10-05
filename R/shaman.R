@@ -219,6 +219,27 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 #' @return The seed the shuffler used, or NA if the matrix was not shuffled here (no or too few
 #' contacts, or the shuffled file already existed).
 #'
+#' @examples
+#'
+#' # The example below runs on the test misha db provided with shaman.
+#' # Called by shaman_shuffle_hic_track() for each chromosome; here it shuffles the contacts
+#' # of chr2:176.5e06-177e06.
+#' library(misha)
+#' track_db <- shaman_get_test_track_db()
+#' work_dir <- tempfile("shaman_shuffle_")
+#' dir.create(work_dir)
+#' seed <- shaman_shuffle_hic_mat_for_track(track_db, "hic_obs", work_dir,
+#'     chrom = "chr2", start1 = 176.5e06, end1 = 177e06, start2 = 176.5e06, end2 = 177e06,
+#'     shuffle = 1, # default is set to 80
+#'     grid_step_iter = 1, # default is set to 40
+#'     seed = 1, # the same seed gives the same shuffle
+#'     sort_uniq = TRUE
+#' )
+#' seed
+#' # the shuffled contacts (in both orientations) and their counts
+#' shuffled <- read.delim(list.files(work_dir, pattern = "uniq$", full.names = TRUE))
+#' head(shuffled)
+#' unlink(work_dir, recursive = TRUE)
 #' @export
 ##########################################################################################################
 shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, start1, end1, start2, end2,
@@ -538,6 +559,25 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 #' \code{options(shaman.score.threads = N)} computes the kNN distances and scores on N threads (default 1).
 #'
 #' @return 0, 1 or -1 per matrix.
+#'
+#' @examples
+#'
+#' # The example below runs on the test misha db provided with shaman.
+#' # Called by shaman_score_hic_track() for each matrix of its grid; here it scores the
+#' # observed contacts of chr2:176.7e06-176.8e06.
+#' library(misha)
+#' track_db <- shaman_get_test_track_db()
+#' gsetroot(track_db)
+#' work_dir <- tempfile("shaman_score_")
+#' dir.create(work_dir)
+#' shaman_score_hic_mat_for_track(track_db, work_dir,
+#'     obs_track_nms = "hic_obs", exp_track_nms = "hic_exp", points_track_nms = "hic_obs",
+#'     chrom = "chr2", start1 = 176.7e06, end1 = 176.8e06, start2 = 176.7e06, end2 = 176.8e06
+#' )
+#' # the score of each observed contact (start1 <= start2) in the matrix
+#' scores <- read.delim(list.files(work_dir, full.names = TRUE))
+#' head(scores)
+#' unlink(work_dir, recursive = TRUE)
 #' @export
 ##########################################################################################################
 shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,

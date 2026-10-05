@@ -97,3 +97,25 @@ near-cis contacts (stored in work_dir) which we sample from to maintain the deca
 Each step creates temporary files of the shuffled matrices which are then joined to a track.
 Temporary files are deleted upon track creation.
 }
+\examples{
+
+# The example below runs on the test misha db provided with shaman.
+# Called by shaman_shuffle_hic_track() for each chromosome; here it shuffles the contacts
+# of chr2:176.5e06-177e06.
+library(misha)
+track_db <- shaman_get_test_track_db()
+work_dir <- tempfile("shaman_shuffle_")
+dir.create(work_dir)
+seed <- shaman_shuffle_hic_mat_for_track(track_db, "hic_obs", work_dir,
+    chrom = "chr2", start1 = 176.5e06, end1 = 177e06, start2 = 176.5e06, end2 = 177e06,
+    shuffle = 1, # default is set to 80
+    grid_step_iter = 1, # default is set to 40
+    seed = 1, # the same seed gives the same shuffle
+    sort_uniq = TRUE
+)
+seed
+# the shuffled contacts (in both orientations) and their counts
+shuffled <- read.delim(list.files(work_dir, pattern = "uniq$", full.names = TRUE))
+head(shuffled)
+unlink(work_dir, recursive = TRUE)
+}

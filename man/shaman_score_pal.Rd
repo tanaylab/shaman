@@ -12,3 +12,8 @@ A vector of 201 colors, for scores -100 to 100.
 \description{
 \code{shaman_score_pal}
 }
+\examples{
+pal <- shaman_score_pal()
+# the colors of the scores -100, 0, 50 and 100
+pal[c(-100, 0, 50, 100) + 101]
+}

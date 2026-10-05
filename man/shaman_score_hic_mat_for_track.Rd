@@ -69,3 +69,22 @@ the whole chromosome pair). The output files are the same as scoring the matrice
 
 \code{options(shaman.score.threads = N)} computes the kNN distances and scores on N threads (default 1).
 }
+\examples{
+
+# The example below runs on the test misha db provided with shaman.
+# Called by shaman_score_hic_track() for each matrix of its grid; here it scores the
+# observed contacts of chr2:176.7e06-176.8e06.
+library(misha)
+track_db <- shaman_get_test_track_db()
+gsetroot(track_db)
+work_dir <- tempfile("shaman_score_")
+dir.create(work_dir)
+shaman_score_hic_mat_for_track(track_db, work_dir,
+    obs_track_nms = "hic_obs", exp_track_nms = "hic_exp", points_track_nms = "hic_obs",
+    chrom = "chr2", start1 = 176.7e06, end1 = 176.8e06, start2 = 176.7e06, end2 = 176.8e06
+)
+# the score of each observed contact (start1 <= start2) in the matrix
+scores <- read.delim(list.files(work_dir, full.names = TRUE))
+head(scores)
+unlink(work_dir, recursive = TRUE)
+}

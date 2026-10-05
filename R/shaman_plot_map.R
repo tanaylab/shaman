@@ -335,6 +335,10 @@ shaman_plot_map_score_with_annotations <- function(genome, points_score, interva
 #' \code{shaman_score_pal}
 #'
 #' @return A vector of 201 colors, for scores -100 to 100.
+#' @examples
+#' pal <- shaman_score_pal()
+#' # the colors of the scores -100, 0, 50 and 100
+#' pal[c(-100, 0, 50, 100) + 101]
 #' @export
 ##########################################################################################################
 
