@@ -1,8 +1,10 @@
-pandoc: 1.19.2.1
-pkgdown: 2.0.2
+pandoc: 3.8.3
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   import: import.html
   shaman-package: shaman-package.html
-last_built: 2022-03-23T11:45Z
-
+last_built: 2026-10-05T11:53Z
+urls:
+  reference: https://tanaylab.github.io/shaman/reference
+  article: https://tanaylab.github.io/shaman/articles
