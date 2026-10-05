@@ -48,14 +48,16 @@ test_that("too few expected contacts for k_exp give no score instead of an error
 test_that("the score step stops after 3 rounds and names the matrices that got no score", {
     db <- make_track(tempfile(), c(chr1 = 5e6), c(chr1 = 1000))
     make_track(db, c(chr1 = 5e6), c(chr1 = 1000), "hic_exp")
+    # one log file per process: forked workers appending to a shared file can interleave lines
     calls <- tempfile()
-    on.exit(unlink(calls))
+    on.exit(unlink(Sys.glob(paste0(calls, ".*"))))
+    read_calls <- function() unlist(lapply(Sys.glob(paste0(calls, ".*")), readLines))
     # every matrix fails without writing its score file, as when knn does not complete
     local_mocked_bindings(shaman_score_hic_mat_for_track = function(track_db, work_dir, obs_track_nms, exp_track_nms,
                                                                     points_track_nms, chrom, start1, end1, start2, end2, ...) {
-        cat(chrom, start1, start2, "\n", file = calls, append = TRUE)
+        cat(chrom, start1, start2, "\n", file = paste0(calls, ".", Sys.getpid()), append = TRUE)
         # without a cap the rounds never end
-        if (length(readLines(calls)) > 100) stop("still retrying")
+        if (length(read_calls()) > 100) stop("still retrying")
         -1
     })
     old_opts <- options(shaman.mc_support = 1, shaman.sge_support = 0)
@@ -67,6 +69,6 @@ test_that("the score step stops after 3 rounds and names the matrices that got n
         shaman_score_hic_track(db, work_dir, "hic_score_test", "hic_obs", "hic_exp", near_cis = 2e6, max_jobs = 2),
         "6 matrices have no score after 3 rounds: chr1:0-2000000 x 0-2000000, "
     )
-    expect_equal(as.vector(table(readLines(calls))), rep(3, 6))
+    expect_equal(as.vector(table(read_calls())), rep(3, 6))
     expect_false(gtrack.exists("hic_score_test"))
 })
