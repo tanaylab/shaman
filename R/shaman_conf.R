@@ -3,13 +3,13 @@
 #' Dump templates of config files required by the package.
 #'
 #' @param config_dir Directory to dump to files to.
-#'
+#' @keywords internal
 #'
 
 .shaman_dump_config <- function(config_dir) {
-    config_files <- dir(system.file("config", package = "shaman"), full.names = T)
-    dir.create(config_dir, recursive = T, showWarnings = FALSE)
-    ret <- file.copy(config_files, config_dir, recursive = T, overwrite = FALSE)
+    config_files <- dir(system.file("config", package = "shaman"), full.names = TRUE)
+    dir.create(config_dir, recursive = TRUE, showWarnings = FALSE)
+    ret <- file.copy(config_files, config_dir, recursive = TRUE, overwrite = FALSE)
     if (!all(ret)) {
         warning("couldn't dump config files to ", config_dir, "\n  Perhaps they're already there? ")
     } else {
@@ -25,6 +25,8 @@
 #' @param config_dir A directory with all the defined config files. Should have the same
 #' files as those that were exported with \code{shaman_dump_config}.
 #' @param shaman_config Parameter file
+#' @param reset Whether to overwrite options that are already set.
+#' @keywords internal
 #'
 #'
 .shaman_load_config <- function(config_dir, shaman_config = file.path(config_dir, "shaman.conf"), reset = FALSE) {

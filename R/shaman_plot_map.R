@@ -5,6 +5,7 @@
 #' Plots hic contact matrix.
 #'
 #' @param points A dataframe containing the points (start1, start2).
+#' @param interval_range Data frame with the start and end of the range to plot. If NA, the range of start1 in points.
 #' @param rotate Binary flag, indicating if the plot should be rotated by 45 degrees.
 #' @param point_size Cex size of the points in the plot.
 #' @param add_axis Binary flag, indicating if axis should be added to plot.
@@ -13,8 +14,9 @@
 #' @examples
 #'
 #' # Set misha db to test
-#' gsetroot(shaman::shaman_get_test_track_db())
-#' points <- gextract("hic_obs", gintervals.2d(2, 176e06, 177e06, 2, 176e06, 177e06))
+#' library(misha)
+#' gsetroot(shaman_get_test_track_db())
+#' points <- gextract("hic_obs", gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06))
 #' shaman_gplot_map(points)
 #' @export
 ##########################################################################################################
@@ -45,7 +47,7 @@ shaman_gplot_map <- function(points, interval_range = NA, rotate = TRUE, point_s
             ggplot2::aes(x = start1, y = start2)
         ) +
             ggplot2::scale_x_continuous(position = "top") +
-            ggplot2::theme(axis.line.y = ggplot2::element_line(size = 0.2))
+            ggplot2::theme(axis.line.y = ggplot2::element_line(linewidth = 0.2))
     }
     map_gplot <- map_gplot +
         ggplot2::geom_point(size = point_size, alpha = 0.1) +
@@ -56,7 +58,7 @@ shaman_gplot_map <- function(points, interval_range = NA, rotate = TRUE, point_s
             panel.border = ggplot2::element_blank(),
             axis.title.x = ggplot2::element_blank(),
             axis.title.y = ggplot2::element_blank(),
-            axis.line.x = ggplot2::element_line(size = 0.2)
+            axis.line.x = ggplot2::element_line(linewidth = 0.2)
         )
     if (add_axis == FALSE) {
         map_gplot <- map_gplot + ggplot2::theme(
@@ -73,13 +75,14 @@ shaman_gplot_map <- function(points, interval_range = NA, rotate = TRUE, point_s
 
 #' plot a normlized hic map
 #'
-#' \code{shaman_golot_map_score}
+#' \code{shaman_gplot_map_score}
 #'
 #' Plots observerved hic contact matrix color-coded by normalized scores.
 #' Data can be either extracted directly from score track or computed via the functions:
 #' score_hic_mat, shuffle_and_score_hic_mat
 #'
 #' @param points_score A dataframe containing the points (start1, start2) and their normalized score.
+#' @param interval_range Data frame with the start and end of the range to plot. If NA, the range of start1 in points_score.
 #' @param rotate Binary flag, indicating if the plot should be rotated by 45 degrees.
 #' @param point_size Cex size of the points in the plot.
 #' @param add_axis Binary flag, indicating if axis should be added to plot.
@@ -88,8 +91,11 @@ shaman_gplot_map <- function(points, interval_range = NA, rotate = TRUE, point_s
 #' @examples
 #'
 #' # Set misha db to test
+#' library(misha)
 #' gsetroot(shaman_get_test_track_db())
-#' points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames = "score")
+#' points <- gextract("hic_score", gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06),
+#'     colnames = "score"
+#' )
 #' shaman_gplot_map_score(points)
 #' @export
 ##########################################################################################################
@@ -121,7 +127,7 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
             ggplot2::aes(x = start1, y = start2, color = factor(floor(score)))
         ) +
             ggplot2::scale_x_continuous(position = "top") +
-            ggplot2::theme(axis.line.y = ggplot2::element_line(size = 0.2))
+            ggplot2::theme(axis.line.y = ggplot2::element_line(linewidth = 0.2))
     }
     map_gplot <- map_gplot +
         ggplot2::geom_point(size = point_size) +
@@ -133,7 +139,7 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
             panel.border = ggplot2::element_blank(),
             axis.title.x = ggplot2::element_blank(),
             axis.title.y = ggplot2::element_blank(),
-            axis.line.x = ggplot2::element_line(size = 0.2)
+            axis.line.x = ggplot2::element_line(linewidth = 0.2)
         )
     if (add_axis == FALSE) {
         map_gplot <- map_gplot + ggplot2::theme(
@@ -163,7 +169,7 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 #' @param interval_range 1D interval (chrom, start, end) specifying the region to plot
 #' @param misha_tracks List of 1D track expressions (virtual tracks also supported) which can be extracted from.
 #' @param mt_colors Array of colors, one for each misha_track, which will be used to plot each 1d track.
-#' @param my_ylims Y-axis limits for each misha track. If not provided, generated automatically based on the data
+#' @param mt_ylims Y-axis limits for each misha track. If not provided, generated automatically based on the data
 #' to be displayed in the region.
 #' @param annotations List of gintervals highlighting annotated regions.
 #' @param a_colors Array of colors, one for each annotation set.
@@ -173,19 +179,39 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 #' @param gene_stacking Describes the viewing option of the genes track. Can be either "squish", or "dense"
 #' @param gene_size Size of gene annotation view
 #' @param track_size Size of track view
-#' @param annot_size Size of annotation view
+#' @param annotation_size Size of annotation view
+#' @return Called for the plot. Returns what \code{Gviz::plotTracks()} returns, invisibly.
+#' Needs the Bioconductor package Gviz.
 #'
 #' @examples
 #'
+#' library(misha)
 #' gsetroot(shaman_get_test_track_db())
-#' shaman_plot_tracks_and_annotations("hg19", gintervals(2, 175.5e06, 177.5e06))
+#' # the test db has chr2 only
+#' ctcf <- list(
+#'     ctcf_forward[ctcf_forward$chrom == "chr2", ],
+#'     ctcf_reverse[ctcf_reverse$chrom == "chr2", ]
+#' )
+#' \donttest{
+#' # loading Gviz takes a few seconds
+#' if (requireNamespace("Gviz", quietly = TRUE)) {
+#'     shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06),
+#'         annotations = ctcf, add_genes = FALSE, add_ideogram = FALSE
+#'     )
+#' }
+#' }
+#' \dontrun{
+#' # gene annotations and the ideogram are downloaded from UCSC
+#' shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06), annotations = ctcf)
+#' }
 #' @export
 ##########################################################################################################
 shaman_plot_tracks_and_annotations <- function(genome, interval_range,
                                                misha_tracks = list(), mt_colors = getOption("shaman.track_colors"), mt_ylims = NULL,
                                                annotations = list(), a_colors = getOption("shaman.annotation_colors"),
-                                               add_genes = T, add_ideogram = T, add_axis = T, gene_stacking = "squish", gene_size = 0.7,
+                                               add_genes = TRUE, add_ideogram = TRUE, add_axis = TRUE, gene_stacking = "squish", gene_size = 0.7,
                                                track_size = 0.8, annotation_size = 0.7) {
+    .shaman_check_gviz()
     tracks <- list()
     if (add_axis) {
         tracks <- list(Gviz::GenomeAxisTrack())
@@ -219,7 +245,7 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
         ideo_track <- Gviz::IdeogramTrack(genome = genome, chromosome = as.character(interval_range$chrom))
         tracks[[length(tracks) + 1]] <- ideo_track
     }
-    Gviz::plotTracks(tracks, from = interval_range$start, to = interval_range$end, panel.only = T, labelPos = "below")
+    Gviz::plotTracks(tracks, from = interval_range$start, to = interval_range$end, panel.only = TRUE, labelPos = "below")
 }
 
 ##########################################################################################################
@@ -234,9 +260,10 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #' @param genome Name of reference genome (e.g. "hg19", "mm10")
 #' @param points_score A dataframe containing the points (start1, start2) and their normalized score.
 #' @param interval_range 1D interval (chrom, start, end) specifying the region to plot
+#' @param point_size Cex size of the points in the plot.
 #' @param misha_tracks List of 1D track expressions (virtual tracks also supported) which can be extracted from.
 #' @param mt_colors Array of colors, one for each misha_track, which will be used to plot each 1d track.
-#' @param my_ylims Y-axis limits for each misha track. If not provided, generated automatically based on the data
+#' @param mt_ylims Y-axis limits for each misha track. If not provided, generated automatically based on the data
 #' to be displayed in the region.
 #' @param annotations List of gintervals highlighting annotated regions.
 #' @param a_colors Array of colors, one for each annotation set.
@@ -246,27 +273,43 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #' @param gene_stacking Describes the viewing option of the genes track. Can be either "squish", or "dense".
 #' @param gene_size Size of gene annotation view.
 #' @param track_size Size of track view.
-#' @param annot_size Size of annotation view.
+#' @param annotation_size Size of annotation view.
 #' @param fig_fn Name of png file to output to. Empty string will cause the figure to be plotted to the current device.
 #' @param fig_width Width in pixels of output png figure.
 #' @param fig_height Height in pixels of output png figure.
+#' @return No return value, called for the plot. Needs the Bioconductor package Gviz.
 #'
 #' @examples
 #'
+#' library(misha)
 #' gsetroot(shaman_get_test_track_db())
-#' points <- gextract("hic_score", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), colnames = "score")
-#' shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 175e06, 178e06))
+#' points <- gextract("hic_score", gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06),
+#'     colnames = "score"
+#' )
+#' \donttest{
+#' # loading Gviz takes a few seconds
+#' if (requireNamespace("Gviz", quietly = TRUE)) {
+#'     shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06),
+#'         add_genes = FALSE, add_ideogram = FALSE
+#'     )
+#' }
+#' }
+#' \dontrun{
+#' # gene annotations and the ideogram are downloaded from UCSC
+#' shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06))
+#' }
 #' @export
 ##########################################################################################################
 
 shaman_plot_map_score_with_annotations <- function(genome, points_score, interval_range, point_size = 0.1,
                                                    misha_tracks = list(), mt_colors = getOption("shaman.track_colors"), mt_ylims = NULL,
                                                    annotations = list(), a_colors = getOption("shaman.annotation_colors"),
-                                                   add_genes = T, add_ideogram = T, add_axis = T, gene_stacking = "squish", gene_size = 0.7,
+                                                   add_genes = TRUE, add_ideogram = TRUE, add_axis = TRUE, gene_stacking = "squish", gene_size = 0.7,
                                                    track_size = 0.8, annotation_size = 0.7, fig_fn = "", fig_width = 900, fig_height = 5 / 6 * 900) {
     if (!all(c("start1", "start2", "score") %in% colnames(points_score))) {
         stop("points_score data frame must contain the following columns: start1, start2, score")
     }
+    .shaman_check_gviz()
     map_score <- shaman_gplot_map_score(points_score, interval_range, rotate = TRUE, point_size = point_size, add_axis = FALSE)
     if (fig_fn != "") {
         png(fig_fn, width = fig_width, height = fig_height)
@@ -291,6 +334,7 @@ shaman_plot_map_score_with_annotations <- function(genome, points_score, interva
 #'
 #' \code{shaman_score_pal}
 #'
+#' @return A vector of 201 colors, for scores -100 to 100.
 #' @export
 ##########################################################################################################
 
@@ -323,6 +367,12 @@ shaman_score_pal <- function() {
     return(colspec)
 }
 
+.shaman_check_gviz <- function() {
+    if (!requireNamespace("Gviz", quietly = TRUE)) {
+        stop("plotting tracks and annotations needs the Bioconductor package Gviz: BiocManager::install(\"Gviz\")")
+    }
+}
+
 .shaman_get_ucsc <- function(genome, interv, stacking = "dense") {
     track <- "RefSeq Genes"
     table <- "refGene"
@@ -336,7 +386,7 @@ shaman_score_pal <- function() {
         rstart = "exonStarts", rends = "exonEnds", gene = "name", symbol = "name2",
         transcript = "name", strand = "strand", name = "RefSeq Genes",
         feature = "name2", stacking = stacking,
-        showId = T, from = interv$start, to = interv$end
+        showId = TRUE, from = interv$start, to = interv$end
     )
     return(genetrack)
 }

@@ -31,6 +31,9 @@ included in the expanded matrix.}
 
 \item{k}{The number of neighbor distances used for the score. For higher resolution maps, increase k. For
 lower resolution maps, decrease k.}
+
+\item{k_exp}{The number of neighbor distances used for the score on the expected tracks (see
+\code{shaman_score_hic_mat}).}
 }
 \value{
 NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
@@ -48,11 +51,13 @@ The score for a point is the KS D-statistic of the distances to the points k-nea
 \examples{
 
 # Set misha db to test
+library(misha)
 gsetroot(shaman_get_test_track_db())
-points <- gextract("hic_obs", gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06), band = c(-2e06, -1024))
+focus <- gintervals.2d(2, 176.7e06, 176.8e06, 2, 176.7e06, 176.8e06)
+points <- gextract("hic_obs", focus, band = c(-5e05, -1024))
 mat_score <- shaman_score_hic_points(
     obs_track_nms = "hic_obs", exp_track_nms = "hic_exp",
-    points = points, regional_interval = gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06)
+    points = points, regional_interval = gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06)
 )
 shaman_gplot_map_score(mat_score$points)
 }

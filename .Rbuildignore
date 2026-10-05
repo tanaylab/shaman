@@ -1,0 +1,12 @@
+^CRAN_PLAN\.md$
+^_pkgdown\.yml$
+^README\.Rmd$
+^.*\.Rproj$
+^\.Rproj\.user$
+^inst/trackdb\.tar\.gz$
+^\.github$
+^cran-comments\.md$
+^docs$
+^pkgdown$
+^vignettes/shaman-package\.Rmd\.orig$
+^vignettes/precompute\.R$

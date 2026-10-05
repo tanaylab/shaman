@@ -6,6 +6,14 @@
 \usage{
 get_param(nm, params)
 }
+\arguments{
+\item{nm}{Parameter name.}
+
+\item{params}{Named list of parameters.}
+}
+\value{
+The parameter, or NA if it is missing.
+}
 \description{
 Get params from saved var
 }

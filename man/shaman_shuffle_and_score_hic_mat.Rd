@@ -8,16 +8,16 @@ shaman_shuffle_and_score_hic_mat(
   obs_track_nms,
   interval,
   work_dir,
-  expand = 1000000,
+  expand = 1e+06,
   min_dist = 1024,
   k = 100,
   dist_resolution = NA,
   decay_smooth = NA,
   hic_mcmc_max_resolution = 400,
   shuffle = 80,
-  grid_small = 500000,
-  grid_high = 1000000,
-  grid_increase = 500000,
+  grid_small = 5e+05,
+  grid_high = 1e+06,
+  grid_increase = 5e+05,
   grid_step_iter = 40,
   seed = NULL
 )
@@ -74,12 +74,16 @@ This function generates an expected 2D hic matrix based on observed hic data, an
 \examples{
 
 # Set misha db to test
+library(misha)
 gsetroot(shaman_get_test_track_db())
 mat_score <- shaman_shuffle_and_score_hic_mat(
     obs_track_nms = "hic_obs",
-    interval = gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06),
-    expand = 5e05,
-    work_dir = tempdir()
+    interval = gintervals.2d(2, 176.6e06, 176.9e06, 2, 176.6e06, 176.9e06),
+    expand = 1e05,
+    work_dir = tempdir(),
+    shuffle = 2, # default is set to 80
+    grid_step_iter = 1, # default is set to 40
+    seed = 1
 )
 shaman_gplot_map_score(mat_score$points)
 }

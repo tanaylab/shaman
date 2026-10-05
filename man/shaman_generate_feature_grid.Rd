@@ -13,8 +13,8 @@ shaman_generate_feature_grid(
   score_filter = 30,
   range = 25000,
   resolution = 500,
-  min_dist = 200000,
-  max_dist = 1000000
+  min_dist = 2e+05,
+  max_dist = 1e+06
 )
 }
 \arguments{
@@ -50,10 +50,10 @@ grid_size - number of windows included in statistics
 \details{
 Build a grid comprising of all combinations of intervals from feature 1 and feature 2 that
 fall within a band defined by min_dist and max_dist. For each point on the grid,
-look at th surrounding window, defined by range parameter. Discard all windows
-that do not contain a point with a score (defined in scotre_track_nm) above the score_filter parameter.
+look at the surrounding window, defined by range parameter. Discard all windows
+that do not contain a point with a score (defined in score_track_nm) above the score_filter parameter.
 This allows for focusing on potentially enriched pairs.
-Discect the window into small bins, size in base pairs defined by the resolution parameter, and count
+Dissect the window into small bins, size in base pairs defined by the resolution parameter, and count
 the number of observed contacts, and the number of expected contacts in each bin.
 All windows are then summed together, generating a single matrix of observed and expected contacts, which is
 returned by function.
@@ -62,9 +62,13 @@ Note that grid contains only points in which feature 1 position is smaller than 
 \examples{
 
 # Set misha db to test
+library(misha)
 gsetroot(shaman_get_test_track_db())
-grid <- shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs",
-    exp_track_nm = "hic_exp"
+# the test db has chr2 only, with contacts in chr2:176.5e06-177e06
+grid <- shaman_generate_feature_grid(
+    ctcf_forward[ctcf_forward$chrom == "chr2", ], ctcf_reverse[ctcf_reverse$chrom == "chr2", ],
+    "hic_obs",
+    exp_track_nm = "hic_exp", min_dist = 1e05, max_dist = 5e05
 )
 plot <- shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
 }

@@ -4,10 +4,10 @@
 #'
 #' Build a grid comprising of all combinations of intervals from feature 1 and feature 2 that
 #' fall within a band defined by min_dist and max_dist. For each point on the grid,
-#' look at th surrounding window, defined by range parameter. Discard all windows
-#' that do not contain a point with a score (defined in scotre_track_nm) above the score_filter parameter.
+#' look at the surrounding window, defined by range parameter. Discard all windows
+#' that do not contain a point with a score (defined in score_track_nm) above the score_filter parameter.
 #' This allows for focusing on potentially enriched pairs.
-#' Discect the window into small bins, size in base pairs defined by the resolution parameter, and count
+#' Dissect the window into small bins, size in base pairs defined by the resolution parameter, and count
 #' the number of observed contacts, and the number of expected contacts in each bin.
 #' All windows are then summed together, generating a single matrix of observed and expected contacts, which is
 #' returned by function.
@@ -32,9 +32,13 @@
 #' @examples
 #'
 #' # Set misha db to test
+#' library(misha)
 #' gsetroot(shaman_get_test_track_db())
-#' grid <- shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs",
-#'     exp_track_nm = "hic_exp"
+#' # the test db has chr2 only, with contacts in chr2:176.5e06-177e06
+#' grid <- shaman_generate_feature_grid(
+#'     ctcf_forward[ctcf_forward$chrom == "chr2", ], ctcf_reverse[ctcf_reverse$chrom == "chr2", ],
+#'     "hic_obs",
+#'     exp_track_nm = "hic_exp", min_dist = 1e05, max_dist = 5e05
 #' )
 #' plot <- shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
 #' @export
@@ -50,7 +54,8 @@ shaman_generate_feature_grid <- function(feature1, feature2, obs_track_nm, exp_t
     if (!gtrack.exists(exp_track_nm)) {
         stop(paste("Missing exp_track_nm (", exp_track_nm, ") in track db"))
     }
-    options(gmultitasking = FALSE)
+    old_opts <- options(gmultitasking = FALSE)
+    on.exit(options(old_opts), add = TRUE)
     expand <- seq(0 - range, range, by = resolution)
     filter_vtrack <- NA
     if (gtrack.exists(score_track_nm)) {
@@ -87,13 +92,18 @@ shaman_generate_feature_grid <- function(feature1, feature2, obs_track_nm, exp_t
 #' @param pal Color palette to use for image
 #' @param zlim The minimum and maximum values for which colors should be plotted. Suggested zlim values by type:
 #' enrichment: (-1,1), obs,exp: (-4.5, -3)
+#' @return A list with the observed (obs) and expected (exp) matrices summed over the grids, at plot_resolution.
 #'
 #' @examples
 #'
 #' # Set misha db to test
+#' library(misha)
 #' gsetroot(shaman_get_test_track_db())
-#' grid <- shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs",
-#'     exp_track_nm = "hic_exp", score_track_nm = "hic_score"
+#' # the test db has chr2 only, with contacts in chr2:176.5e06-177e06
+#' grid <- shaman_generate_feature_grid(
+#'     ctcf_forward[ctcf_forward$chrom == "chr2", ], ctcf_reverse[ctcf_reverse$chrom == "chr2", ],
+#'     "hic_obs",
+#'     exp_track_nm = "hic_exp", score_track_nm = "hic_score", min_dist = 1e05, max_dist = 5e05
 #' )
 #' shaman_plot_feature_grid(list(grid), 25000, 500, 500)
 #' shaman_plot_feature_grid(list(grid), 25000, 500, 1000)
@@ -125,8 +135,11 @@ shaman_plot_feature_grid <- function(grids, range, grid_resolution, plot_resolut
     }
     if (fig_fn != "") {
         png(fig_fn, width = fig_width, height = fig_height)
+        par(mar = c(0, 0, 0, 0))
+    } else {
+        old_par <- par(mar = c(0, 0, 0, 0))
+        on.exit(par(old_par), add = TRUE)
     }
-    par(mar = c(0, 0, 0, 0))
     if (type == "enrichment") {
         image(as.matrix(log2((obs / sum(obs, na.rm = TRUE)) / (exp / sum(exp, na.rm = TRUE)))),
             zlim = zlim, col = pal(1000), xaxt = "n", yaxt = "n"
@@ -181,7 +194,7 @@ shaman_plot_feature_grid <- function(grids, range, grid_resolution, plot_resolut
         grid <- gscreen(sprintf("%s > %s", filter_vtrack, filter_value), intervals = grid, iterator = grid, band = band)
     }
     message(paste("found ", nrow(grid), "regions"))
-    interv_set_out <- gsub("+", "", paste(track, paste(rev(-(band)), collapse = "_"), sep = "_"), fixed = T)
+    interv_set_out <- gsub("+", "", paste(track, paste(rev(-(band)), collapse = "_"), sep = "_"), fixed = TRUE)
     if (!gintervals.exists(interv_set_out)) {
         giterator.intervals(track, band = band, intervals.set.out = interv_set_out)
     }
@@ -196,7 +209,7 @@ shaman_plot_feature_grid <- function(grids, range, grid_resolution, plot_resolut
         cut(a$start2 - a$grid.start2, breaks = expand2, include.lowest = TRUE)
     )
 
-    interv_set_out <- gsub("+", "", paste(shuffled_track, paste(rev(-(band)), collapse = "_"), sep = "_"), fixed = T)
+    interv_set_out <- gsub("+", "", paste(shuffled_track, paste(rev(-(band)), collapse = "_"), sep = "_"), fixed = TRUE)
     if (!gintervals.exists(interv_set_out)) {
         giterator.intervals(shuffled_track, band = band, intervals.set.out = interv_set_out)
     }

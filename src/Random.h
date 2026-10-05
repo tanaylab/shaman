@@ -15,14 +15,14 @@
 class Random {
 private:
         static int bits_num;
-        static uint bits_data;
+        static unsigned int bits_data;
         static uint64_t state48;	// drand48 state, advanced inline (see fraction())
 public:
         static int time_seed();
 
         static void reset(int seed = -1);
-        static uint bits();
-        static uint bits(int num);
+        static unsigned int bits();
+        static unsigned int bits(int num);
 
         static bool boolean();
 
@@ -33,8 +33,8 @@ public:
 
 #if HAS_RAND48
 // mrand48() uses the libc rand48 state, which fraction() does not advance (the shuffler does not use bits())
-inline uint Random::bits() {
-        uint raw = mrand48();
+inline unsigned int Random::bits() {
+        unsigned int raw = mrand48();
         return(raw ^ (raw >> 16));
 }
 // Same stream as glibc drand48() after seed48(): X = (0x5DEECE66D * X + 0xB) mod 2^48,

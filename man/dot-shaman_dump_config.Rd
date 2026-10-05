@@ -12,3 +12,4 @@
 \description{
 Dump templates of config files required by the package.
 }
+\keyword{internal}

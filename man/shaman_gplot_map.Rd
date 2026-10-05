@@ -15,6 +15,8 @@ shaman_gplot_map(
 \arguments{
 \item{points}{A dataframe containing the points (start1, start2).}
 
+\item{interval_range}{Data frame with the start and end of the range to plot. If NA, the range of start1 in points.}
+
 \item{rotate}{Binary flag, indicating if the plot should be rotated by 45 degrees.}
 
 \item{point_size}{Cex size of the points in the plot.}
@@ -33,7 +35,8 @@ Plots hic contact matrix.
 \examples{
 
 # Set misha db to test
-gsetroot(shaman::shaman_get_test_track_db())
-points <- gextract("hic_obs", gintervals.2d(2, 176e06, 177e06, 2, 176e06, 177e06))
+library(misha)
+gsetroot(shaman_get_test_track_db())
+points <- gextract("hic_obs", gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06))
 shaman_gplot_map(points)
 }

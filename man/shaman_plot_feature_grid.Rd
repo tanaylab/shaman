@@ -40,6 +40,9 @@ shaman_plot_feature_grid(
 \item{zlim}{The minimum and maximum values for which colors should be plotted. Suggested zlim values by type:
 enrichment: (-1,1), obs,exp: (-4.5, -3)}
 }
+\value{
+A list with the observed (obs) and expected (exp) matrices summed over the grids, at plot_resolution.
+}
 \description{
 \code{shaman_plot_feature_grid}
 }
@@ -49,9 +52,13 @@ After contact feature grids are generated via shaman_generate_feature_grid, use 
 \examples{
 
 # Set misha db to test
+library(misha)
 gsetroot(shaman_get_test_track_db())
-grid <- shaman_generate_feature_grid(shaman::ctcf_forward, shaman::ctcf_reverse, "hic_obs",
-    exp_track_nm = "hic_exp", score_track_nm = "hic_score"
+# the test db has chr2 only, with contacts in chr2:176.5e06-177e06
+grid <- shaman_generate_feature_grid(
+    ctcf_forward[ctcf_forward$chrom == "chr2", ], ctcf_reverse[ctcf_reverse$chrom == "chr2", ],
+    "hic_obs",
+    exp_track_nm = "hic_exp", score_track_nm = "hic_score", min_dist = 1e05, max_dist = 5e05
 )
 shaman_plot_feature_grid(list(grid), 25000, 500, 500)
 shaman_plot_feature_grid(list(grid), 25000, 500, 1000)

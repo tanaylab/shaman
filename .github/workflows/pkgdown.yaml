@@ -1,0 +1,71 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# Builds the site on every push and PR; deploys it to GitHub Pages (gh-pages branch) only from master.
+# On pushes to master and cran-readiness, full-example.yaml first runs the usage article on the full example
+# database and the site is built with the regenerated article; if that run fails, the site is not built (so
+# nothing is deployed). Other builds use the committed article.
+on:
+  push:
+    branches: [main, master, cran-readiness]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+name: pkgdown
+
+jobs:
+  full-example:
+    # cran-readiness: to test the full example on GitHub before merging (no deployment from there)
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/cran-readiness')
+    uses: ./.github/workflows/full-example.yaml
+
+  pkgdown:
+    needs: full-example
+    # also when full-example was skipped (not master), not when it failed
+    if: ${{ !cancelled() && (needs.full-example.result == 'success' || needs.full-example.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    # Only restrict concurrency for non-PR jobs
+    concurrency:
+      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use the article regenerated on the full example database
+        if: needs.full-example.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: full-example
+          path: vignettes
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::pkgdown, local::.
+          needs: website
+
+      - name: Build site
+        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        shell: Rscript {0}
+
+      - name: Upload site
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkgdown-site
+          path: docs
+
+      - name: Deploy to GitHub pages
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        uses: JamesIves/github-pages-deploy-action@v4.4.1
+        with:
+          clean: true
+          branch: gh-pages
+          folder: docs

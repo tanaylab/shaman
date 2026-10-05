@@ -35,10 +35,13 @@ The score for a point is the KS D-statistic of the distances to the points k-nea
 \examples{
 
 # Set misha db to test
+library(misha)
 gsetroot(shaman_get_test_track_db())
-points <- gextract("hic_obs", gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06), band = c(-2e06, -1024))
-obs <- gextract("hic_obs", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), band = c(-2e06, -1024))
-exp <- gextract("hic_exp", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), band = c(-2e06, -1024))
+focus <- gintervals.2d(2, 176.6e06, 176.9e06, 2, 176.6e06, 176.9e06)
+regional <- gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06)
+points <- gextract("hic_obs", focus, band = c(-5e05, -1024))
+obs <- gextract("hic_obs", regional, band = c(-5e05, -1024))
+exp <- gextract("hic_exp", regional, band = c(-5e05, -1024))
 mat_score <- shaman_kk_norm(obs, exp, points, k = 100, k_exp = 200)
 shaman_gplot_map_score(mat_score$points)
 }

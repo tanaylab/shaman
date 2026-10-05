@@ -1,7 +1,7 @@
 ---
 title: "The shaman package - Sampling HiC contAct Matrices for Aparametric Normalization"
 author: "Netta Mendelson Cohen"
-date: "2026-10-01"
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{The shaman package - Sampling HiC contAct Matrices for Aparametric Normalization}
@@ -11,7 +11,9 @@ vignette: >
 
 <!-- shaman-package.Rmd and its figures are generated from shaman-package.Rmd.orig by vignettes/precompute.R. Edit the .orig. -->
 
-
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.path = "shaman-package-", dpi = 100)
+```
 
 Shaman package implements functions for resampling Hi-C matrices in order to generate expected contact distributions given constraints on marginal coverage and contact-distance probability distributions. The package also provides support for visualizing normalized matrices and statistical analysis of contact distributions around selected landmarks. It is an R package embedding algorithms implemented in C++, which is built over the Tanay lab's *misha* genomic database system (the misha package).
 
@@ -35,21 +37,18 @@ Once an observed HiC dataset is available in the misha db (refer to  [Import](ht
 
 ### Distributed mode
 - Set configuration parameter "shaman.sge_support" for sge or "shaman.mc_support" for multi-core to 1.
-
-``` r
+```{r}
 library(misha)
 library(shaman)
 options(shaman.mc_support = 1)
 ```
 - Get the full example database (downloaded on first use) and set it as the misha database
-
-``` r
+```{r}
 track_db <- shaman_get_test_track_db(full = TRUE)
 gsetroot(track_db)
 ```
 - Generate expected HiC misha 2D track (skipped if the track is already there, e.g. from an earlier run)
-
-``` r
+```{r shuffle, message = FALSE, warning = FALSE}
 if (!gtrack.exists("hic_obs_shuffle")) {
     shaman_shuffle_hic_track(
         track_db = track_db, obs_track_nm = "hic_obs", exp_track_nm = "hic_obs_shuffle",
@@ -58,8 +57,7 @@ if (!gtrack.exists("hic_obs_shuffle")) {
 }
 ```
 - Generate score 2D track
-
-``` r
+```{r score, message = FALSE}
 if (!gtrack.exists("hic_score_new")) {
     shaman_score_hic_track(
         track_db = track_db, work_dir = tempdir(), score_track_nm = "hic_score_new",
@@ -70,8 +68,7 @@ if (!gtrack.exists("hic_score_new")) {
 Note: the example database is a cut-out of the K562 data: the hoxd window, and elsewhere only the long-range contacts (200kb-2Mb) around convergent CTCF pairs. An expected made by shuffling this database alone is therefore not representative. The database's `hic_exp` track was not made from this cut-out (it was presumably shuffled from the full dataset and cut to the same regions), and the figures below use it; the shuffle and score steps above are shown for the workflow.
 
 - Visualize region, with its scores against `hic_exp` from `shaman_score_hic_mat()` (with a representative expected, take them from the score track: `gextract("hic_score_new", region, colnames = "score")`). `ctcf_forward` and `ctcf_reverse` are datasets of the package. `misha_tracks` adds 1D misha tracks, such as ChIP-seq or RNA-seq signal, which the example database does not have. `add_genes` and `add_ideogram` (TRUE by default) download RefSeq genes and the chromosome ideogram from UCSC; they are off here so that the article does not depend on the network.
-
-``` r
+```{r score-map, message = FALSE, fig.width = 9, fig.height = 7.5, fig.cap = "Normalized map of chr2:175e06-178e06, with the CTCF motifs on the forward (blue) and reverse (red) strand"}
 region <- gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06)
 map_score <- shaman_score_hic_mat(
     obs_track_nms = "hic_obs", exp_track_nms = "hic_exp", focus_interval = region,
@@ -84,19 +81,14 @@ shaman_plot_map_score_with_annotations("hg19", map_score$points, gintervals(2, 1
 )
 ```
 
-![Normalized map of chr2:175e06-178e06, with the CTCF motifs on the forward (blue) and reverse (red) strand](shaman-package-score-map-1.png)
-
 ### Local mode
 - Generating an expected matrix and computing its score for a given interval: a local computation is possible on a small region. The scores of its points (`local_score$points`) can be plotted as above.
-
-``` r
+```{r local, message = FALSE}
 interval <- gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06)
 local_score <- shaman_shuffle_and_score_hic_mat(
     obs_track_nms = "hic_obs", interval = interval, work_dir = tempdir(), seed = 1
 )
 summary(local_score$points$score)
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>  -78.20  -10.20   16.50   12.22   30.10   85.40
 ```
 
 ## Analysis
@@ -111,13 +103,11 @@ All windows are then summed together, generating a single matrix of observed and
 Note that grid contains only points in which feature 1 position is smaller than feature 2 position.
 
 Create data grid for two sets of features, and visualize it. Here feature 1 is the forward CTCF motifs and feature 2 the reverse ones, 200kb-1Mb apart (the default `min_dist` and `max_dist`): converging CTCF pairs. The database has no `hic_obs_score` track (the default `score_track_nm`), so no window is filtered out.
-
-``` r
+```{r ctcf-grid, message = FALSE, fig.width = 8, fig.height = 4, fig.cap = "Spatial contact enrichment for converging CTCF pairs: log10(obs) on the left, log2(obs/exp) on the right"}
 grid <- shaman_generate_feature_grid(ctcf_forward, ctcf_reverse,
     obs_track_nm = "hic_obs", exp_track_nm = "hic_exp", range = 25000, resolution = 500
 )
 grid$grid_size # the number of windows
-#> [1] 43999
 par(mfrow = c(1, 2))
 obs_exp <- shaman_plot_feature_grid(list(grid),
     range = 25000, grid_resolution = 500, plot_resolution = 1000,
@@ -125,8 +115,6 @@ obs_exp <- shaman_plot_feature_grid(list(grid),
 )
 obs_exp <- shaman_plot_feature_grid(list(grid), range = 25000, grid_resolution = 500, plot_resolution = 1000)
 ```
-
-![Spatial contact enrichment for converging CTCF pairs: log10(obs) on the left, log2(obs/exp) on the right](shaman-package-ctcf-grid-1.png)
 
 
 ### Options

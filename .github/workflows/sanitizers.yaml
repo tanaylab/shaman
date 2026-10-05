@@ -1,0 +1,50 @@
+# R CMD check with AddressSanitizer and UndefinedBehaviorSanitizer, in R-hub's clang-asan container
+# (R-devel and packages built with -fsanitize=address,undefined), like CRAN's clang-ASAN check.
+# Gviz (Suggests) is not installed here, so its examples are skipped.
+on:
+  push:
+    branches: [main, master, cran-readiness]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+name: sanitizers
+
+jobs:
+  clang-asan:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/r-hub/containers/clang-asan:latest
+
+    env:
+      _R_CHECK_FORCE_SUGGESTS_: false
+      NOT_CRAN: false
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          pak::local_install_deps(dependencies = NA)
+          pak::pkg_install(c("testthat", "knitr", "rmarkdown", "foreach"))
+        shell: Rscript {0}
+
+      - name: Check
+        run: |
+          R CMD build --no-build-vignettes --no-manual .
+          R CMD check --no-manual --ignore-vignettes --run-donttest --no-stop-on-test-error shaman_*.tar.gz
+
+      - name: Fail on sanitizer reports
+        if: always()
+        run: |
+          cd shaman.Rcheck
+          if grep -l 'UndefinedBehaviorSanitizer\|AddressSanitizer' shaman-Ex.Rout tests/*.Rout*; then
+            exit 1
+          fi
+
+      - name: Upload check results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sanitizers-check
+          path: shaman.Rcheck

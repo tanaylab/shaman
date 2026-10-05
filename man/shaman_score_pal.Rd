@@ -6,6 +6,9 @@
 \usage{
 shaman_score_pal()
 }
+\value{
+A vector of 201 colors, for scores -100 to 100.
+}
 \description{
 \code{shaman_score_pal}
 }

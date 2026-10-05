@@ -11,8 +11,8 @@ shaman_score_hic_track(
   obs_track_nms,
   exp_track_nms = paste0(obs_track_nms, "_shuffle"),
   points_track_nms = obs_track_nms,
-  near_cis = 5000000,
-  expand = 2000000,
+  near_cis = 5e+06,
+  expand = 2e+06,
   k = 100,
   max_jobs = 100
 )
@@ -43,6 +43,9 @@ lower resolution maps, decrease k.}
 
 \item{max_jobs}{Maximal number of qsub jobs.}
 }
+\value{
+No return value, called for side effects: creates the 2D score track score_track_nm in track_db.
+}
 \description{
 \code{shaman_score_hic_track}
 }
@@ -55,8 +58,6 @@ over the distances of the k-nearest neighbors in the observed compared to the ex
 High scores represent contact enrichment while low scores depict insulation.
 Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
 Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
-Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters),
-depending on the number of cores available.
 \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
 threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
 each job does, so shaman.sge_flags should ask for N slots.
@@ -74,21 +75,28 @@ The finished score files stay in work_dir, so a rerun with the same work_dir com
 # The example below runs on the test misha db provided with shaman.
 # Note that this is a toy db sampled from K562 ela data -
 # scoring based on the observed and expected tracks will not produce the score track,
-# as most of the genome is missing (you will see message: number of points in focus interval < 1000)
+# as most of the genome is missing.
+library(misha)
+track_db <- shaman_get_test_track_db()
+gsetroot(track_db)
 # options(shaman.sge_support=1) #configuring sge engine mode - preferred
-options(shaman.mc_support = 1) # configuring multi-core mode
+old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 if (gtrack.exists("hic_score_new")) {
     gtrack.rm("hic_score_new", force = TRUE)
     gdb.reload()
 }
-ret <- shaman_score_hic_track(shaman_get_test_track_db(),
-    work_dir = tempdir(), # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+ret <- shaman_score_hic_track(track_db,
+    # work_dir can be tempdir() only in multi-core mode.
+    # For sge mode, work_dir must be accessible by all jobs.
+    work_dir = tempdir(),
     score_track_nm = "hic_score_new",
     obs_track_nms = "hic_obs",
     exp_track_nms = "hic_exp",
     near_cis = 1e09, # this test db contains very little data, can increase the size of each job
-    max_jobs = parallel::detectCores()
+    k = 20, # default is set to 100
+    max_jobs = 2
 ) # increase number of jobs for optimal runtime when running in sge mode
 gdb.reload()
-gtrack.ls("hic_score_new") # new shuffled track that was created
+gtrack.ls("hic_score_new") # new score track that was created
+options(old_opts)
 }

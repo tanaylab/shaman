@@ -12,9 +12,9 @@ shaman_plot_tracks_and_annotations(
   mt_ylims = NULL,
   annotations = list(),
   a_colors = getOption("shaman.annotation_colors"),
-  add_genes = T,
-  add_ideogram = T,
-  add_axis = T,
+  add_genes = TRUE,
+  add_ideogram = TRUE,
+  add_axis = TRUE,
   gene_stacking = "squish",
   gene_size = 0.7,
   track_size = 0.8,
@@ -29,6 +29,9 @@ shaman_plot_tracks_and_annotations(
 \item{misha_tracks}{List of 1D track expressions (virtual tracks also supported) which can be extracted from.}
 
 \item{mt_colors}{Array of colors, one for each misha_track, which will be used to plot each 1d track.}
+
+\item{mt_ylims}{Y-axis limits for each misha track. If not provided, generated automatically based on the data
+to be displayed in the region.}
 
 \item{annotations}{List of gintervals highlighting annotated regions.}
 
@@ -46,10 +49,11 @@ shaman_plot_tracks_and_annotations(
 
 \item{track_size}{Size of track view}
 
-\item{my_ylims}{Y-axis limits for each misha track. If not provided, generated automatically based on the data
-to be displayed in the region.}
-
-\item{annot_size}{Size of annotation view}
+\item{annotation_size}{Size of annotation view}
+}
+\value{
+Called for the plot. Returns what \code{Gviz::plotTracks()} returns, invisibly.
+Needs the Bioconductor package Gviz.
 }
 \description{
 \code{shaman_gplot_tracks_and_annotations}
@@ -61,6 +65,23 @@ annotated intervals in the plotting region.
 }
 \examples{
 
+library(misha)
 gsetroot(shaman_get_test_track_db())
-shaman_plot_tracks_and_annotations("hg19", gintervals(2, 175.5e06, 177.5e06))
+# the test db has chr2 only
+ctcf <- list(
+    ctcf_forward[ctcf_forward$chrom == "chr2", ],
+    ctcf_reverse[ctcf_reverse$chrom == "chr2", ]
+)
+\donttest{
+# loading Gviz takes a few seconds
+if (requireNamespace("Gviz", quietly = TRUE)) {
+    shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06),
+        annotations = ctcf, add_genes = FALSE, add_ideogram = FALSE
+    )
+}
+}
+\dontrun{
+# gene annotations and the ideogram are downloaded from UCSC
+shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06), annotations = ctcf)
+}
 }

@@ -6,11 +6,11 @@
 #' Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
 #' Note that this function requires sge (qsub) or multicore to be enabled.
 #' Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
-#' Reshuffling of an entire dataset will require 7 hours per 1 billion reads on a machine
-#' with one core per chromosome.
 #'
 #' Each step creates temporary files of the shuffled matrices which are then joined to a track.
 #' Temporary files are deleted upon track creation.
+#' If the shuffle of a chromosome fails (an error, or its process or job is killed), no track is imported
+#' and work_dir keeps the shuffled chromosomes, so a rerun with the same work_dir shuffles only the others.
 #' @param track_db Directory of the misha database.
 #' @param obs_track_nm Name of observed 2D genomic track for the hic data.
 #' @param work_dir Centralized directory to store temporary files.
@@ -30,26 +30,37 @@
 #' stored in the track attribute \code{seed} (NA for chromosomes this call did not shuffle).
 #' A chromosome's seed depends on its position in \code{gintervals.all()}, so the same seed reproduces a
 #' track only in a database with the same chromosomes; the \code{seed} attribute reproduces each chromosome.
+#' @return No return value, called for side effects: creates the 2D track exp_track_nm in track_db, with the
+#' seeds in its attribute \code{seed}.
 #'
 #' @examples
 #'
 #' # The example below runs on the test misha db provided with shaman.
-#' # Note that this is a toy db sampled from K562 ela data - shuffling the observed track will not produce the expected track.
+#' # Note that this is a toy db sampled from K562 ela data - shuffling the observed track
+#' # will not produce the expected track.
+#' library(misha)
+#' track_db <- shaman_get_test_track_db()
+#' gsetroot(track_db)
 #' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
-#' options(shaman.mc_support = 1) # configuring multi-core mode
+#' old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 #' if (gtrack.exists("hic_obs_shuffle")) {
 #'     gtrack.rm("hic_obs_shuffle", force = TRUE)
 #'     gdb.reload()
 #' }
-#' ret <- shaman_shuffle_hic_track(shaman::shaman_get_test_track_db(),
+#' ret <- shaman_shuffle_hic_track(track_db,
 #'     obs_track_nm = "hic_obs",
-#'     work_dir = tempdir(), # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+#'     # work_dir can be tempdir() only in multi-core mode.
+#'     # For sge mode, work_dir must be accessible by all jobs.
+#'     work_dir = tempdir(),
 #'     shuffle = 1, # default is set to 80
 #'     grid_step_iter = 1, # default is set to 40
-#'     max_jobs = parallel::detectCores()
-#' ) # optimally set to number of chromosomes
+#'     max_jobs = 2, # optimally set to number of chromosomes
+#'     seed = 1 # the same seed gives the same track
+#' )
 #' gdb.reload()
 #' gtrack.ls("hic_obs_shuffle") # new shuffled track that was created
+#' gtrack.attr.get("hic_obs_shuffle", "seed") # the seed of each chromosome
+#' options(old_opts)
 #' @export
 ##########################################################################################################
 shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
@@ -86,8 +97,9 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
     seeds <- if (!is.null(seed)) (seed + seq_len(nrow(intervals)) - 1) %% 2^31
 
     if (sge_support) {
+        # each job first waits a random 1-10s (staggered start)
         commands <- paste0(
-            "{library(shaman); shaman_shuffle_hic_mat_for_track(\"", track_db, "\",\"", obs_track_nm, "\",\"",
+            "{library(shaman); Sys.sleep(sample(1:10, 1)); shaman_shuffle_hic_mat_for_track(\"", track_db, "\",\"", obs_track_nm, "\",\"",
             work_dir, "\", \"", intervals$chrom, "\", ", intervals$start, ", ",
             intervals$end, ", ", intervals$start, ", ", intervals$end,
             ", min_dist=1024, dist_resolution=", dist_resolution, ", decay_smooth=",
@@ -96,21 +108,38 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
             ", raw_ext=\"full_chrom_raw\", shuffled_ext=\"full_chrom_shuffled\", sort_uniq=TRUE)}"
         )
         res <- .gcluster.run2(command.list = commands, opt.flags = sge_flags, max.jobs = max_jobs)
+        # a job that was killed has no result; a job that failed in R returns the error
+        failed <- vapply(res, function(r) !identical(r$exit.status, "success") || inherits(r$retv, "try-error"), TRUE)
+        errors <- lapply(res, `[[`, "retv")
         # a failed job's retv is the error message
         used_seeds <- sapply(res, function(r) if (is.numeric(r$retv)) r$retv[1] else NA)
     } else {
-        doMC::registerDoMC(cores = max_jobs)
-        res <- plyr::ddply(intervals, plyr::.(chrom, start), function(x) {
-            shaman_shuffle_hic_mat_for_track(track_db, obs_track_nm, work_dir, x$chrom[1],
-                x$start[1], x$end[1], x$start[1], x$end[1],
+        # one process per chromosome (no prescheduling), so a process that dies (e.g. killed for
+        # memory) loses only its own chromosome
+        res <- parallel::mclapply(seq_len(nrow(intervals)), function(i) {
+            shaman_shuffle_hic_mat_for_track(track_db, obs_track_nm, work_dir, intervals$chrom[i],
+                intervals$start[i], intervals$end[i], intervals$start[i], intervals$end[i],
                 min_dist = 1024,
                 dist_resolution = dist_resolution, decay_smooth = smooth, shuffle = shuffle,
                 grid_small = grid_small, grid_high = grid_high, grid_step_iter = grid_step_iter,
                 raw_ext = "full_chrom_raw", shuffled_ext = "full_chrom_shuffled", sort_uniq = TRUE,
-                seed = seeds[match(x$chrom[1], intervals$chrom)]
+                seed = seeds[i]
             )
-        }, .parallel = TRUE)
-        used_seeds <- res$V1[match(intervals$chrom, res$chrom)]
+        }, mc.cores = max_jobs, mc.preschedule = FALSE)
+        # NULL for a process that died, the error for one that failed
+        failed <- vapply(res, function(r) is.null(r) || inherits(r, "try-error"), TRUE)
+        errors <- res
+        used_seeds <- vapply(res, function(r) if (length(r) == 1) as.integer(r) else NA_integer_, 1L)
+    }
+    # stop before the import and the cleanup, so that a rerun shuffles only the failed chromosomes
+    if (any(failed)) {
+        err <- Filter(function(e) inherits(e, "try-error"), errors[failed])
+        stop(sprintf(
+            "the shuffle of %s failed%s. No track was imported; the shuffled chromosomes are kept in %s, and a rerun with the same work_dir shuffles only the others.",
+            paste(intervals$chrom[failed], collapse = ", "),
+            if (length(err) > 0) paste0(" (first error: ", conditionMessage(attr(err[[1]], "condition")), ")") else " (no result: the process died, e.g. killed for memory)",
+            work_dir
+        ), call. = FALSE)
     }
     exp_shuf_files <- paste0(obs_track_nm, "_", intervals$chrom, "_0_0.full_chrom_shuffled.uniq")
     obs_shuf_files <- list.files(work_dir, pattern = paste0(obs_track_nm, ".*full_chrom_shuffled.uniq"))
@@ -202,10 +231,8 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
     shuf_fn <- paste0(work_dir, "/", track, "_", chrom, "_", start1, "_", start2, ".", shuffled_ext)
     ret <- NA
     if (!file.exists(shuf_fn)) {
-        x <- sample(1:10, 1)
-        system(paste("sleep", x))
-        options(gmultitasking = FALSE)
-        options(gmax.data.size = 1e+09)
+        old_opts <- options(gmultitasking = FALSE, gmax.data.size = 1e+09)
+        on.exit(options(old_opts), add = TRUE)
         gsetroot(track_db)
         scope <- gintervals.2d(chrom, start1, end1, chrom, start2, end2)
         a <- gextract(track, scope, band = c(-max_dist, -min_dist + 1), colnames = "contact")
@@ -228,7 +255,7 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
         if (nrow(a) < 2000 | dist_resolution == 0) {
             message("not shuffling, leaving raw")
             data.table::fwrite(format(rbind(a, setNames(rev(a), names(a))), scientific = FALSE), shuf_fn,
-                quote = FALSE, row.names = F,
+                quote = FALSE, row.names = FALSE,
                 sep = "\t"
             )
         } else {
@@ -292,8 +319,6 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' High scores represent contact enrichment while low scores depict insulation.
 #' Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
 #' Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
-#' Score computation on 1 billion reads on a distributed system may take 4-10 hours (with default parameters),
-#' depending on the number of cores available.
 #' \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
 #' threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
 #' each job does, so shaman.sge_flags should ask for N slots.
@@ -320,29 +345,37 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' @param k The number of neighbor distances used for the score. For higher resolution maps, increase k. For
 #' lower resolution maps, decrease k.
 #' @param max_jobs Maximal number of qsub jobs.
+#' @return No return value, called for side effects: creates the 2D score track score_track_nm in track_db.
 #'
 #' @examples
 #'
 #' # The example below runs on the test misha db provided with shaman.
 #' # Note that this is a toy db sampled from K562 ela data -
 #' # scoring based on the observed and expected tracks will not produce the score track,
-#' # as most of the genome is missing (you will see message: number of points in focus interval < 1000)
+#' # as most of the genome is missing.
+#' library(misha)
+#' track_db <- shaman_get_test_track_db()
+#' gsetroot(track_db)
 #' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
-#' options(shaman.mc_support = 1) # configuring multi-core mode
+#' old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 #' if (gtrack.exists("hic_score_new")) {
 #'     gtrack.rm("hic_score_new", force = TRUE)
 #'     gdb.reload()
 #' }
-#' ret <- shaman_score_hic_track(shaman_get_test_track_db(),
-#'     work_dir = tempdir(), # this can be set only in multi-core mode. For sge mode, work_dir must be accessible by all jobs.
+#' ret <- shaman_score_hic_track(track_db,
+#'     # work_dir can be tempdir() only in multi-core mode.
+#'     # For sge mode, work_dir must be accessible by all jobs.
+#'     work_dir = tempdir(),
 #'     score_track_nm = "hic_score_new",
 #'     obs_track_nms = "hic_obs",
 #'     exp_track_nms = "hic_exp",
 #'     near_cis = 1e09, # this test db contains very little data, can increase the size of each job
-#'     max_jobs = parallel::detectCores()
+#'     k = 20, # default is set to 100
+#'     max_jobs = 2
 #' ) # increase number of jobs for optimal runtime when running in sge mode
 #' gdb.reload()
-#' gtrack.ls("hic_score_new") # new shuffled track that was created
+#' gtrack.ls("hic_score_new") # new score track that was created
+#' options(old_opts)
 #' @export
 ##########################################################################################################
 shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track_nms,
@@ -351,10 +384,10 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
     gsetroot(track_db)
     # check tracks
     if (sum(gtrack.exists(obs_track_nms)) < length(obs_track_nms)) {
-        stop(paste("Missing obs_track_nm (", obs_track_nm[!gtrack.exists(obs_track_nms)], ") in track db"))
+        stop(paste("Missing obs_track_nm (", obs_track_nms[!gtrack.exists(obs_track_nms)], ") in track db"))
     }
     if (sum(gtrack.exists(exp_track_nms)) < length(exp_track_nms)) {
-        stop(paste("Missing exp_track_nm (", exp_track_nm[!gtrack.exists(exp_track_nms)], ") in track db"))
+        stop(paste("Missing exp_track_nm (", exp_track_nms[!gtrack.exists(exp_track_nms)], ") in track db"))
     }
     if (gtrack.exists(score_track_nm)) {
         stop(paste("score_track_nm (", score_track_nm, ") already exists in track db"))
@@ -427,15 +460,20 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 
             res <- .gcluster.run2(command.list = commands, opt.flags = sge_flags, max.jobs = max_jobs)
         } else {
-            doMC::registerDoMC(cores = max_jobs)
-            res <- plyr::ddply(near_cis_2d_upper_mat, plyr::.(chrom1, start1, start2), function(x) {
+            res <- parallel::mclapply(seq_len(nrow(near_cis_2d_upper_mat)), function(i) {
+                x <- near_cis_2d_upper_mat[i, ]
                 shaman_score_hic_mat_for_track(
                     track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
-                    x$chrom1[1], x$start1[1], x$end1[1], x$start2[1], x$end2[1], expand, k
+                    x$chrom1, x$start1, x$end1, x$start2, x$end2, expand, k
                 )
-            },
-            .parallel = TRUE
-            )
+            }, mc.cores = max_jobs, mc.preschedule = FALSE)
+            # one process per matrix (no prescheduling), so a process that dies (e.g. killed for memory)
+            # leaves only its own score file missing, which the loop retries; an error in a job stops
+            # the run, as it did with plyr and doMC
+            failed <- vapply(res, inherits, TRUE, "try-error")
+            if (any(failed)) {
+                stop(attr(res[[which(failed)[1]]], "condition"))
+            }
         }
         # res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
         # check to see if there are any missing files
@@ -511,10 +549,11 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
         todo <- !file.exists(fns)
         ret <- rep(0, nrow(rects))
         on.exit(rm(list = ls(.shaman_extract_cache), envir = .shaman_extract_cache))
+        old_opts <- options(gmax.data.size = 1e09)
+        on.exit(options(old_opts), add = TRUE)
         for (r in unique(row[todo])) {
             i <- which(row == r & todo)
             if (length(i) > 1) {
-                options(gmax.data.size = 1e09)
                 .shaman_cache_extractions(unique(c(obs_track_nms, exp_track_nms, points_track_nms)), gintervals.force_range(data.frame(
                     chrom1 = rects$chrom[i[1]], start1 = rects$start1[i[1]] - expand, end1 = rects$end1[i[1]] + expand,
                     chrom2 = rects$chrom[i[1]], start2 = min(rects$start2[i]) - expand, end2 = max(rects$end2[i]) + expand
@@ -532,7 +571,8 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
     if (file.exists(fn)) {
         return(0)
     }
-    options(gmax.data.size = 1e09)
+    old_opts <- options(gmax.data.size = 1e09)
+    on.exit(options(old_opts), add = TRUE)
     regional_interval <- gintervals.force_range(data.frame(
         chrom1 = chrom, start1 = start1 - expand, end1 = end1 + expand,
         chrom2 = chrom, start2 = start2 - expand, end2 = end2 + expand
@@ -598,11 +638,12 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 #' @examples
 #'
 #' # Set misha db to test
+#' library(misha)
 #' gsetroot(shaman_get_test_track_db())
 #' mat_score <- shaman_score_hic_mat(
 #'     obs_track_nms = "hic_obs", exp_track_nms = "hic_exp",
-#'     focus_interval = gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06),
-#'     regional_interval = gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06)
+#'     focus_interval = gintervals.2d(2, 176.7e06, 176.8e06, 2, 176.7e06, 176.8e06),
+#'     regional_interval = gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06)
 #' )
 #' shaman_gplot_map_score(mat_score$points)
 #' @export
@@ -660,6 +701,8 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #' @param min_dist The minimum distance between points.
 #' @param k The number of neighbor distances used for the score. For higher resolution maps, increase k. For
 #' lower resolution maps, decrease k.
+#' @param k_exp The number of neighbor distances used for the score on the expected tracks (see
+#' \code{shaman_score_hic_mat}).
 #'
 #' @return NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
 #' 1) points - start1, start2 and score for all observed points.
@@ -669,11 +712,13 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #' @examples
 #'
 #' # Set misha db to test
+#' library(misha)
 #' gsetroot(shaman_get_test_track_db())
-#' points <- gextract("hic_obs", gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06), band = c(-2e06, -1024))
+#' focus <- gintervals.2d(2, 176.7e06, 176.8e06, 2, 176.7e06, 176.8e06)
+#' points <- gextract("hic_obs", focus, band = c(-5e05, -1024))
 #' mat_score <- shaman_score_hic_points(
 #'     obs_track_nms = "hic_obs", exp_track_nms = "hic_exp",
-#'     points = points, regional_interval = gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06)
+#'     points = points, regional_interval = gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06)
 #' )
 #' shaman_gplot_map_score(mat_score$points)
 #' @export
@@ -773,12 +818,16 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
 #' @examples
 #'
 #' # Set misha db to test
+#' library(misha)
 #' gsetroot(shaman_get_test_track_db())
 #' mat_score <- shaman_shuffle_and_score_hic_mat(
 #'     obs_track_nms = "hic_obs",
-#'     interval = gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06),
-#'     expand = 5e05,
-#'     work_dir = tempdir()
+#'     interval = gintervals.2d(2, 176.6e06, 176.9e06, 2, 176.6e06, 176.9e06),
+#'     expand = 1e05,
+#'     work_dir = tempdir(),
+#'     shuffle = 2, # default is set to 80
+#'     grid_step_iter = 1, # default is set to 40
+#'     seed = 1
 #' )
 #' shaman_gplot_map_score(mat_score$points)
 #' @export
@@ -838,7 +887,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
     )
 
 
-    exp <- as.data.frame(data.table::fread(shuf_fn, header = T))
+    exp <- as.data.frame(data.table::fread(shuf_fn, header = TRUE))
 
     ret <- shaman_kk_norm(obs, exp, points, k = k, k_exp = 2 * k)
     ret$exp_fn <- shuf_fn
@@ -871,10 +920,13 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 #' @examples
 #'
 #' # Set misha db to test
+#' library(misha)
 #' gsetroot(shaman_get_test_track_db())
-#' points <- gextract("hic_obs", gintervals.2d(2, 175.5e06, 177.5e06, 2, 175.5e06, 177.5e06), band = c(-2e06, -1024))
-#' obs <- gextract("hic_obs", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), band = c(-2e06, -1024))
-#' exp <- gextract("hic_exp", gintervals.2d(2, 175e06, 178e06, 2, 175e06, 178e06), band = c(-2e06, -1024))
+#' focus <- gintervals.2d(2, 176.6e06, 176.9e06, 2, 176.6e06, 176.9e06)
+#' regional <- gintervals.2d(2, 176.5e06, 177e06, 2, 176.5e06, 177e06)
+#' points <- gextract("hic_obs", focus, band = c(-5e05, -1024))
+#' obs <- gextract("hic_obs", regional, band = c(-5e05, -1024))
+#' exp <- gextract("hic_exp", regional, band = c(-5e05, -1024))
 #' mat_score <- shaman_kk_norm(obs, exp, points, k = 100, k_exp = 200)
 #' shaman_gplot_map_score(mat_score$points)
 #' @export

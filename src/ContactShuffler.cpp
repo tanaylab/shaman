@@ -6,6 +6,7 @@
  */
 
 #include "ContactShuffler.h"
+#include <Rcpp.h>
 #include "GenomeGridLog.h"
 #include "Parser.h"
 #include "VectorUtils.h"
@@ -82,20 +83,20 @@ long ContactShuffler::load_contacts(const int* x, const int* y, int stride, long
 		m_y[i] = y[i * stride];
 	}
 	if (!symetric) {
-		cerr << "adding " << m_contact_count << " symmetric contacts" << endl;
+		Rcpp::Rcerr << "adding " << m_contact_count << " symmetric contacts" << endl;
 		for (long i=0; i<m_contact_count; i++) {
 			m_x[m_contact_count + i] = m_y[i];
 			m_y[m_contact_count + i] = m_x[i];
 		}
 	}
-	cerr << "finished adding" << endl;
+	Rcpp::Rcerr << "finished adding" << endl;
 	m_contact_count = m_x.size();
 	init_contact_dist_bins();
 	m_decay_exp.resize(get_dist_bin(m_min_x,m_max_x)+1, 0);
 	m_decay_obs.resize(get_dist_bin(m_min_x,m_max_x)+1, 0);
 	m_transitions.resize(get_dist_bin(m_min_x,m_max_x)+1, 0);
 	init_obs_decay_from_contacts();
-	cerr<<"Loaded "<< m_contact_count << " contacts\n";
+	Rcpp::Rcerr <<"Loaded "<< m_contact_count << " contacts\n";
 	m_reg = log(5)-log(m_contact_count);
 	return(m_contact_count);
 }
@@ -163,10 +164,10 @@ int ContactShuffler::init_obs_decay_from_contacts() {
 	}
 	//building grid
 	int grid_size = floor((m_max_x-m_min_x)/m_grid_x_binsize) + 1;
-	cerr << "GRID: " << grid_size << " X " << grid_size << endl;
+	Rcpp::Rcerr << "GRID: " << grid_size << " X " << grid_size << endl;
 	build_grid();
-	cerr << "finished resizing" << endl;
-	cerr << "finished init_obs_decay" << endl;
+	Rcpp::Rcerr << "finished resizing" << endl;
+	Rcpp::Rcerr << "finished init_obs_decay" << endl;
 	return(m_decay_obs.size());
 }
 
@@ -248,7 +249,7 @@ void	ContactShuffler::init_contact_dist_bins() {
 	m_contacts_dist_bins.resize(m_contact_count, -1);
 	m_min_x = INT_MAX;
 	m_max_x = 0;
-	cerr << "init_contact_dist_bins" << endl;
+	Rcpp::Rcerr << "init_contact_dist_bins" << endl;
 	for (int i=0; i<m_contact_count; i++) {
 		if (m_x[i] < m_min_x) m_min_x = m_x[i];
 		if (m_y[i] < m_min_x) m_min_x = m_y[i];
@@ -259,8 +260,8 @@ void	ContactShuffler::init_contact_dist_bins() {
 	for (int i=0; i<m_contact_count; i++) {
 		m_contacts_dist_bins[i] = get_dist_bin(m_x[i], m_y[i]);
 	}
-	cerr << "m_min_x=" << m_min_x << endl;
-	cerr << "m_max_x=" << m_max_x << endl;
+	Rcpp::Rcerr << "m_min_x=" << m_min_x << endl;
+	Rcpp::Rcerr << "m_max_x=" << m_max_x << endl;
 }
 
 int ContactShuffler::simple_sample() {
@@ -375,7 +376,7 @@ void ContactShuffler::init_dist_bin_table() {
 				}
 				r.next_bin_dist = b;
 			} else if (hi_bin != r.bin) {
-				cerr << "distance bin table not used (sub-range " << lo << "-" << hi << ")" << endl;
+				Rcpp::Rcerr << "distance bin table not used (sub-range " << lo << "-" << hi << ")" << endl;
 				return;
 			}
 		}
@@ -457,7 +458,7 @@ int ContactShuffler::init_proposal_from_area() {
 }
 
 int ContactShuffler::init_proposal_from_contacts(long proposal_shuffle) {
-	cerr << "init proposal from contacts " << proposal_shuffle << " iterations" << endl;
+	Rcpp::Rcerr << "init proposal from contacts " << proposal_shuffle << " iterations" << endl;
 	m_proposal_shuffle = proposal_shuffle;
 	int max_bins = m_decay_exp.size();
 	vector<unsigned long> proposal_count(max_bins, 0);
@@ -523,7 +524,7 @@ void ContactShuffler::debug(ostream& out, int id) {
 
 int ContactShuffler::shuffle_contacts(int shuffle_factor, float transition_correction_factor,
 		float transition_cooling_update, int debug) {
-	cerr << "shuffling..." << shuffle_factor << " iterations"<< endl;
+	Rcpp::Rcerr << "shuffling..." << shuffle_factor << " iterations"<< endl;
 
 	int transitions_per_correction = floor(m_contact_count*0.0001);
 	int percentile = floor((m_contact_count)/10);
@@ -531,9 +532,9 @@ int ContactShuffler::shuffle_contacts(int shuffle_factor, float transition_corre
 	if (transitions_per_correction < 1) transitions_per_correction = 1;
 	if (percentile < 1) percentile = 1;
 	if (debug) {
-	  cout << m_grid_x_binsize << "\t0\t0";
-	  print_proposal(cout);
-	  cout << endl;
+	  Rcpp::Rcout << m_grid_x_binsize << "\t0\t0";
+	  print_proposal(Rcpp::Rcout);
+	  Rcpp::Rcout << endl;
 	}
 	long total_samples=0;
 	long total_transitions=0;
@@ -547,7 +548,7 @@ int ContactShuffler::shuffle_contacts(int shuffle_factor, float transition_corre
 			samples++;
 			transitions += simple_sample();
 			if (samples > 1000 && transitions == 0) {
-				cerr << "not making any transitions... stopping early" << endl;
+				Rcpp::Rcerr << "not making any transitions... stopping early" << endl;
 				return(0);
 			}
 
@@ -557,14 +558,14 @@ int ContactShuffler::shuffle_contacts(int shuffle_factor, float transition_corre
 				//transitions_per_correction += floor(m_contact_count*transition_correction_factor * 0.02);
 				//cerr << transitions_per_correction << endl;
 			    if (debug) {
-			    	cout << m_grid_x_binsize << "\t" << (total_samples + samples) << "\t" <<
+			    	Rcpp::Rcout << m_grid_x_binsize << "\t" << (total_samples + samples) << "\t" <<
 			    			floor(100*(total_transitions + transitions))/(total_samples+samples)/100;
-			    	print_proposal(cout);
-			    	cout << endl;
+			    	print_proposal(Rcpp::Rcout);
+			    	Rcpp::Rcout << endl;
 			    }
 		    }
 		    if (transitions % percentile == 0) {
-			  cerr << i << " :: " << samples << "\t" << transitions << "\t" << floor(100*transitions/samples)/100
+			  Rcpp::Rcerr << i << " :: " << samples << "\t" << transitions << "\t" << floor(100*transitions/samples)/100
 					<< "\t" << transitions/percentile << endl;
 		    }
 		}
@@ -671,7 +672,7 @@ void ContactShuffler::save_transitions(ostream& out, int id) {
 }
 
 void ContactShuffler::reset_grid(int grid_x_binsize) {
-	cerr << "resetting grid from " << m_grid_x_binsize << " to " << grid_x_binsize << endl;
+	Rcpp::Rcerr << "resetting grid from " << m_grid_x_binsize << " to " << grid_x_binsize << endl;
 	contacts_from_grid();
 	m_grid_x_binsize = grid_x_binsize;
 	build_grid();

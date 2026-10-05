@@ -4,18 +4,34 @@
 \alias{shaman_get_test_track_db}
 \title{returns test misha db}
 \usage{
-shaman_get_test_track_db()
+shaman_get_test_track_db(full = FALSE)
+}
+\arguments{
+\item{full}{Whether to return the full example database (downloaded on first use) instead of the small one.}
+}
+\value{
+The path of the database.
 }
 \description{
 \code{shaman_get_test_track_db}
-Returns the path of the example misha database provided with shaman.
-On first use the database is extracted into the user cache directory
-(\code{tools::R_user_dir("shaman", "cache")}); later calls reuse it. If the installed
-package holds only a git-lfs pointer instead of the tarball, the tarball is downloaded
-from the lab's public S3 bucket first (about 100MB) and its md5 checked.
-In the example misha database provided in this package we have created a low-footprint
-matrix to examplify the shaman workflow. We included 4.6 million contacts from
-ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF regions.
+Returns the path of an example misha database with Hi-C contacts from the ELA K562 dataset.
+}
+\details{
+By default this is a small database that is built in the session's temporary directory on first
+use; later calls in the session reuse it. It has one chromosome (hg19 chr2) and the observed
+(hic_obs), expected (hic_exp) and score (hic_score) tracks of chr2:176.5e06-177e06, around the
+hoxd locus (46,735 observed contacts, each stored in both orientations).
+
+With \code{full = TRUE} it returns the full example database of earlier shaman versions: 4.6 million
+contacts from the ELA K562 dataset covering the hoxd locus (chr2:175e06-178e06) and convergent CTCF
+regions, with scores for chr2:175e06-178e06. It is downloaded (about 100MB, from the lab's public S3 bucket) and extracted into the
+user cache directory (\code{tools::R_user_dir("shaman", "cache")}, about 480MB) on first use; later
+calls reuse it.
 Processing the complete matrix from this study requires downloading the full contact list
 and regenerating the reshuffled matrix.
+}
+\examples{
+library(misha)
+gsetroot(shaman_get_test_track_db())
+gtrack.ls()
 }
