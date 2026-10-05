@@ -60,8 +60,8 @@ ContactShuffler::ContactShuffler(int dist_log_scale, int dist_resolution,
 #endif
    //m_grid_switch_x_dist(grid_switch_x_dist),
    m_correction_factor(log(correction_factor)),
-   m_decay_smooth(decay_smooth),
-   m_regularization(regularization)
+   m_regularization(regularization),
+   m_decay_smooth(decay_smooth)
 {
 	m_min_dist = (m_dist_resolution * log(min_dist)/m_log_log_scale);
 	if (m_min_dist < 0) m_min_dist=0;
