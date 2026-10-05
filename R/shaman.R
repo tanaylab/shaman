@@ -6,6 +6,8 @@
 #' Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
 #' Note that this function requires sge (qsub) or multicore to be enabled.
 #' Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+#' Sun Grid Engine mode, \code{options(shaman.sge_support = 1)}, is preferred; work_dir must then be
+#' accessible by all jobs. Multi-core mode is \code{options(shaman.mc_support = 1)}.
 #'
 #' Each step creates temporary files of the shuffled matrices which are then joined to a track.
 #' Temporary files are deleted upon track creation.
@@ -41,7 +43,6 @@
 #' library(misha)
 #' track_db <- shaman_get_test_track_db()
 #' gsetroot(track_db)
-#' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
 #' old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 #' if (gtrack.exists("hic_obs_shuffle")) {
 #'     gtrack.rm("hic_obs_shuffle", force = TRUE)
@@ -340,6 +341,8 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' High scores represent contact enrichment while low scores depict insulation.
 #' Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
 #' Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+#' Sun Grid Engine mode, \code{options(shaman.sge_support = 1)}, is preferred; work_dir must then be
+#' accessible by all jobs. Multi-core mode is \code{options(shaman.mc_support = 1)}.
 #' \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
 #' threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
 #' each job does, so shaman.sge_flags should ask for N slots.
@@ -377,7 +380,6 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' library(misha)
 #' track_db <- shaman_get_test_track_db()
 #' gsetroot(track_db)
-#' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
 #' old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 #' if (gtrack.exists("hic_score_new")) {
 #'     gtrack.rm("hic_score_new", force = TRUE)

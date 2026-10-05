@@ -63,6 +63,8 @@ This function generates an expected 2D hic track based on observed hic data.
 Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
 Note that this function requires sge (qsub) or multicore to be enabled.
 Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+Sun Grid Engine mode, \code{options(shaman.sge_support = 1)}, is preferred; work_dir must then be
+accessible by all jobs. Multi-core mode is \code{options(shaman.mc_support = 1)}.
 
 Each step creates temporary files of the shuffled matrices which are then joined to a track.
 Temporary files are deleted upon track creation.
@@ -77,7 +79,6 @@ and work_dir keeps the shuffled chromosomes, so a rerun with the same work_dir s
 library(misha)
 track_db <- shaman_get_test_track_db()
 gsetroot(track_db)
-# options(shaman.sge_support=1) #configuring sge engine mode - preferred
 old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 if (gtrack.exists("hic_obs_shuffle")) {
     gtrack.rm("hic_obs_shuffle", force = TRUE)

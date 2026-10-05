@@ -58,6 +58,8 @@ over the distances of the k-nearest neighbors in the observed compared to the ex
 High scores represent contact enrichment while low scores depict insulation.
 Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
 Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+Sun Grid Engine mode, \code{options(shaman.sge_support = 1)}, is preferred; work_dir must then be
+accessible by all jobs. Multi-core mode is \code{options(shaman.mc_support = 1)}.
 \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
 threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
 each job does, so shaman.sge_flags should ask for N slots.
@@ -79,7 +81,6 @@ The finished score files stay in work_dir, so a rerun with the same work_dir com
 library(misha)
 track_db <- shaman_get_test_track_db()
 gsetroot(track_db)
-# options(shaman.sge_support=1) #configuring sge engine mode - preferred
 old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 if (gtrack.exists("hic_score_new")) {
     gtrack.rm("hic_score_new", force = TRUE)
