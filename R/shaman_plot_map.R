@@ -200,9 +200,9 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 #'     )
 #' }
 #' }
-#' \dontrun{
 #' # gene annotations and the ideogram are downloaded from UCSC
-#' shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06), annotations = ctcf)
+#' if (interactive() && requireNamespace("Gviz", quietly = TRUE)) {
+#'     shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06), annotations = ctcf)
 #' }
 #' @export
 ##########################################################################################################
@@ -294,9 +294,9 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #'     )
 #' }
 #' }
-#' \dontrun{
 #' # gene annotations and the ideogram are downloaded from UCSC
-#' shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06))
+#' if (interactive() && requireNamespace("Gviz", quietly = TRUE)) {
+#'     shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06))
 #' }
 #' @export
 ##########################################################################################################

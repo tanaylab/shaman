@@ -91,8 +91,8 @@ if (requireNamespace("Gviz", quietly = TRUE)) {
     )
 }
 }
-\dontrun{
 # gene annotations and the ideogram are downloaded from UCSC
-shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06))
+if (interactive() && requireNamespace("Gviz", quietly = TRUE)) {
+    shaman_plot_map_score_with_annotations("hg19", points, gintervals(2, 176.5e06, 177e06))
 }
 }
