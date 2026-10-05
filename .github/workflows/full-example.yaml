@@ -2,7 +2,7 @@
 # vignettes/precompute.R: shuffle, score, the figures, and the checks (scoring against hic_exp reproduces the
 # database's hic_score, a seeded rerun of the shuffle gives the same contacts, the shuffle keeps the marginal
 # coverage). Fails if any of it fails. Uploads the regenerated article and figures as the artifact
-# "full-example", which pkgdown.yaml builds the site from (pushes to master and cran-readiness).
+# "full-example", which pkgdown.yaml builds the site from (pushes to master).
 # About 13 minutes of computing on 4 cores (measured on a cluster node), 3GB of memory, 2.5GB of disk.
 #
 # Cached: the downloaded database (key: its md5), and the expected and score tracks the article computes

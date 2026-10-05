@@ -3,7 +3,7 @@
 # Gviz (Suggests) is not installed here, so its examples are skipped.
 on:
   push:
-    branches: [main, master, cran-readiness]
+    branches: [main, master]
   pull_request:
     branches: [main, master]
   workflow_dispatch:
