@@ -9,3 +9,11 @@ shaman_merge_ks_cpp <- function(o_dist, e_dist) {
     .Call('_shaman_shaman_merge_ks_cpp', PACKAGE = 'shaman', o_dist, e_dist)
 }
 
+shaman_knn_ks_cpp <- function(obs_x, obs_y, exp_x, exp_y, pts_x, pts_y, k, k_exp, threads) {
+    .Call('_shaman_shaman_knn_ks_cpp', PACKAGE = 'shaman', obs_x, obs_y, exp_x, exp_y, pts_x, pts_y, k, k_exp, threads)
+}
+
+shaman_knn_dist_cpp <- function(data_x, data_y, query_x, query_y, k, threads = 1L) {
+    .Call('_shaman_shaman_knn_dist_cpp', PACKAGE = 'shaman', data_x, data_y, query_x, query_y, k, threads)
+}
+
