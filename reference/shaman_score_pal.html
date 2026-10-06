@@ -79,6 +79,14 @@
     <p>A vector of 201 colors, for scores -100 to 100.</p>
     </div>
 
+    <div id="ref-examples">
+    <h2>Examples</h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">pal</span> <span class="op">&lt;-</span> <span class="fu">shaman_score_pal</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># the colors of the scores -100, 0, 50 and 100</span></span></span>
+<span class="r-in"><span><span class="va">pal</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">100</span>, <span class="fl">0</span>, <span class="fl">50</span>, <span class="fl">100</span><span class="op">)</span> <span class="op">+</span> <span class="fl">101</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "#000000"   "lightgrey" "#FF2F00"   "#FFFF00"  </span>
+</code></pre></div>
+    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>

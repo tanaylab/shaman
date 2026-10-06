@@ -88,7 +88,7 @@ Matrices for Aparametric Normalization</h1>
                         <h4 data-toc-skip class="author">Netta Mendelson
 Cohen</h4>
             
-            <h4 data-toc-skip class="date">2026-10-05</h4>
+            <h4 data-toc-skip class="date">2026-10-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/tanaylab/shaman/blob/master/vignettes/shaman-package.Rmd" class="external-link"><code>vignettes/shaman-package.Rmd</code></a></small>
       <div class="hidden name"><code>shaman-package.Rmd</code></div>
@@ -247,18 +247,18 @@ above.</li>
 between two sets of genomic features.<a class="anchor" aria-label="anchor" href="#spatial-contact-enrichment---used-to-measure-contact-enrichment-between-two-sets-of-genomic-features-"></a>
 </h3>
 <p>Relies on an existence of an expected (shuffled) 2d track. Builds a
-grid comprising of all combinations of intervals from feature 1 and
-feature 2 that fall within a band defined by min_dist and max_dist. For
-each point on the grid, look at the surrounding window, defined by range
-parameter. Discard all windows that do not contain a point with a score
-(defined in score_track_nm) above the score_filter parameter. This
-allows for focusing on potentially enriched pairs. Dissect the window
-into small bins, size in base pairs defined by the resolution parameter,
-and count the number of observed contacts, and the number of expected
-contacts in each bin. All windows are then summed together, generating a
-single matrix of observed and expected contacts, which is returned by
-function. Note that grid contains only points in which feature 1
-position is smaller than feature 2 position.</p>
+grid of all combinations of intervals from feature 1 and feature 2 that
+fall within a band defined by min_dist and max_dist. For each point on
+the grid, look at the surrounding window, defined by range parameter.
+Discard all windows that do not contain a point with a score (defined in
+score_track_nm) above the score_filter parameter. This allows for
+focusing on potentially enriched pairs. Dissect the window into small
+bins, size in base pairs defined by the resolution parameter, and count
+the number of observed contacts, and the number of expected contacts in
+each bin. All windows are then summed together, generating a single
+matrix of observed and expected contacts, which is returned by function.
+Note that grid contains only points in which feature 1 position is
+smaller than feature 2 position.</p>
 <p>Create data grid for two sets of features, and visualize it. Here
 feature 1 is the forward CTCF motifs and feature 2 the reverse ones,
 200kb-1Mb apart (the default <code>min_dist</code> and
@@ -295,7 +295,7 @@ distributed computing.</li>
 <li>shaman.sge_support = 0 - Set to 1 if Sun Grid Engine is available
 for distributed computing.</li>
 <li>shaman.sge_flags = “” - SGE parameters to be passed to qsub
-(e.g. threads, queue, etc’).</li>
+(e.g. threads, queue, etc.).</li>
 <li>shaman.score.threads = 1 - Threads for the kNN distances and scores
 of each score matrix. In multi-core mode each of the max_jobs processes
 uses this many threads; in SGE mode each job does, so shaman.sge_flags
