@@ -2,15 +2,15 @@
 
 0 errors | 0 warnings | 2 notes
 
-* This is a new submission. Possibly misspelled words in DESCRIPTION: Mendelson, et al. (the cited
-  authors) and enrichments are correct; Aparametric is the second A of the package name.
-* installed size is 5.2Mb, sub-directory libs 3.5Mb: debug information of the compiled code; the
-  stripped library is about 0.2Mb.
+* This is a new submission. Possibly misspelled words in DESCRIPTION: Mendelson (an author's
+  surname), et al. (in the citation) and enrichments are correct; Aparametric is the second A of the
+  package name.
+* installed size is about 5Mb, sub-directory libs about 3.5Mb: debug information of the compiled
+  code; the stripped library is about 0.2Mb.
 
 ## Test environments
 
-* local: AlmaLinux 8.10, R 4.4.1, gcc 13.3 (R's default flags, and -Wall -pedantic) and clang 18
-* local: clang 18 with -fsanitize=address,undefined (examples, tests)
+* local: AlmaLinux 8.10, R 4.4.1, gcc 13.3 with -Wall -pedantic
 * GitHub Actions: macOS (arm64), R release; Ubuntu, R devel, release and oldrel-1
 * GitHub Actions: R-hub's clang-asan container (R-devel with AddressSanitizer and
   UndefinedBehaviorSanitizer)

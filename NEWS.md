@@ -13,10 +13,10 @@
 * The shuffler stops with an error when it cannot write its output (e.g. a full disk) instead of leaving a truncated file.
 * `shaman_score_hic_track()` stops with an error naming the matrices that still have no score after 3 rounds, instead of resubmitting them forever; the finished scores stay in `work_dir`, so a rerun computes only the missing ones.
 * A matrix whose expected has fewer contacts than `k_exp` gets no scores (as with fewer than `k`) instead of failing with "Cannot find more nearest neighbours than there are points".
-* `library(shaman)` no longer tries to unpack the example database; `shaman_get_test_track_db()` unpacks it into the user cache on first use (downloading it from the lab's public S3 bucket and checking its md5 if needed), and current misha can open it.
+* `library(shaman)` no longer tries to unpack the example database.
 * The unused `shaman.ks_pl` option was removed from `shaman.conf`; configuration files that still set it load as before.
 * shaman now requires R >= 4.0.0 and a C++17 compiler.
-* `shaman_get_test_track_db()` returns a small example database (chr2:176.5e06-177e06 of the previous one), built in the session's temporary directory; `shaman_get_test_track_db(full = TRUE)` returns the full one, downloaded from the lab's public S3 bucket on first use. The package no longer includes the 104MB database, and the examples run on the small one.
+* `shaman_get_test_track_db()` returns a small example database (chr2:176.5e06-177e06 of the previous one), built in the session's temporary directory; `shaman_get_test_track_db(full = TRUE)` returns the full one, downloaded from the lab's public S3 bucket into the user cache on first use (its md5 is checked), in a form current misha can open. The package no longer includes the 104MB database, and the examples run on the small one.
 * Gviz is suggested instead of required; `shaman_plot_tracks_and_annotations()` and `shaman_plot_map_score_with_annotations()` need it.
 * The shuffle, score and feature grid functions restore the misha options they set (`gmultitasking`, `gmax.data.size`), and `shaman_plot_feature_grid()` restores `par()`.
 * The shuffler writes its progress through R's console instead of directly to stderr.
