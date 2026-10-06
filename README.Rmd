@@ -10,7 +10,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# The shaman package - sampling HiC contact matrices for a-parametric normalization#
+# The shaman package - sampling HiC contact matrices for a-parametric normalization
 
 Shaman package implements functions for resampling Hi-C matrices in order to generate expected contact distributions given constraints on marginal coverage and contact-distance probability distributions. The package also provides support for visualizing normalized matrices and statistical analysis of contact distributions around selected landmarks. It is an R package embedding algorithms implemented in C++, which is built over the Tanay lab's *misha* genomic database system (the misha package).
 

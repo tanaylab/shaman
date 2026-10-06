@@ -80,7 +80,7 @@ uint Random::bits() {
 
         return(uint(prev ^ (prev << 16)));
 }
-#endif // SCM_HAS_RAND48
+#endif // HAS_RAND48
 int Random::time_seed() {
 
         time_t now;

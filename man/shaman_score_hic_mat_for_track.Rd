@@ -2,7 +2,7 @@
 % Please edit documentation in R/shaman.R
 \name{shaman_score_hic_mat_for_track}
 \alias{shaman_score_hic_mat_for_track}
-\title{generate a score matrix for observed data based on the expected}
+\title{Generate a score matrix for observed data based on the expected}
 \usage{
 shaman_score_hic_mat_for_track(
   track_db,
@@ -15,7 +15,7 @@ shaman_score_hic_mat_for_track(
   end1,
   start2,
   end2,
-  expand = 2e+06,
+  expand = 2000000,
   k = 100,
   min_dist = 1024
 )
@@ -34,7 +34,7 @@ tracks is supported.}
 \item{points_track_nms}{Names of 2D genomic tracks that contain points on which to compute
 normalized score. Pooling points from multiple tracks is supported.}
 
-\item{chrom}{The chormosome of the matrix.}
+\item{chrom}{The chromosome of the matrix.}
 
 \item{start1}{The start coordinate of the first dimension.}
 
@@ -60,7 +60,9 @@ lower resolution maps, decrease k.}
 }
 \details{
 This function extracts observed data and expected data in an expanded matrix and computes
-The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
+the score for each observed point.
+The score for a point is the KS D-statistic of the distances to its k nearest neighbors
+in the observed data compared to the expected data.
 
 chrom, start1, end1, start2 and end2 can be vectors, to score several matrices in one call.
 Matrices with the same chrom, start1 and end1 then share one extraction of each track over the union
@@ -68,4 +70,23 @@ of their expanded intervals, instead of one extraction per matrix (each extracti
 the whole chromosome pair). The output files are the same as scoring the matrices one by one.
 
 \code{options(shaman.score.threads = N)} computes the kNN distances and scores on N threads (default 1).
+}
+\examples{
+
+# The example below runs on the test misha db provided with shaman.
+# Called by shaman_score_hic_track() for each matrix of its grid; here it scores the
+# observed contacts of chr2:176.7e06-176.8e06.
+library(misha)
+track_db <- shaman_get_test_track_db()
+gsetroot(track_db)
+work_dir <- tempfile("shaman_score_")
+dir.create(work_dir)
+shaman_score_hic_mat_for_track(track_db, work_dir,
+    obs_track_nms = "hic_obs", exp_track_nms = "hic_exp", points_track_nms = "hic_obs",
+    chrom = "chr2", start1 = 176.7e06, end1 = 176.8e06, start2 = 176.7e06, end2 = 176.8e06
+)
+# the score of each observed contact (start1 <= start2) in the matrix
+scores <- read.delim(list.files(work_dir, full.names = TRUE))
+head(scores)
+unlink(work_dir, recursive = TRUE)
 }

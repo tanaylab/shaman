@@ -39,7 +39,6 @@ GenomeGridLog::GenomeGridLog(int dist_resolution, int log_scale, int x_binsize,
 }
 
 GenomeGridLog::~GenomeGridLog() {
-	// TODO Auto-generated destructor stub
 }
 
 

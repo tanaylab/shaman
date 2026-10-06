@@ -2,7 +2,7 @@
 #'
 #' Dump templates of config files required by the package.
 #'
-#' @param config_dir Directory to dump to files to.
+#' @param config_dir Directory to dump the files to.
 #' @keywords internal
 #'
 
@@ -49,8 +49,6 @@
         op.shaman <- op.shaman[!already_set]
     }
     options(op.shaman)
-
-    #    gset_input_mode(autocompletion = FALSE, interactive = FALSE)
     invisible()
 }
 

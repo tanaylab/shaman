@@ -2,7 +2,7 @@
 #'
 #' \code{shaman_generate_feature_grid}
 #'
-#' Build a grid comprising of all combinations of intervals from feature 1 and feature 2 that
+#' Build a grid of all combinations of intervals from feature 1 and feature 2 that
 #' fall within a band defined by min_dist and max_dist. For each point on the grid,
 #' look at the surrounding window, defined by range parameter. Discard all windows
 #' that do not contain a point with a score (defined in score_track_nm) above the score_filter parameter.

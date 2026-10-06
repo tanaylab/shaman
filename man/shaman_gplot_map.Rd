@@ -2,7 +2,7 @@
 % Please edit documentation in R/shaman_plot_map.R
 \name{shaman_gplot_map}
 \alias{shaman_gplot_map}
-\title{plot an observed or expected hic map}
+\title{Plot an observed or expected hic map}
 \usage{
 shaman_gplot_map(
   points,
@@ -24,7 +24,7 @@ shaman_gplot_map(
 \item{add_axis}{Binary flag, indicating if axis should be added to plot.}
 }
 \value{
-gplot containing the map
+A ggplot object with the map.
 }
 \description{
 \code{shaman_gplot_map}

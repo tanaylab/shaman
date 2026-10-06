@@ -2,7 +2,7 @@
 % Please edit documentation in R/shaman.R
 \name{shaman_shuffle_hic_track}
 \alias{shaman_shuffle_hic_track}
-\title{generate an expected hic track based on observed hic data}
+\title{Generate an expected hic track based on observed hic data}
 \usage{
 shaman_shuffle_hic_track(
   track_db,
@@ -11,8 +11,8 @@ shaman_shuffle_hic_track(
   exp_track_nm = paste0(obs_track_nm, "_shuffle"),
   max_jobs = 25,
   shuffle = 80,
-  grid_small = 5e+05,
-  grid_high = 1e+06,
+  grid_small = 500000,
+  grid_high = 1000000,
   grid_step_iter = 40,
   dist_resolution = NA,
   smooth = NA,
@@ -32,9 +32,9 @@ shaman_shuffle_hic_track(
 
 \item{shuffle}{Average number of shuffling transitions for each observed point in the chromosomal contact matrix.}
 
-\item{grid_small}{Initial size of maximum distance between contact pairs consdered for switching}
+\item{grid_small}{Initial size of maximum distance between contact pairs considered for switching}
 
-\item{grid_high}{Final size of maximum distance between contact pairs consdered for switching}
+\item{grid_high}{Final size of maximum distance between contact pairs considered for switching}
 
 \item{grid_step_iter}{Number of iterations in each grid size}
 
@@ -60,9 +60,11 @@ seeds in its attribute \code{seed}.
 }
 \details{
 This function generates an expected 2D hic track based on observed hic data.
-Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
+Each chromosome is shuffled separately, to generate an expected shuffled contact matrix.
 Note that this function requires sge (qsub) or multicore to be enabled.
 Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+Sun Grid Engine mode, \code{options(shaman.sge_support = 1)}, is preferred; work_dir must then be
+accessible by all jobs. Multi-core mode is \code{options(shaman.mc_support = 1)}.
 
 Each step creates temporary files of the shuffled matrices which are then joined to a track.
 Temporary files are deleted upon track creation.
@@ -77,7 +79,6 @@ and work_dir keeps the shuffled chromosomes, so a rerun with the same work_dir s
 library(misha)
 track_db <- shaman_get_test_track_db()
 gsetroot(track_db)
-# options(shaman.sge_support=1) #configuring sge engine mode - preferred
 old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 if (gtrack.exists("hic_obs_shuffle")) {
     gtrack.rm("hic_obs_shuffle", force = TRUE)

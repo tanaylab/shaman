@@ -1,11 +1,13 @@
-#'  generate an expected hic track based on observed hic data
+#' Generate an expected hic track based on observed hic data
 #'
 #' \code{shaman_shuffle_hic_track}
 #'
 #' This function generates an expected 2D hic track based on observed hic data.
-#' Each chromosome is shuffled seperately, to generate an expected shuffled contact matrix
+#' Each chromosome is shuffled separately, to generate an expected shuffled contact matrix.
 #' Note that this function requires sge (qsub) or multicore to be enabled.
 #' Parameter can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+#' Sun Grid Engine mode, \code{options(shaman.sge_support = 1)}, is preferred; work_dir must then be
+#' accessible by all jobs. Multi-core mode is \code{options(shaman.mc_support = 1)}.
 #'
 #' Each step creates temporary files of the shuffled matrices which are then joined to a track.
 #' Temporary files are deleted upon track creation.
@@ -17,8 +19,8 @@
 #' @param exp_track_nm Name of expected 2D genomic track.
 #' @param max_jobs Maximal number of qsub or local jobs - for optimal performance provide the number of chromosomes.
 #' @param shuffle Average number of shuffling transitions for each observed point in the chromosomal contact matrix.
-#' @param grid_small Initial size of maximum distance between contact pairs consdered for switching
-#' @param grid_high Final size of maximum distance between contact pairs consdered for switching
+#' @param grid_small Initial size of maximum distance between contact pairs considered for switching
+#' @param grid_high Final size of maximum distance between contact pairs considered for switching
 #' @param grid_step_iter Number of iterations in each grid size
 #' @param dist_resolution Number of bins in each log2 distance unit. If NA, value is determined
 #' based on observed data (recommended).
@@ -41,7 +43,6 @@
 #' library(misha)
 #' track_db <- shaman_get_test_track_db()
 #' gsetroot(track_db)
-#' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
 #' old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 #' if (gtrack.exists("hic_obs_shuffle")) {
 #'     gtrack.rm("hic_obs_shuffle", force = TRUE)
@@ -90,7 +91,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
         work_dir <- paste0(work_dir, "/")
     }
     if (!dir.exists(work_dir)) {
-        stop(paste("work_dir (", work_dir, ") does not exists"))
+        stop(paste("work_dir (", work_dir, ") does not exist"))
     }
 
     intervals <- gintervals.all()
@@ -148,8 +149,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
         warning(paste(length(missing_files), "full chrom files were not shuffled:\n", paste(missing_files, collapse = ",")))
     }
 
-    # reaching this point means that all matrices should be in work_dir --> creating track this section
-    # should be replaced after misha generates a proper import for overlapping contacts
+    # all chromosomes were shuffled: import their files as the track
     files <- c()
     for (chrom in intervals$chrom) {
         fn <- paste0(work_dir, obs_track_nm, "_", chrom, "_0_0.full_chrom_shuffled.uniq")
@@ -178,10 +178,10 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 ####################################################################################################
 #' Generate an expected matrix from observed data as a process for generating an expected track
 #'
-#' \code{shuffle_hic_mat_for_track}
+#' \code{shaman_shuffle_hic_mat_for_track}
 #'
 #' This function generates an expected 2D hic matrix from observed hic data. Should not be called externally,
-#  but rather as jobs when creating a 2D shuffled track.
+#' but rather as jobs when creating a 2D shuffled track.
 #' The observed data is a combination of observed contacts in scope plus already shuffled
 #' near-cis contacts (stored in work_dir) which we sample from to maintain the decay probability curve.
 #'
@@ -190,7 +190,7 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 #' @param track_db Directory of the misha database.
 #' @param track Name of observed 2D genomic track for the hic data.
 #' @param work_dir Centralized directory to store temporary files.
-#' @param chrom The chormosome of the matrix.
+#' @param chrom The chromosome of the matrix.
 #' @param start1 The start coordinate of the first dimension.
 #' @param end1 The end coordinate of the first dimension.
 #' @param start2 The start coordinate of the second dimension.
@@ -206,8 +206,8 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 #' @param hic_mcmc_max_resolution Maximum number of bins for each log2 unit
 #' @param raw_ext File extension of the observed data.
 #' @param shuffled_ext File extension of the shuffled data.
-#' @param grid_small Initial size of maximum distance between contact pairs consdered for switching
-#' @param grid_high Final size of maximum distance between contact pairs consdered for switching
+#' @param grid_small Initial size of maximum distance between contact pairs considered for switching
+#' @param grid_high Final size of maximum distance between contact pairs considered for switching
 #' @param grid_increase Grid increase size
 #' @param grid_step_iter Number of iterations in each grid size
 #' @param sort_uniq Binary flag, indicating whether the shuffled matrix file should be sorted and
@@ -219,6 +219,27 @@ shaman_shuffle_hic_track <- function(track_db, obs_track_nm, work_dir,
 #' @return The seed the shuffler used, or NA if the matrix was not shuffled here (no or too few
 #' contacts, or the shuffled file already existed).
 #'
+#' @examples
+#'
+#' # The example below runs on the test misha db provided with shaman.
+#' # Called by shaman_shuffle_hic_track() for each chromosome; here it shuffles the contacts
+#' # of chr2:176.5e06-177e06.
+#' library(misha)
+#' track_db <- shaman_get_test_track_db()
+#' work_dir <- tempfile("shaman_shuffle_")
+#' dir.create(work_dir)
+#' seed <- shaman_shuffle_hic_mat_for_track(track_db, "hic_obs", work_dir,
+#'     chrom = "chr2", start1 = 176.5e06, end1 = 177e06, start2 = 176.5e06, end2 = 177e06,
+#'     shuffle = 1, # default is set to 80
+#'     grid_step_iter = 1, # default is set to 40
+#'     seed = 1, # the same seed gives the same shuffle
+#'     sort_uniq = TRUE
+#' )
+#' seed
+#' # the shuffled contacts (in both orientations) and their counts
+#' shuffled <- read.delim(list.files(work_dir, pattern = "uniq$", full.names = TRUE))
+#' head(shuffled)
+#' unlink(work_dir, recursive = TRUE)
 #' @export
 ##########################################################################################################
 shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, start1, end1, start2, end2,
@@ -307,18 +328,20 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 }
 
 ##########################################################################################################
-#'  generate a score hic track based on observed and expected (shuffled) hic data
+#' Generate a score hic track based on observed and expected (shuffled) hic data
 #'
 #' \code{shaman_score_hic_track}
 #'
 #' This function generates a 2D score track based on observed and expected hic data.
 #' The score is computed by generating a grid of small matrices spanning all chromosomes
-#' and computing the score of each matrix independantly.
+#' and computing the score of each matrix independently.
 #' The model for computing the score relies on the KS D statistic computed for each observed point,
 #' over the distances of the k-nearest neighbors in the observed compared to the expected.
 #' High scores represent contact enrichment while low scores depict insulation.
 #' Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
 #' Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+#' Sun Grid Engine mode, \code{options(shaman.sge_support = 1)}, is preferred; work_dir must then be
+#' accessible by all jobs. Multi-core mode is \code{options(shaman.mc_support = 1)}.
 #' \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
 #' threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
 #' each job does, so shaman.sge_flags should ask for N slots.
@@ -356,7 +379,6 @@ shaman_shuffle_hic_mat_for_track <- function(track_db, track, work_dir, chrom, s
 #' library(misha)
 #' track_db <- shaman_get_test_track_db()
 #' gsetroot(track_db)
-#' # options(shaman.sge_support=1) #configuring sge engine mode - preferred
 #' old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 #' if (gtrack.exists("hic_score_new")) {
 #'     gtrack.rm("hic_score_new", force = TRUE)
@@ -432,8 +454,8 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
         work_dir, "/", paste0(obs_track_nms, collapse = "."), ".",
         near_cis_2d_upper_mat$chrom1, ".", near_cis_2d_upper_mat$start1, ".", near_cis_2d_upper_mat$start2, ".score"
     )
-    # ponytail: a fixed number of rounds, not an option; a matrix that failed this often (e.g. a job
-    # that is always killed for memory) would fail again
+    # a fixed number of rounds, not an option: a matrix that failed this often (e.g. a job that is
+    # always killed for memory) would fail again
     max_rounds <- 3
     rounds <- 0
     while (nrow(near_cis_2d_upper_mat) > 0) {
@@ -456,8 +478,6 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
                 near_cis_2d_upper_mat$end1, ",", near_cis_2d_upper_mat$start2, ", ",
                 near_cis_2d_upper_mat$end2, ", ", expand, ", ", k, ")}"
             )
-            # commands <- paste(commands, collapse=",")
-
             res <- .gcluster.run2(command.list = commands, opt.flags = sge_flags, max.jobs = max_jobs)
         } else {
             res <- parallel::mclapply(seq_len(nrow(near_cis_2d_upper_mat)), function(i) {
@@ -475,7 +495,6 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
                 stop(attr(res[[which(failed)[1]]], "condition"))
             }
         }
-        # res <- eval(parse(text=paste("gcluster.run(", commands, ",opt.flags=\"", sge_flags,  "\" ,max.jobs=", max_jobs, ")")))
         # check to see if there are any missing files
         existing_files <- file.exists(expected_files)
         missing_files <- expected_files[!existing_files]
@@ -502,14 +521,14 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 }
 
 ##########################################################################################################
-#'  generate a score matrix for observed data based on the expected
+#' Generate a score matrix for observed data based on the expected
 #'
 #' \code{shaman_score_hic_mat_for_track}
 #'
 #' This function extracts observed data and expected data in an expanded matrix and computes
-#  the score for each observed point.
-#' The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
-#  in the observed data compared the the expected data.
+#' the score for each observed point.
+#' The score for a point is the KS D-statistic of the distances to its k nearest neighbors
+#' in the observed data compared to the expected data.
 #'
 #' @param track_db Directory of the misha database.
 #' @param work_dir Centralized directory to store temporary files.
@@ -519,7 +538,7 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 #' tracks is supported.
 #' @param points_track_nms Names of 2D genomic tracks that contain points on which to compute
 #' normalized score. Pooling points from multiple tracks is supported.
-#' @param chrom The chormosome of the matrix.
+#' @param chrom The chromosome of the matrix.
 #' @param start1 The start coordinate of the first dimension.
 #' @param end1 The end coordinate of the first dimension.
 #' @param start2 The start coordinate of the second dimension.
@@ -538,6 +557,25 @@ shaman_score_hic_track <- function(track_db, work_dir, score_track_nm, obs_track
 #' \code{options(shaman.score.threads = N)} computes the kNN distances and scores on N threads (default 1).
 #'
 #' @return 0, 1 or -1 per matrix.
+#'
+#' @examples
+#'
+#' # The example below runs on the test misha db provided with shaman.
+#' # Called by shaman_score_hic_track() for each matrix of its grid; here it scores the
+#' # observed contacts of chr2:176.7e06-176.8e06.
+#' library(misha)
+#' track_db <- shaman_get_test_track_db()
+#' gsetroot(track_db)
+#' work_dir <- tempfile("shaman_score_")
+#' dir.create(work_dir)
+#' shaman_score_hic_mat_for_track(track_db, work_dir,
+#'     obs_track_nms = "hic_obs", exp_track_nms = "hic_exp", points_track_nms = "hic_obs",
+#'     chrom = "chr2", start1 = 176.7e06, end1 = 176.8e06, start2 = 176.7e06, end2 = 176.8e06
+#' )
+#' # the score of each observed contact (start1 <= start2) in the matrix
+#' scores <- read.delim(list.files(work_dir, full.names = TRUE))
+#' head(scores)
+#' unlink(work_dir, recursive = TRUE)
 #' @export
 ##########################################################################################################
 shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, exp_track_nms, points_track_nms,
@@ -602,21 +640,21 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 }
 
 ##########################################################################################################
-#'  generate a score matrix for observed data based on the expected for a given 2D focus interval
+#' Generate a score matrix for observed data based on the expected for a given 2D focus interval
 #'
 #' \code{shaman_score_hic_mat}
 #'
 #' This function extracts observed data and expected data in an expanded matrix and computes
-#  the score for each observed point.
-#' The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
-#  in the observed data compared the the expected data.
+#' the score for each observed point.
+#' The score for a point is the KS D-statistic of the distances to its k nearest neighbors
+#' in the observed data compared to the expected data.
 #'
 #' @param obs_track_nms Names of observed 2D genomic tracks for the hic data. Pooling of multiple
 #' observed tracks is supported.
 #' @param exp_track_nms Names of expected (shuffled) 2D genomic tracks. Pooling of multiple expected
 #' tracks is supported.
 #' @param focus_interval 2D interval on which to compute the scores.
-#' @param regional_interval An expansion of the focus interval, inclusing  points outside the focus matrix
+#' @param regional_interval An expansion of the focus interval, including points outside the focus matrix
 #' for accurate computing of the score. Note that for each observed point, its k-nearest neighbors must be
 #' included in the expanded matrix.
 #' @param points_track_nms Names of 2D genomic tracks that contain points on which to compute
@@ -630,10 +668,8 @@ shaman_score_hic_mat_for_track <- function(track_db, work_dir, obs_track_nms, ex
 #' independent, k_exp should be set to NA and the will be determined by the ratio between the total number
 #' of contacts in this region.
 #'
-#' @return NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
-#' 1) points - start1, start2 and score for all observed points.
-#' 2) obs - the observed points.
-#' 3) exp - the expected points.
+#' @return NULL if insufficient observed data, otherwise a list with one element:
+#' points - the points in the focus interval (chrom1, start1, end1, chrom2, start2, end2) and their score.
 #'
 #' @examples
 #'
@@ -681,21 +717,21 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 }
 
 ##########################################################################################################
-#'  generate a score matrix for observed data based on the expected for a given set of points
+#' Generate a score matrix for observed data based on the expected for a given set of points
 #'
 #' \code{shaman_score_hic_points}
 #'
 #' This function extracts observed data and expected data in an expanded matrix and computes
-#  the score for each observed point.
-#' The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
-#  in the observed data compared the the expected data.
+#' the score for each observed point.
+#' The score for a point is the KS D-statistic of the distances to its k nearest neighbors
+#' in the observed data compared to the expected data.
 #'
 #' @param obs_track_nms Names of observed 2D genomic tracks for the hic data. Pooling of multiple
 #' observed tracks is supported.
 #' @param exp_track_nms Names of expected (shuffled) 2D genomic tracks. Pooling of multiple expected
 #' tracks is supported.
 #' @param points A score will be computed for each of the points.
-#' @param regional_interval An expansion of the focus interval, inclusing  points outside the focus matrix
+#' @param regional_interval An expansion of the focus interval, including points outside the focus matrix
 #' for accurate computing of the score. Note that for each observed point, its k-nearest neighbors must be
 #' included in the expanded matrix.
 #' @param min_dist The minimum distance between points.
@@ -704,10 +740,8 @@ shaman_score_hic_mat <- function(obs_track_nms, exp_track_nms, focus_interval, r
 #' @param k_exp The number of neighbor distances used for the score on the expected tracks (see
 #' \code{shaman_score_hic_mat}).
 #'
-#' @return NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
-#' 1) points - start1, start2 and score for all observed points.
-#' 2) obs - the observed points.
-#' 3) exp - the expected points.
+#' @return NULL if insufficient observed data, otherwise a list with one element:
+#' points - the given points with their score (column score).
 #'
 #' @examples
 #'
@@ -783,7 +817,7 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
 }
 
 #########################################################################################################
-#'  Inline function for generating an expected matrix and computing the score for a given interval
+#' Inline function for generating an expected matrix and computing the score for a given interval
 #'
 #' \code{shaman_shuffle_and_score_hic_mat}
 #'
@@ -795,20 +829,21 @@ shaman_score_hic_points <- function(obs_track_nms, exp_track_nms, points, region
 #' Note that for each observed point, its k-nearest neighbors must be included in the expanded matrix.
 #' @param min_dist The minimum distance between points.
 #' @param k The number of neighbor distances used for the score. For higher resolution maps, increase k. For
+#' lower resolution maps, decrease k.
 #' @param dist_resolution Number of bins in each log2 distance unit. If NA, value is determined
 #' based on observed data (recommended).
 #' @param decay_smooth Number of bins to use for smoothing the MCMC target function: the decay curve.
 #' If NA, value is determined based on observed data (recommended).
 #' @param hic_mcmc_max_resolution Maximum number of bins for each log2 unit.
 #' @param shuffle Number of shuffling rounds for each observed point.
-#' @param grid_small Initial size of maximum distance between contact pairs consdered for switching
-#' @param grid_high Final size of maximum distance between contact pairs consdered for switching
+#' @param grid_small Initial size of maximum distance between contact pairs considered for switching
+#' @param grid_high Final size of maximum distance between contact pairs considered for switching
 #' @param grid_increase Grid increase size
 #' @param grid_step_iter Number of iterations in each grid size
 #' @param seed Seed for the shuffler: NULL (default) seeds it from the current time (in seconds), or a
 #' whole number between 0 and 2^31 - 1. The shuffler prints the seed it uses.
-
-#' @return NULL if insufficient observed data, otherwise resturns a list containing:
+#'
+#' @return NULL if insufficient observed data, otherwise returns a list containing:
 #' 1) points - start1, start2 and score for all observed points.
 #' 2) obs - the observed points.
 #' 3) exp - the expected points.
@@ -896,13 +931,13 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 }
 
 ##########################################################################################################
-#'  Compute a score matrix for observed data based on the expected for a given set of points
+#' Compute a score matrix for observed data based on the expected for a given set of points
 #'
 #' \code{shaman_kk_norm}
 #'
-#' This function receives observed and expected data and compute the score on a given set of points.
-#' The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
-#  in the observed data compared the the expected data.
+#' This function receives observed and expected data and computes the score on a given set of points.
+#' The score for a point is the KS D-statistic of the distances to its k nearest neighbors
+#' in the observed data compared to the expected data.
 #'
 #' @param obs Dataframe containing the observed points
 #' @param exp Dataframe containing the expected (shuffled) points.
@@ -912,7 +947,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 #' @param k_exp The number of neighbor distances used for the score on expected data. Should reflect
 #' the ratio between the total number of observed and expected over the entire chromosome.
 #'
-#' @return NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
+#' @return NULL if insufficient observed data, otherwise returns a list containing 3 elements:
 #' 1) points - start1, start2 and score for all observed points.
 #' 2) obs - the observed points.
 #' 3) exp - the expected points.
@@ -932,7 +967,7 @@ shaman_shuffle_and_score_hic_mat <- function(obs_track_nms, interval, work_dir, 
 #' @export
 ##########################################################################################################
 shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
-    message(paste0("going into knn witn ", nrow(obs), " observed and ", nrow(exp), " expected"))
+    message(paste0("going into knn with ", nrow(obs), " observed and ", nrow(exp), " expected"))
     o_knn <- RANN::nn2(obs[, c("start1", "start2")], points[, c("start1", "start2")], k = k)
     message("going into shuffled knn")
     e_knn <- RANN::nn2(exp[, c("start1", "start2")], points[, c("start1", "start2")], k = k_exp)
@@ -944,10 +979,7 @@ shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
     return(list(points = points, obs = obs, exp = exp))
 }
 
-##########################################################################################################
-#  .shaman_combine_points_multi_tracks
-#
-##########################################################################################################
+# The contacts of tracks in interval, pooled, without those within min_dist of the diagonal
 .shaman_combine_points_multi_tracks <- function(tracks, interval, min_dist) {
     points <- plyr::adply(tracks, 1, function(x) {
         p <- .shaman_cached_gextract(x, interval)
@@ -1019,10 +1051,6 @@ shaman_kk_norm <- function(obs, exp, points, k = 100, k_exp = 100) {
     })[, -1]
     return(sum(total))
 }
-
-
-
-
 
 # Runs commands on SGE via misha::gcluster.run. Commands are given either as expressions in '...'
 # or as strings in 'command.list'. The call is evaluated in the caller's frame, so the jobs get

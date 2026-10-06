@@ -20,7 +20,7 @@ For higher resolution maps, increase k. For lower resolution maps, decrease k.}
 the ratio between the total number of observed and expected over the entire chromosome.}
 }
 \value{
-NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
+NULL if insufficient observed data, otherwise returns a list containing 3 elements:
 1) points - start1, start2 and score for all observed points.
 2) obs - the observed points.
 3) exp - the expected points.
@@ -29,8 +29,9 @@ NULL if insufficient observed data, otherwise resturns a list containing 3 eleme
 \code{shaman_kk_norm}
 }
 \details{
-This function receives observed and expected data and compute the score on a given set of points.
-The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
+This function receives observed and expected data and computes the score on a given set of points.
+The score for a point is the KS D-statistic of the distances to its k nearest neighbors
+in the observed data compared to the expected data.
 }
 \examples{
 

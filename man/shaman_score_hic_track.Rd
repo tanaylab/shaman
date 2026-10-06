@@ -2,7 +2,7 @@
 % Please edit documentation in R/shaman.R
 \name{shaman_score_hic_track}
 \alias{shaman_score_hic_track}
-\title{generate a score hic track based on observed and expected (shuffled) hic data}
+\title{Generate a score hic track based on observed and expected (shuffled) hic data}
 \usage{
 shaman_score_hic_track(
   track_db,
@@ -11,8 +11,8 @@ shaman_score_hic_track(
   obs_track_nms,
   exp_track_nms = paste0(obs_track_nms, "_shuffle"),
   points_track_nms = obs_track_nms,
-  near_cis = 5e+06,
-  expand = 2e+06,
+  near_cis = 5000000,
+  expand = 2000000,
   k = 100,
   max_jobs = 100
 )
@@ -52,12 +52,14 @@ No return value, called for side effects: creates the 2D score track score_track
 \details{
 This function generates a 2D score track based on observed and expected hic data.
 The score is computed by generating a grid of small matrices spanning all chromosomes
-and computing the score of each matrix independantly.
+and computing the score of each matrix independently.
 The model for computing the score relies on the KS D statistic computed for each observed point,
 over the distances of the k-nearest neighbors in the observed compared to the expected.
 High scores represent contact enrichment while low scores depict insulation.
 Note that this function requires either sge (qsub) or multicore to compute in a timely manner.
 Parameters can be set via shaman.sge_support or shaman.mc_support in shaman.conf file.
+Sun Grid Engine mode, \code{options(shaman.sge_support = 1)}, is preferred; work_dir must then be
+accessible by all jobs. Multi-core mode is \code{options(shaman.mc_support = 1)}.
 \code{options(shaman.score.threads = N)} computes the kNN distances and scores of each matrix on N
 threads (default 1); in multi-core mode each of the max_jobs processes uses N threads, and in SGE mode
 each job does, so shaman.sge_flags should ask for N slots.
@@ -79,7 +81,6 @@ The finished score files stay in work_dir, so a rerun with the same work_dir com
 library(misha)
 track_db <- shaman_get_test_track_db()
 gsetroot(track_db)
-# options(shaman.sge_support=1) #configuring sge engine mode - preferred
 old_opts <- options(shaman.mc_support = 1) # configuring multi-core mode
 if (gtrack.exists("hic_score_new")) {
     gtrack.rm("hic_score_new", force = TRUE)

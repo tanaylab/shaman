@@ -4,6 +4,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^inst/trackdb\.tar\.gz$
+^\.git$
 ^\.github$
 ^cran-comments\.md$
 ^docs$

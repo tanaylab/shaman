@@ -2,7 +2,7 @@
 % Please edit documentation in R/shaman_plot_map.R
 \name{shaman_plot_tracks_and_annotations}
 \alias{shaman_plot_tracks_and_annotations}
-\title{plots misha 1D tracks and annotations}
+\title{Plot misha 1D tracks and annotations}
 \usage{
 shaman_plot_tracks_and_annotations(
   genome,
@@ -39,9 +39,9 @@ to be displayed in the region.}
 
 \item{add_genes}{Boolean flag indicating whether to show gene annotations.}
 
-\item{add_ideogram}{Boolean flag indicating whether to add an chromosomal ideogram.}
+\item{add_ideogram}{Boolean flag indicating whether to add a chromosome ideogram.}
 
-\item{add_axis}{Boolean flag indicating whether to show chromosmal axis.}
+\item{add_axis}{Boolean flag indicating whether to show the chromosomal axis.}
 
 \item{gene_stacking}{Describes the viewing option of the genes track. Can be either "squish", or "dense"}
 
@@ -56,7 +56,7 @@ Called for the plot. Returns what \code{Gviz::plotTracks()} returns, invisibly.
 Needs the Bioconductor package Gviz.
 }
 \description{
-\code{shaman_gplot_tracks_and_annotations}
+\code{shaman_plot_tracks_and_annotations}
 }
 \details{
 Plots 1D tracks in UCSC format. Along with gene annotations and chromosomal axis, this
@@ -80,8 +80,8 @@ if (requireNamespace("Gviz", quietly = TRUE)) {
     )
 }
 }
-\dontrun{
 # gene annotations and the ideogram are downloaded from UCSC
-shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06), annotations = ctcf)
+if (interactive() && requireNamespace("Gviz", quietly = TRUE)) {
+    shaman_plot_tracks_and_annotations("hg19", gintervals(2, 176.5e06, 177e06), annotations = ctcf)
 }
 }
