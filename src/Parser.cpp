@@ -10,12 +10,9 @@
 #include "macro.h"
 
 Parser::Parser() {
-	// TODO Auto-generated constructor stub
-
 }
 
 Parser::~Parser() {
-	// TODO Auto-generated destructor stub
 }
 
 int Parser::split_line(istream &in, vector<string> &fields, char delim, int estimated_num_fields)

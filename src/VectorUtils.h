@@ -24,13 +24,13 @@ public:
 		for (unsigned int i=0; i<vec.size(); i++) {
 			log_vec[i] = (vec[i]<=0 ? FLT_MIN_EXP : log(vec[i]));
 		}
-	};
+	}
 
 	static void exp_vec(const vector<float>& vec, vector<float>& exp_vec) {
 		for (unsigned int i=0; i<vec.size(); i++) {
 			exp_vec[i] = exp(vec[i]);
 		}
-	};
+	}
 
 	template <class T>
 	static void linear_regression(const vector<T>& vals, int N, float& a, float& b) {
@@ -47,7 +47,7 @@ public:
 		a = (N*sum_xy - sum_x*sum_y) /
 				(N*sum_x_squared - sum_x*sum_x);
 		b = (sum_y - a*sum_x)/N;
-	};
+	}
 
 	template <class T>
 	static void smooth_vector(const vector<T>& raw, vector<float>& smoothed, int smooth) {
@@ -105,7 +105,7 @@ public:
 			s += a_start_margin;
 			e += a_end_margin;
 		}
-	};
+	}
 };
 
 #endif /* VECTORUTILS_H_ */

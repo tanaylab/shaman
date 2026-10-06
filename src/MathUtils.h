@@ -1,5 +1,5 @@
 /*
- * MathUtil.h
+ * MathUtils.h
  *
  *  Created on: Nov 30, 2016
  *      Author: nettam
@@ -49,8 +49,6 @@ inline void log_minus_log(float &l1, float l2) {
 			l1 = -FLT_MAX;
 
 		} else {
-//			cerr << "NAN at log minus log "
-//			<< l1 << " " << l2 << " " << l2 - l1 << endl;
 			l1 = -FLT_MAX;
 		}
 	} else {

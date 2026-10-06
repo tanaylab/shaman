@@ -47,8 +47,8 @@ protected:
 class ContactShuffler final {
 public:
 	ContactShuffler(int dist_log_scale,	int dist_resolution,
-			int grid_x_resolution, //int grid_dist_resolution,
-			int grid_switch_bin_dist, //int grid_switch_x_dist,
+			int grid_x_resolution,
+			int grid_switch_bin_dist,
 			float correction_factor, int decay_smooth, int regularization, int min_dist, int max_dist);
 	virtual ~ContactShuffler();
 	// contact i is (x[i*stride], y[i*stride]), i < n

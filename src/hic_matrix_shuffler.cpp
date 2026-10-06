@@ -39,8 +39,6 @@ int shaman_hic_matrix_shuffler_cpp(Rcpp::IntegerMatrix raw_contacts,
 	Random::reset(seed);
 	Rcpp::Rcerr << "seed = " << seed << endl;
 	clock_t begin = clock();
-	//Rcpp::Rcout << "raw contacts file = " << raw_contacts << endl;
-
 
 	int dist_log_scale = 2;
 	int output_header = 1;

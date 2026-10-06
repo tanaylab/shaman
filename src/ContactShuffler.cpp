@@ -54,12 +54,10 @@ ContactShuffler::ContactShuffler(int dist_log_scale, int dist_resolution,
    m_log_log_scale(log(dist_log_scale)),
    m_small_dist(0),
    m_grid_x_binsize(grid_x_resolution),
-   //m_grid_dist_resolution(grid_dist_resolution),
    m_grid_switch_bin_dist(grid_switch_bin_dist),
 #ifdef SHAMAN_PMR
    m_contact_cell(&m_huge_pages),
 #endif
-   //m_grid_switch_x_dist(grid_switch_x_dist),
    m_correction_factor(log(correction_factor)),
    m_regularization(regularization),
    m_decay_smooth(decay_smooth)
@@ -69,8 +67,6 @@ ContactShuffler::ContactShuffler(int dist_log_scale, int dist_resolution,
 }
 
 ContactShuffler::~ContactShuffler() {
-	// TODO Auto-generated destructor stub
-	//delete(m_grid);
 }
 
 long ContactShuffler::load_contacts(const int* x, const int* y, int stride, long n, bool symetric)
@@ -395,11 +391,6 @@ int ContactShuffler::get_grid_bin(int x) {
 void ContactShuffler::correct_proposal_dist() {
 	float sum_proposal=FLT_MIN_EXP;
 	int max_bins = m_proposal_freq.size();
-	//vector<float> smooth_obs(max_bins, FLT_MIN_EXP);
-	//VectorUtils::smooth_vector(m_decay_obs, smooth_obs, m_decay_smooth);
-	//VectorUtils::log_vec(smooth_obs, smooth_obs);
-	//regularize_decay(smooth_obs);
-
 	for (int bin=0; bin<max_bins; bin++) {
 		if (m_decay_exp_nonzero[bin]) {
 			if (m_decay_obs[bin] != 0) {
@@ -427,8 +418,6 @@ void ContactShuffler::correct_proposal_dist() {
 int ContactShuffler::init_proposal_const() {
 	int bins = m_decay_exp.size();
 	m_proposal_freq.resize(bins, -log(bins));
-	//m_proposal_freq[0] = FLT_MIN_EXP;
-	//m_proposal_freq[bins-1] = FLT_MIN_EXP;
 	return(0);
 }
 
@@ -448,10 +437,10 @@ int ContactShuffler::init_proposal_from_area() {
 		m_proposal_freq[d] = max_clip_factor+min_clip_factor==0 ? FLT_MIN_EXP : log(((max_clip_factor + min_clip_factor)/2) * f);
 	}
 	float sum_proposal=FLT_MIN_EXP;
-	for (int bin=0; bin<m_decay_exp.size(); bin++) {
+	for (unsigned bin=0; bin<m_decay_exp.size(); bin++) {
 		log_sum_log(sum_proposal,m_proposal_freq[bin]);
 	}
-	for (int bin=0; bin<m_decay_exp.size(); bin++) {
+	for (unsigned bin=0; bin<m_decay_exp.size(); bin++) {
 		m_proposal_freq[bin] -= sum_proposal;
 	}
 	return(0);
@@ -474,22 +463,9 @@ int ContactShuffler::init_proposal_from_contacts(long proposal_shuffle) {
 
 		int dist_ij_bin = get_dist_bin(ci.x, cj.y);
 		int dist_ji_bin = get_dist_bin(ci.y, cj.x);
-		//log_sum_log(m_proposal_freq[dist_ij_bin], 0);
-		//log_sum_log(m_proposal_freq[dist_ji_bin], 0);
-		//proposal_suggest[m_contacts_dist_bins[i]]++;
-		//proposal_suggest[m_contacts_dist_bins[j]]++;
 		if (dist_ij_bin >= 0) proposal_count[dist_ij_bin]++;
 		if (dist_ji_bin >= 0) proposal_count[dist_ji_bin]++;
 	}
-	/*
-	for (int bin=0; bin<max_bins; bin++) {
-		if (proposal_suggest[bin] > 0) {
-			m_proposal_freq[bin] = ((float)proposal_count[bin])/proposal_suggest[bin];
-		} else {
-			m_proposal_freq[bin] = 10;
-		}
-	}
-	*/
 	VectorUtils::smooth_vector(proposal_count, m_proposal_freq, m_decay_smooth);
 	VectorUtils::log_vec(m_proposal_freq, m_proposal_freq);
 	float sum_proposal=FLT_MIN_EXP;
@@ -539,12 +515,9 @@ int ContactShuffler::shuffle_contacts(int shuffle_factor, float transition_corre
 	long total_samples=0;
 	long total_transitions=0;
 	for (int i=0; i<shuffle_factor; i++) {
-		//transitions_per_correction = floor(m_contact_count*0.0001 * (i+1));
-
 		long transitions=0;
 		long samples=0;
 		while (transitions < m_contact_count) {
-			//while (transitions < shuffle_factor) {
 			samples++;
 			transitions += simple_sample();
 			if (samples > 1000 && transitions == 0) {
@@ -554,9 +527,6 @@ int ContactShuffler::shuffle_contacts(int shuffle_factor, float transition_corre
 
 			if (transitions % transitions_per_correction == 0) {
 				correct_proposal_dist();
-				//cerr << transitions_per_correction << " --> ";
-				//transitions_per_correction += floor(m_contact_count*transition_correction_factor * 0.02);
-				//cerr << transitions_per_correction << endl;
 			    if (debug) {
 			    	Rcpp::Rcout << m_grid_x_binsize << "\t" << (total_samples + samples) << "\t" <<
 			    			floor(100*(total_transitions + transitions))/(total_samples+samples)/100;
