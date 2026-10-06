@@ -2,7 +2,7 @@
 % Please edit documentation in R/shaman_plot_map.R
 \name{shaman_gplot_map_score}
 \alias{shaman_gplot_map_score}
-\title{plot a normlized hic map}
+\title{Plot a normalized hic map}
 \usage{
 shaman_gplot_map_score(
   points_score,
@@ -24,15 +24,15 @@ shaman_gplot_map_score(
 \item{add_axis}{Binary flag, indicating if axis should be added to plot.}
 }
 \value{
-gplot containing the map
+A ggplot object with the map.
 }
 \description{
 \code{shaman_gplot_map_score}
 }
 \details{
-Plots observerved hic contact matrix color-coded by normalized scores.
+Plots observed hic contact matrix color-coded by normalized scores.
 Data can be either extracted directly from score track or computed via the functions:
-score_hic_mat, shuffle_and_score_hic_mat
+\code{shaman_score_hic_mat()}, \code{shaman_shuffle_and_score_hic_mat()}.
 }
 \examples{
 

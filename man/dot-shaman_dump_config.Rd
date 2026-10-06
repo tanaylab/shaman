@@ -7,7 +7,7 @@
 .shaman_dump_config(config_dir)
 }
 \arguments{
-\item{config_dir}{Directory to dump to files to.}
+\item{config_dir}{Directory to dump the files to.}
 }
 \description{
 Dump templates of config files required by the package.

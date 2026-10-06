@@ -2,7 +2,7 @@
 % Please edit documentation in R/shaman.R
 \name{shaman_score_hic_points}
 \alias{shaman_score_hic_points}
-\title{generate a score matrix for observed data based on the expected for a given set of points}
+\title{Generate a score matrix for observed data based on the expected for a given set of points}
 \usage{
 shaman_score_hic_points(
   obs_track_nms,
@@ -23,7 +23,7 @@ tracks is supported.}
 
 \item{points}{A score will be computed for each of the points.}
 
-\item{regional_interval}{An expansion of the focus interval, inclusing  points outside the focus matrix
+\item{regional_interval}{An expansion of the focus interval, including points outside the focus matrix
 for accurate computing of the score. Note that for each observed point, its k-nearest neighbors must be
 included in the expanded matrix.}
 
@@ -36,17 +36,17 @@ lower resolution maps, decrease k.}
 \code{shaman_score_hic_mat}).}
 }
 \value{
-NULL if insufficient observed data, otherwise resturns a list containing 3 elements:
-1) points - start1, start2 and score for all observed points.
-2) obs - the observed points.
-3) exp - the expected points.
+NULL if insufficient observed data, otherwise a list with one element:
+points - the given points with their score (column score).
 }
 \description{
 \code{shaman_score_hic_points}
 }
 \details{
 This function extracts observed data and expected data in an expanded matrix and computes
-The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
+the score for each observed point.
+The score for a point is the KS D-statistic of the distances to its k nearest neighbors
+in the observed data compared to the expected data.
 }
 \examples{
 

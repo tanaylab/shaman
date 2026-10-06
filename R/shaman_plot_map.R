@@ -1,4 +1,4 @@
-#' plot an observed or expected hic map
+#' Plot an observed or expected hic map
 #'
 #' \code{shaman_gplot_map}
 #'
@@ -9,7 +9,7 @@
 #' @param rotate Binary flag, indicating if the plot should be rotated by 45 degrees.
 #' @param point_size Cex size of the points in the plot.
 #' @param add_axis Binary flag, indicating if axis should be added to plot.
-#' @return gplot containing the map
+#' @return A ggplot object with the map.
 #'
 #' @examples
 #'
@@ -73,20 +73,20 @@ shaman_gplot_map <- function(points, interval_range = NA, rotate = TRUE, point_s
     return(map_gplot)
 }
 
-#' plot a normlized hic map
+#' Plot a normalized hic map
 #'
 #' \code{shaman_gplot_map_score}
 #'
-#' Plots observerved hic contact matrix color-coded by normalized scores.
+#' Plots observed hic contact matrix color-coded by normalized scores.
 #' Data can be either extracted directly from score track or computed via the functions:
-#' score_hic_mat, shuffle_and_score_hic_mat
+#' \code{shaman_score_hic_mat()}, \code{shaman_shuffle_and_score_hic_mat()}.
 #'
 #' @param points_score A dataframe containing the points (start1, start2) and their normalized score.
 #' @param interval_range Data frame with the start and end of the range to plot. If NA, the range of start1 in points_score.
 #' @param rotate Binary flag, indicating if the plot should be rotated by 45 degrees.
 #' @param point_size Cex size of the points in the plot.
 #' @param add_axis Binary flag, indicating if axis should be added to plot.
-#' @return gplot containing the map
+#' @return A ggplot object with the map.
 #'
 #' @examples
 #'
@@ -156,9 +156,9 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 
 
 ##########################################################################################################
-#' plots misha 1D tracks and annotations
+#' Plot misha 1D tracks and annotations
 #'
-#' \code{shaman_gplot_tracks_and_annotations}
+#' \code{shaman_plot_tracks_and_annotations}
 #'
 #' Plots 1D tracks in UCSC format. Along with gene annotations and chromosomal axis, this
 #' function plots one dimensional misha tracks (e.g. rna-seq, chip-seq data) and marks
@@ -174,8 +174,8 @@ shaman_gplot_map_score <- function(points_score, interval_range = NA, rotate = T
 #' @param annotations List of gintervals highlighting annotated regions.
 #' @param a_colors Array of colors, one for each annotation set.
 #' @param add_genes Boolean flag indicating whether to show gene annotations.
-#' @param add_ideogram Boolean flag indicating whether to add an chromosomal ideogram.
-#' @param add_axis Boolean flag indicating whether to show chromosmal axis.
+#' @param add_ideogram Boolean flag indicating whether to add a chromosome ideogram.
+#' @param add_axis Boolean flag indicating whether to show the chromosomal axis.
 #' @param gene_stacking Describes the viewing option of the genes track. Can be either "squish", or "dense"
 #' @param gene_size Size of gene annotation view
 #' @param track_size Size of track view
@@ -249,12 +249,12 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 }
 
 ##########################################################################################################
-#' plots hic normalized map with annotations
+#' Plot a normalized hic map with annotations
 #'
 #' \code{shaman_plot_map_score_with_annotations}
 #'
-#' Plots observerved hic contact matrix color-coded by normalized scores, aligned with
-#' linear data such as gene annotations, rna, chromatin, transcription factor binding, etc').
+#' Plots observed hic contact matrix color-coded by normalized scores, aligned with
+#' linear data such as gene annotations, rna, chromatin, transcription factor binding, etc.).
 #'
 #'
 #' @param genome Name of reference genome (e.g. "hg19", "mm10")
@@ -268,8 +268,8 @@ shaman_plot_tracks_and_annotations <- function(genome, interval_range,
 #' @param annotations List of gintervals highlighting annotated regions.
 #' @param a_colors Array of colors, one for each annotation set.
 #' @param add_genes Boolean flag indicating whether to show gene annotations.
-#' @param add_ideogram Boolean flag indicating whether to add an chromosomal ideogram.
-#' @param add_axis Boolean flag indicating whether to show chromosmal axis.
+#' @param add_ideogram Boolean flag indicating whether to add a chromosome ideogram.
+#' @param add_axis Boolean flag indicating whether to show the chromosomal axis.
 #' @param gene_stacking Describes the viewing option of the genes track. Can be either "squish", or "dense".
 #' @param gene_size Size of gene annotation view.
 #' @param track_size Size of track view.
@@ -383,7 +383,6 @@ shaman_score_pal <- function() {
     if (genome == "mm10" | genome == "hg38" | genome == "hg19") {
         track <- "NCBI RefSeq"
     }
-    #  genetrack=Gviz::UcscTrack(track="RefSeq Genes", table="refGene",
     genetrack <- Gviz::UcscTrack(
         genome = genome, track = track, table = "refGene",
         trackType = "GeneRegionTrack", chromosome = as.character(interv$chrom),

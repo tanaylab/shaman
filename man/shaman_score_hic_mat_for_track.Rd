@@ -2,7 +2,7 @@
 % Please edit documentation in R/shaman.R
 \name{shaman_score_hic_mat_for_track}
 \alias{shaman_score_hic_mat_for_track}
-\title{generate a score matrix for observed data based on the expected}
+\title{Generate a score matrix for observed data based on the expected}
 \usage{
 shaman_score_hic_mat_for_track(
   track_db,
@@ -15,7 +15,7 @@ shaman_score_hic_mat_for_track(
   end1,
   start2,
   end2,
-  expand = 2e+06,
+  expand = 2000000,
   k = 100,
   min_dist = 1024
 )
@@ -34,7 +34,7 @@ tracks is supported.}
 \item{points_track_nms}{Names of 2D genomic tracks that contain points on which to compute
 normalized score. Pooling points from multiple tracks is supported.}
 
-\item{chrom}{The chormosome of the matrix.}
+\item{chrom}{The chromosome of the matrix.}
 
 \item{start1}{The start coordinate of the first dimension.}
 
@@ -60,7 +60,9 @@ lower resolution maps, decrease k.}
 }
 \details{
 This function extracts observed data and expected data in an expanded matrix and computes
-The score for a point is the KS D-statistic of the distances to the points k-nearest-neighbors
+the score for each observed point.
+The score for a point is the KS D-statistic of the distances to its k nearest neighbors
+in the observed data compared to the expected data.
 
 chrom, start1, end1, start2 and end2 can be vectors, to score several matrices in one call.
 Matrices with the same chrom, start1 and end1 then share one extraction of each track over the union

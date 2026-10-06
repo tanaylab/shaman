@@ -102,7 +102,7 @@ summary(local_score$points$score)
 ## Analysis
 ### Spatial contact enrichment - used to measure contact enrichment between two sets of genomic features.
 Relies on an existence of an expected (shuffled) 2d track.
-Builds a grid comprising of all combinations of intervals from feature 1 and feature 2 that fall within a band
+Builds a grid of all combinations of intervals from feature 1 and feature 2 that fall within a band
 defined by min_dist and max_dist. For each point on the grid, look at the surrounding window, defined by range parameter.
 Discard all windows that do not contain a point with a score (defined in score_track_nm) above the score_filter parameter.
 This allows for focusing on potentially enriched pairs. Dissect the window into small bins, size in base pairs defined by
@@ -136,7 +136,7 @@ The following options are available for this package:
 
 * shaman.mc_support = 0 - Set to 1 if multi-core is available for distributed computing.
 * shaman.sge_support = 0 - Set to 1 if Sun Grid Engine is available for distributed computing.
-* shaman.sge_flags = ""  - SGE parameters to be passed to qsub (e.g. threads, queue, etc').
+* shaman.sge_flags = ""  - SGE parameters to be passed to qsub (e.g. threads, queue, etc.).
 * shaman.score.threads = 1 - Threads for the kNN distances and scores of each score matrix. In multi-core mode each of the max_jobs processes uses this many threads; in SGE mode each job does, so shaman.sge_flags should ask for as many slots.
 Note that for some shaman package methods either multi-core or sge support is required.
 

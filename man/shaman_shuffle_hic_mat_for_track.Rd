@@ -17,14 +17,14 @@ shaman_shuffle_hic_mat_for_track(
   max_dist = max(gintervals.all()$end),
   dist_resolution = NA,
   decay_smooth = NA,
-  proposal_iterations = 1e+07,
+  proposal_iterations = 10000000,
   shuffle = 80,
   hic_mcmc_max_resolution = 400,
   raw_ext = "raw",
   shuffled_ext = "shuffled",
-  grid_small = 5e+05,
-  grid_high = 1e+06,
-  grid_increase = 5e+05,
+  grid_small = 500000,
+  grid_high = 1000000,
+  grid_increase = 500000,
   grid_step_iter = 40,
   sort_uniq = FALSE,
   seed = NULL
@@ -37,7 +37,7 @@ shaman_shuffle_hic_mat_for_track(
 
 \item{work_dir}{Centralized directory to store temporary files.}
 
-\item{chrom}{The chormosome of the matrix.}
+\item{chrom}{The chromosome of the matrix.}
 
 \item{start1}{The start coordinate of the first dimension.}
 
@@ -67,9 +67,9 @@ If NA, value is determined based on observed data (recommended).}
 
 \item{shuffled_ext}{File extension of the shuffled data.}
 
-\item{grid_small}{Initial size of maximum distance between contact pairs consdered for switching}
+\item{grid_small}{Initial size of maximum distance between contact pairs considered for switching}
 
-\item{grid_high}{Final size of maximum distance between contact pairs consdered for switching}
+\item{grid_high}{Final size of maximum distance between contact pairs considered for switching}
 
 \item{grid_increase}{Grid increase size}
 
@@ -87,10 +87,11 @@ The seed the shuffler used, or NA if the matrix was not shuffled here (no or too
 contacts, or the shuffled file already existed).
 }
 \description{
-\code{shuffle_hic_mat_for_track}
+\code{shaman_shuffle_hic_mat_for_track}
 }
 \details{
 This function generates an expected 2D hic matrix from observed hic data. Should not be called externally,
+but rather as jobs when creating a 2D shuffled track.
 The observed data is a combination of observed contacts in scope plus already shuffled
 near-cis contacts (stored in work_dir) which we sample from to maintain the decay probability curve.
 

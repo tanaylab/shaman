@@ -2,7 +2,7 @@
 % Please edit documentation in R/params.R
 \name{shaman_get_test_track_db}
 \alias{shaman_get_test_track_db}
-\title{returns test misha db}
+\title{Returns the example misha database}
 \usage{
 shaman_get_test_track_db(full = FALSE)
 }

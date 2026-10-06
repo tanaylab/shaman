@@ -18,7 +18,7 @@ init_params <- function(fn, prev_params = NULL) {
         }
     }
     params <- as.list(params)
-    # interpret some values as R exprssions
+    # interpret some values as R expressions
     expr_idx <- grep("\\@R$", names(params))
     # Strip names from R
     params[expr_idx] <- lapply(params[expr_idx], function(x) eval(parse(text = x)))
@@ -52,7 +52,7 @@ get_param_list <- function(nm, params) {
 }
 
 ############################################
-#' returns test misha db
+#' Returns the example misha database
 #'
 #' \code{shaman_get_test_track_db}
 #' Returns the path of an example misha database with Hi-C contacts from the ELA K562 dataset.

@@ -13,8 +13,8 @@ shaman_generate_feature_grid(
   score_filter = 30,
   range = 25000,
   resolution = 500,
-  min_dist = 2e+05,
-  max_dist = 1e+06
+  min_dist = 200000,
+  max_dist = 1000000
 )
 }
 \arguments{
@@ -48,7 +48,7 @@ grid_size - number of windows included in statistics
 \code{shaman_generate_feature_grid}
 }
 \details{
-Build a grid comprising of all combinations of intervals from feature 1 and feature 2 that
+Build a grid of all combinations of intervals from feature 1 and feature 2 that
 fall within a band defined by min_dist and max_dist. For each point on the grid,
 look at the surrounding window, defined by range parameter. Discard all windows
 that do not contain a point with a score (defined in score_track_nm) above the score_filter parameter.

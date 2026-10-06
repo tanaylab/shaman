@@ -2,7 +2,7 @@
 % Please edit documentation in R/shaman_plot_map.R
 \name{shaman_plot_map_score_with_annotations}
 \alias{shaman_plot_map_score_with_annotations}
-\title{plots hic normalized map with annotations}
+\title{Plot a normalized hic map with annotations}
 \usage{
 shaman_plot_map_score_with_annotations(
   genome,
@@ -48,9 +48,9 @@ to be displayed in the region.}
 
 \item{add_genes}{Boolean flag indicating whether to show gene annotations.}
 
-\item{add_ideogram}{Boolean flag indicating whether to add an chromosomal ideogram.}
+\item{add_ideogram}{Boolean flag indicating whether to add a chromosome ideogram.}
 
-\item{add_axis}{Boolean flag indicating whether to show chromosmal axis.}
+\item{add_axis}{Boolean flag indicating whether to show the chromosomal axis.}
 
 \item{gene_stacking}{Describes the viewing option of the genes track. Can be either "squish", or "dense".}
 
@@ -73,8 +73,8 @@ No return value, called for the plot. Needs the Bioconductor package Gviz.
 \code{shaman_plot_map_score_with_annotations}
 }
 \details{
-Plots observerved hic contact matrix color-coded by normalized scores, aligned with
-linear data such as gene annotations, rna, chromatin, transcription factor binding, etc').
+Plots observed hic contact matrix color-coded by normalized scores, aligned with
+linear data such as gene annotations, rna, chromatin, transcription factor binding, etc.).
 }
 \examples{
 
