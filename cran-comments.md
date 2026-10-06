@@ -6,7 +6,7 @@
   surname), et al. (in the citation) and enrichments are correct; Aparametric is the second A of the
   package name.
 * installed size is about 5Mb, sub-directory libs about 3.5Mb: debug information of the compiled
-  code; the stripped library is about 0.2Mb.
+  code; the stripped library is about 0.25Mb.
 
 ## Test environments
 
@@ -17,14 +17,9 @@
 
 ## Notes
 
-* shaman is `OS_type: unix`: it depends on misha, which is unix-only.
-* Examples and tests run on a small example database (0.5Mb of data in inst/extdata, built in
-  `tempdir()`). The full example database (about 100Mb) is downloaded only when asked for with
-  `shaman_get_test_track_db(full = TRUE)`, never in examples, tests or vignettes.
-* No `\dontrun{}`. The gene and ideogram tracks of `shaman_plot_tracks_and_annotations()` and
-  `shaman_plot_map_score_with_annotations()` are downloaded from the UCSC genome browser, so those
-  examples run only in interactive sessions (`if (interactive())`). The versions without them run in
-  `\donttest{}`, because loading Gviz (Suggests, Bioconductor) takes several seconds.
-* Examples, tests and vignettes run without the Suggests packages Gviz and foreach (checked with
-  only the hard dependencies, testthat, knitr and rmarkdown installed).
-* Examples and tests use at most 2 cores.
+* shaman is `OS_type: unix` because it depends on misha, which is unix-only.
+* Examples, tests and vignettes use a small example database bundled with the package (built in
+  `tempdir()`) and download nothing.
+* The examples that download gene and ideogram tracks from UCSC run only in interactive sessions;
+  the versions without them are in `\donttest{}` because loading Gviz (Suggests) takes several
+  seconds.
