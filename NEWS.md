@@ -1,3 +1,5 @@
+# shaman (development version)
+
 # shaman 2.1.0
 
 * `shaman_shuffle_hic_track()` is about 6x faster; results are unchanged for the same seed.
