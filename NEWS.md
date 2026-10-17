@@ -1,4 +1,6 @@
-# shaman (development version)
+# shaman 2.1.1
+
+* Fixed a compiler warning from GCC 16 (`-Wstringop-overflow`) in the shuffler; results are unchanged.
 
 # shaman 2.1.0
 
