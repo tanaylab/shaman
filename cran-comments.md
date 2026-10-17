@@ -9,13 +9,14 @@
 ## This update
 
 Fixes the `-Wstringop-overflow` warning of g++ 16 in src/ContactShuffler.cpp
-(r-devel-linux-x86_64-fedora-gcc). With g++ 16.2.1 (the same version as on that machine) and the
-same flags, the package compiles without warnings.
+(r-devel-linux-x86_64-fedora-gcc and r-devel-linux-x86_64-debian-gcc). With g++ 16.2.1 and 16.2.0
+(the versions on those machines) and the same flags, the package compiles without warnings.
 
 ## Test environments
 
 * local: AlmaLinux 8.10, R 4.4.1, gcc 13.3 with -Wall -pedantic
 * R-hub's gcc16 container: Fedora 44, g++ 16.2.1, at -O2 and -O3
+* the gcc:16.2.0 Docker image: g++ 16.2.0, at -O2 and -O3
 * GitHub Actions: macOS (arm64), R release; Ubuntu, R devel, release and oldrel-1
 * GitHub Actions: R-hub's clang-asan container (R-devel with AddressSanitizer and
   UndefinedBehaviorSanitizer)
