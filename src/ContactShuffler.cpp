@@ -122,6 +122,9 @@ int ContactShuffler::save_contacts(const char* fn, bool symetric, bool with_head
 	vector<char> buf(1 << 20);
 	char* p = buf.data();
 	char* buf_end = buf.data() + buf.size() - 64;
+	// A contact is at most 48 bytes (4 numbers and 4 separators), so the buffer never fills. to_chars
+	// is still given one byte less than the buffer, for the separator after the number: otherwise GCC
+	// 16 warns that the separator may be written past the buffer (-Wstringop-overflow).
 	for (long i=0; i<m_contact_count; i++) {
 		int a = m_x[i];
 		int b = m_y[i];
@@ -129,11 +132,11 @@ int ContactShuffler::save_contacts(const char* fn, bool symetric, bool with_head
 			a = m_y[i];
 			b = m_x[i];
 		}
-		p = to_chars(p, buf_end + 64, a).ptr; *p++ = '\t';
-		p = to_chars(p, buf_end + 64, b).ptr; *p++ = '\n';
+		p = to_chars(p, buf_end + 63, a).ptr; *p++ = '\t';
+		p = to_chars(p, buf_end + 63, b).ptr; *p++ = '\n';
 		if (symetric) {
-			p = to_chars(p, buf_end + 64, b).ptr; *p++ = '\t';
-			p = to_chars(p, buf_end + 64, a).ptr; *p++ = '\n';
+			p = to_chars(p, buf_end + 63, b).ptr; *p++ = '\t';
+			p = to_chars(p, buf_end + 63, a).ptr; *p++ = '\n';
 		}
 		if (p >= buf_end) {
 			put(buf.data(), p - buf.data());
