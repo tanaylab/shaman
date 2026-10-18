@@ -1,7 +1,7 @@
 Package: shaman
 Type: Package
 Title: Sampling Hi-C Contact Matrices for Aparametric Normalization
-Version: 2.1.1
+Version: 2.1.1.9000
 Authors@R: c(person("Amos", "Tanay", role=c("aut")),
     person("Netta", "Mendelson Cohen", email="netta.mendelsoncohen@weizmann.ac.il",
     role=c("aut")),
