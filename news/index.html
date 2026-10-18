@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">shaman</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">2.1.1</span>
       </span>
     </div>
 
@@ -66,10 +66,11 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="development version" id="shaman-development-version">shaman (development version)<a class="anchor" aria-label="anchor" href="#shaman-development-version"></a></h2>
-</div>
+<h2 class="page-header" data-toc-text="2.1.1" id="shaman-211">shaman 2.1.1<a class="anchor" aria-label="anchor" href="#shaman-211"></a></h2>
+<ul><li>Fixed a compiler warning from GCC 16 (<code>-Wstringop-overflow</code>).</li>
+</ul></div>
     <div class="section level2">
-<h2 class="page-header" data-toc-text="2.1.0" id="shaman-210">shaman 2.1.0<a class="anchor" aria-label="anchor" href="#shaman-210"></a></h2>
+<h2 class="page-header" data-toc-text="2.1.0" id="shaman-210">shaman 2.1.0<small>2026-10-16</small><a class="anchor" aria-label="anchor" href="#shaman-210"></a></h2>
 <ul><li>
 <code><a href="../reference/shaman_shuffle_hic_track.html">shaman_shuffle_hic_track()</a></code> is about 6x faster; results are unchanged for the same seed.</li>
 <li>The <code>sort_uniq</code> step of the shuffle (used by <code><a href="../reference/shaman_shuffle_hic_track.html">shaman_shuffle_hic_track()</a></code>) counts contacts in memory instead of with <code>sort | uniq -c</code>: 44 to 3.5 min on chr1 of a Hi-C dataset.</li>
